@@ -22,7 +22,11 @@ class HomeScreen extends ConsumerWidget {
       child: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
-            final orbSize = (constraints.maxHeight * 0.28).clamp(140.0, 220.0);
+            final maxHeight = constraints.maxHeight.isFinite
+                ? constraints.maxHeight
+                : 640.0;
+            final orbSize = (maxHeight * 0.28).clamp(140.0, 220.0);
+            final minBodyHeight = (maxHeight - 8).clamp(0.0, double.infinity);
 
             return SingleChildScrollView(
               padding: const EdgeInsets.fromLTRB(
@@ -32,7 +36,7 @@ class HomeScreen extends ConsumerWidget {
                 SanaSpacing.sm,
               ),
               child: ConstrainedBox(
-                constraints: BoxConstraints(minHeight: constraints.maxHeight - 8),
+                constraints: BoxConstraints(minHeight: minBodyHeight),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
@@ -49,7 +53,7 @@ class HomeScreen extends ConsumerWidget {
                             color: SanaColors.textSecondary,
                           ),
                     ),
-                    SizedBox(height: constraints.maxHeight * 0.06),
+                    SizedBox(height: maxHeight * 0.06),
                     Center(
                       child: SanaOrb(
                         size: orbSize,
@@ -80,7 +84,7 @@ class HomeScreen extends ConsumerWidget {
                       textAlign: TextAlign.center,
                       style: Theme.of(context).textTheme.bodySmall,
                     ),
-                    SizedBox(height: constraints.maxHeight * 0.05),
+                    SizedBox(height: maxHeight * 0.05),
                     ModeCards(
                       selected: mode,
                       onSelected: (value) {
