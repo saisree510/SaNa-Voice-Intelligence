@@ -1,0 +1,83 @@
+# Secrets / local env
+.env
+.env.*
+!.env.example
+*.pem
+*.p12
+credentials.json
+**/secrets/
+**/service-account*.json
+
+# Supabase / cloud local dumps
+supabase/.branches
+supabase/.temp
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.venv/
+venv/
+.envrc
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+dist/
+build/
+
+# Flutter / Dart
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+build/
+coverage/
+*.iml
+.flutter-plugins-dependencies
+
+# IDE / editor
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Logs / temp
+*.log
+logs/
+tmp/
+temp/
+.cache/
+
+# Local SaNa runtime / workspaces (dev build sandboxes)
+.sana/
+workspaces/
+**/local_workspaces/
+
+# DeepCode local state (never commit)
+.deepcode/
+**/.deepcode/
+
+# OS / misc
+*.stackdump
+desktop.ini
+
+# Native / generated
+**/Generated.xcconfig
+**/Flutter/ephemeral/
+**/android/local.properties
+**/android/.gradle/
+**/android/app/debug/
+**/android/app/profile/
+**/android/app/release/
+**/ios/Pods/
+**/ios/.symlinks/
+**/macos/Flutter/ephemeral/
+**/linux/flutter/ephemeral/
+**/windows/flutter/ephemeral/
