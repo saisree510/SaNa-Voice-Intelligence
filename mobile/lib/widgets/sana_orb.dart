@@ -192,7 +192,7 @@ class _SanaOrbPainter extends CustomPainter {
         coreColor.withValues(alpha: 0.95),
         coreColor.withValues(alpha: 0.72),
         deepColor.withValues(alpha: 0.85),
-        SanaColors.nearBlack.withValues(alpha: 0.9),
+        SanaColors.lavenderDeep.withValues(alpha: 0.9),
       ],
       stops: const [0.0, 0.35, 0.7, 1.0],
     );

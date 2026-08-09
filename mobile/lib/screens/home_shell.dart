@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 
 import '../controllers/app_ctrl.dart';
 import '../models/sana_orb_state.dart';
+import '../services/auth_service.dart';
 import '../ui/sana_theme.dart';
 import '../widgets/sana_orb_view.dart';
 
@@ -85,10 +86,7 @@ class _HomeTabBody extends StatelessWidget {
           body: 'Build projects will live here in a later phase.',
         );
       case HomeTab.profile:
-        return const _PlaceholderPane(
-          title: 'Profile',
-          body: 'Sign-in and assistant preferences arrive with auth.',
-        );
+        return const _ProfilePane();
     }
   }
 }
@@ -295,6 +293,93 @@ class _PlaceholderPane extends StatelessWidget {
           Text(title, style: Theme.of(context).textTheme.headlineMedium),
           const SizedBox(height: 12),
           Text(body, style: Theme.of(context).textTheme.bodyMedium),
+        ],
+      ),
+    );
+  }
+}
+
+class _ProfilePane extends StatelessWidget {
+  const _ProfilePane();
+
+  @override
+  Widget build(BuildContext context) {
+    final authService = context.watch<AuthService>();
+    final textTheme = Theme.of(context).textTheme;
+
+    final userName = authService.userName ?? 'User';
+    final userEmail = authService.userEmail ?? 'No email';
+    final assistantName = authService.assistantName;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(28, 36, 28, 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Profile & Settings', style: textTheme.headlineMedium?.copyWith(color: SanaColors.lavender)),
+          const SizedBox(height: 24),
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: SanaColors.surface,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: SanaColors.lavender.withValues(alpha: 0.15)),
+            ),
+            child: Column(
+              children: [
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const CircleAvatar(
+                    backgroundColor: SanaColors.lavender,
+                    child: Icon(Icons.person, color: SanaColors.nearBlack),
+                  ),
+                  title: Text(userName, style: const TextStyle(fontWeight: FontWeight.bold, color: SanaColors.fgPrimary)),
+                  subtitle: Text(userEmail, style: const TextStyle(color: SanaColors.fgSecondary)),
+                ),
+                const Divider(color: SanaColors.nearBlack, height: 24),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text('Assistant Name', style: TextStyle(color: SanaColors.fgSecondary)),
+                    Text(assistantName, style: const TextStyle(color: SanaColors.lavender, fontWeight: FontWeight.w600)),
+                  ],
+                ),
+                if (authService.isMock) ...[
+                  const SizedBox(height: 12),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('Auth Mode', style: TextStyle(color: SanaColors.fgSecondary)),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: SanaColors.nearBlack,
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: const Text('Dev Local Mode', style: TextStyle(color: SanaColors.fgMuted, fontSize: 11)),
+                      ),
+                    ],
+                  ),
+                ],
+              ],
+            ),
+          ),
+          const Spacer(),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: () async {
+                await context.read<AuthService>().signOut();
+              },
+              icon: const Icon(Icons.logout_rounded, color: Colors.redAccent),
+              label: const Text('Sign Out', style: TextStyle(color: Colors.redAccent)),
+              style: OutlinedButton.styleFrom(
+                side: const BorderSide(color: Colors.redAccent),
+                padding: const EdgeInsets.symmetric(vertical: 14),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
         ],
       ),
     );

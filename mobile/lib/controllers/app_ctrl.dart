@@ -41,8 +41,17 @@ class AppCtrl extends ChangeNotifier {
   static const Duration connectTimeout = Duration(seconds: 45);
   static const Duration endTimeout = Duration(seconds: 12);
 
-  /// Placeholder until Phase 6 onboarding stores the real name.
+  /// Placeholder fallback if user name is not set.
   static const String placeholderUserName = 'Sai';
+  String _customUserName = placeholderUserName;
+
+  void updateUserName(String? name) {
+    final cleanName = name?.trim();
+    if (cleanName != null && cleanName.isNotEmpty && cleanName != _customUserName) {
+      _customUserName = cleanName;
+      notifyListeners();
+    }
+  }
 
   // States
   AppScreenState appScreenState = AppScreenState.welcome;
@@ -54,7 +63,7 @@ class AppCtrl extends ChangeNotifier {
   bool isUserCameEnabled = false;
   bool isScreenshareEnabled = false;
 
-  String get greetingLine => 'Hey $placeholderUserName, what are we planning to do today?';
+  String get greetingLine => 'Hey $_customUserName, what are we planning to do today?';
 
   final messageCtrl = TextEditingController();
   final messageFocusNode = FocusNode();

@@ -1,49 +1,50 @@
 import 'package:flutter/material.dart';
 
-/// Refinable Sana brand tokens (black + muted-lavender).
+/// Refinable Sana brand tokens (white + vibrant-lavender/lilac).
 class SanaColors {
   const SanaColors._();
 
-  static const Color nearBlack = Color(0xFF000000);
-  static const Color ink = Color(0xFF0A0A0A);
-  static const Color surface = Color(0xFF141414);
-  static const Color surfaceElevated = Color(0xFF1C1C1C);
+  static const Color pureWhite = Color(0xFFFFFFFF);
+  static const Color nearBlack = Color(0xFFFFFFFF); // Background alias for compatibility
+  static const Color ink = Color(0xFFF8F6FA);
+  static const Color surface = Color(0xFFF3EEFA);
+  static const Color surfaceElevated = Color(0xFFE9E2F5);
 
-  /// Primary brand signal — muted, not neon.
-  static const Color lavender = Color(0xFFB7A8D4);
-  static const Color lavenderSoft = Color(0xFF9A8BB8);
-  static const Color lavenderDeep = Color(0xFF7E6FA0);
+  /// Primary brand signal — lightened soft Lilac / Lavender.
+  static const Color lavender = Color(0xFFA58AD6);
+  static const Color lavenderSoft = Color(0xFFCBBBEA);
+  static const Color lavenderDeep = Color(0xFF8A6DC2);
 
-  static const Color fgPrimary = Color(0xFFF2F0F7);
-  static const Color fgSecondary = Color(0xFFC4BED6);
-  static const Color fgMuted = Color(0xFF8E87A3);
+  static const Color fgPrimary = Color(0xFF191624);
+  static const Color fgSecondary = Color(0xFF524A66);
+  static const Color fgMuted = Color(0xFF857E99);
 
-  static const Color danger = Color(0xFFE08A7A);
-  static const Color success = Color(0xFF7DB89A);
-  static const Color outline = Color(0x33B7A8D4);
+  static const Color danger = Color(0xFFD9534F);
+  static const Color success = Color(0xFF2E8B57);
+  static const Color outline = Color(0x33A58AD6);
 }
 
 ThemeData buildSanaTheme() {
-  const scheme = ColorScheme.dark(
+  const scheme = ColorScheme.light(
     primary: SanaColors.lavender,
-    onPrimary: SanaColors.nearBlack,
+    onPrimary: SanaColors.pureWhite,
     secondary: SanaColors.lavenderSoft,
-    onSecondary: SanaColors.nearBlack,
-    surface: SanaColors.ink,
+    onSecondary: SanaColors.pureWhite,
+    surface: SanaColors.pureWhite,
     onSurface: SanaColors.fgPrimary,
     onSurfaceVariant: SanaColors.fgSecondary,
     error: SanaColors.danger,
-    onError: SanaColors.nearBlack,
+    onError: SanaColors.pureWhite,
     outline: SanaColors.fgMuted,
     surfaceContainerHighest: SanaColors.surfaceElevated,
   );
 
   return ThemeData(
     useMaterial3: true,
-    brightness: Brightness.dark,
+    brightness: Brightness.light,
     colorScheme: scheme,
-    scaffoldBackgroundColor: SanaColors.nearBlack,
-    canvasColor: SanaColors.nearBlack,
+    scaffoldBackgroundColor: SanaColors.pureWhite,
+    canvasColor: SanaColors.pureWhite,
     cardColor: SanaColors.surface,
     dividerColor: SanaColors.outline,
     appBarTheme: const AppBarTheme(
@@ -117,17 +118,18 @@ ThemeData buildSanaTheme() {
     filledButtonTheme: FilledButtonThemeData(
       style: FilledButton.styleFrom(
         backgroundColor: SanaColors.lavender,
-        foregroundColor: SanaColors.nearBlack,
+        foregroundColor: SanaColors.pureWhite,
         disabledBackgroundColor: SanaColors.lavender.withValues(alpha: 0.35),
-        disabledForegroundColor: SanaColors.nearBlack.withValues(alpha: 0.6),
+        disabledForegroundColor: SanaColors.pureWhite.withValues(alpha: 0.6),
         padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 16),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
         textStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
       ),
     ),
     navigationBarTheme: NavigationBarThemeData(
-      backgroundColor: SanaColors.ink.withValues(alpha: 0.92),
-      indicatorColor: SanaColors.lavender.withValues(alpha: 0.22),
+      backgroundColor: SanaColors.pureWhite,
+      elevation: 4,
+      indicatorColor: SanaColors.lavender.withValues(alpha: 0.15),
       labelTextStyle: WidgetStateProperty.resolveWith((states) {
         final selected = states.contains(WidgetState.selected);
         return TextStyle(

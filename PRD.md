@@ -1,6 +1,6 @@
 # SaNa — Product Requirements Document (PRD)
 
-**Status:** Phase 5 COMPLETE — Sana branded UI (black + muted-lavender orb, mode/nav shells); Phase 6 next
+**Status:** Phase 6 COMPLETE — Supabase auth, speak-or-type onboarding, white + light-lavender UI, personalized greeting; Phase 7 next
 **Product:** SaNa
 **Document version:** 0.4.0
 **Date:** 2026-08-09
