@@ -70,7 +70,9 @@ class VoiceAssistantApp extends StatelessWidget {
             title: 'Voice Assistant',
             theme: buildTheme(isLight: true),
             darkTheme: buildTheme(isLight: false),
-            // themeMode: ThemeMode.dark,
+            // Force light theme during Phase 3 voice validation so call UI
+            // controls remain visible on OLED phones in system dark mode.
+            themeMode: ThemeMode.light,
             home: Builder(
               builder: (ctx) => Center(
                 child: Container(

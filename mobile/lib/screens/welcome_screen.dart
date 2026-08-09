@@ -51,16 +51,40 @@ class WelcomeScreen extends StatelessWidget {
                     ],
                   ),
                 ),
-                // Agent status indicator
-                const AgentStatusIndicator(),
+                Consumer<ctrl.AppCtrl>(
+                  builder: (ctx, appCtrl, child) {
+                    // Only show agent status while a connect is actually in progress.
+                    // Avoids stale "Agent is listening" on a stuck welcome screen.
+                    if (!appCtrl.isConnecting) {
+                      return const SizedBox.shrink();
+                    }
+                    return const AgentStatusIndicator();
+                  },
+                ),
                 Consumer2<ctrl.AppCtrl, sdk.Session>(
                   builder: (ctx, appCtrl, session, child) {
-                    final isProgressing =
-                        appCtrl.isSessionStarting || session.connectionState != sdk.ConnectionState.disconnected;
+                    final isConnecting = appCtrl.isConnecting;
+                    final isLive = session.connectionState == sdk.ConnectionState.connected ||
+                        session.connectionState == sdk.ConnectionState.reconnecting;
+
+                    late final String label;
+                    late final VoidCallback onPressed;
+                    if (isConnecting) {
+                      label = 'Cancel';
+                      onPressed = () => appCtrl.cancelConnect();
+                    } else if (isLive) {
+                      label = 'Continue call';
+                      onPressed = () => appCtrl.connect();
+                    } else {
+                      label = 'Start call';
+                      onPressed = () => appCtrl.connect();
+                    }
+
                     return buttons.Button(
-                      text: isProgressing ? 'Connecting' : 'Start call',
-                      isProgressing: isProgressing,
-                      onPressed: () => appCtrl.connect(),
+                      text: label,
+                      isProgressing: isConnecting,
+                      enabled: true,
+                      onPressed: onPressed,
                     );
                   },
                 ),

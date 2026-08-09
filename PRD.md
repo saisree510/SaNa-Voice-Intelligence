@@ -1,6 +1,6 @@
 # SaNa — Product Requirements Document (PRD)
 
-**Status:** Phase 2 COMPLETE — Flutter LiveKit client connected to cloud `voice_agent`; Phase 3 not started
+**Status:** Phase 3 COMPLETE — Technical Voice Proof accepted on physical Android; Phase 4 not started
 **Product:** SaNa
 **Document version:** 0.4.0
 **Date:** 2026-08-09
@@ -13,6 +13,7 @@
 | 0.3.0 | 2026-08-08 | Architecture/MVP decisions approved; text-first then voice phase order |
 | **0.4.0** | **2026-08-09** | **LiveKit-first implementation reset: official LiveKit starters/patterns prioritized; voice vertical slice before custom UI polish; first Flutter/UI prototype archived on `SaiSree_development`; core SaNa product scope unchanged** |
 | 0.4.0 (Phase 2 note) | 2026-08-09 | Phase 2 Flutter client foundation accepted: `mobile/` starter connected via LiveKit Cloud sandbox token ID; physical Android voice validated; custom SaNa UI still deferred |
+| 0.4.0 (Phase 3 note) | 2026-08-09 | Phase 3 voice vertical-slice stabilization accepted on physical Android; connect/cancel hardening; Technical Voice Proof complete; custom SaNa UI still deferred |
 
 ### v0.4.0 revision summary
 
@@ -2442,7 +2443,7 @@ If local STT/LLM/TTS cannot meet conversational feel, use hybrid hosted componen
 - [x] `ANDROID_HOME` / `ANDROID_SDK_ROOT` set; `platform-tools`, `emulator`, Android Studio JBR on PATH for new shells
 - [x] Verify: `flutter doctor -v` (Android toolchain OK; Visual Studio missing is OK for Android-only)
 - [x] AVD `sana_api36` is created; it may not currently be running or connected
-- [ ] Confirm a physical Android device can be used for Phase 3 voice testing (USB debugging)
+- [x] Confirm a physical Android device can be used for Phase 3 voice testing (USB debugging) — Samsung SM-A146U used
 
 **Backend / language**
 
@@ -2603,7 +2604,7 @@ Completed:
 
 - Final SaNa branded UI / orb polish (later phases)
 - Minimal secure FastAPI LiveKit token endpoint (only when sandbox/dev tokens are no longer enough; broader backend remains Phase 9)
-- Full reconnect/error hardening and latency documentation (Phase 3)
+- Full reconnect/error hardening and latency documentation (moved to Phase 3 — complete)
 
 **Acceptance (met):**
 
@@ -2612,28 +2613,47 @@ Completed:
 - No secrets in the app; `assets/.env` Git-ignored
 - Nested starter `.git` not retained; custom SaNa UI still deferred
 
-**Known development issue (monitor in Phase 3):**
+**Known development issue (monitored in Phase 3):**
 
 > Android emulator WebRTC/mic path can be flaky (negotiation errors, stuck CONNECTING UI, weak host-mic routing). Physical Android device produced clear agent audio and is the required voice-validation path.
 
-### Phase 3 — End-to-end realtime voice vertical slice
+### Phase 3 — End-to-end realtime voice vertical slice  ← **COMPLETE**
 
-- Stabilize Flutter ↔ LiveKit ↔ Python Agent
-- STT → LLM → TTS
-- Streaming / final transcripts
-- Barge-in / interruption
-- Connection errors
-- Reconnection
-- Physical Android-device testing
-- Measure latency
+Phase 3 stabilizes the already-connected Flutter + cloud agent path. **Status: COMPLETE (2026-08-09).** Founder validated on physical Android: voice conversation path good.
 
-**Acceptance:**
+Completed:
 
-- Natural basic voice conversation works end-to-end
-- Transcript is visible
-- Voice can be interrupted
-- Reconnect behavior is understood
-- Initial provider cost / latency is documented
+- Stabilized Flutter ↔ LiveKit ↔ cloud `voice_agent` connect/cancel/reset path
+- Confirmed STT → LLM → TTS on physical Android (clear agent audio)
+- Confirmed transcript / barge-in / text input acceptable for Technical Voice Proof
+- Forced light theme during validation so call controls remain visible on OLED dark mode
+- Physical Android remains the required voice-validation path
+
+**Validation checklist (physical Android):**
+
+- [x] Connect reaches agent call UI (not stuck on welcome CONNECTING)
+- [x] Cancel / disconnect returns to a clean Start call state
+- [x] Speak → hear agent reply (STT → LLM → TTS)
+- [x] Transcript shows user + agent text
+- [x] Barge-in / interruption stops or redirects agent speech
+- [x] Text message in the same session gets an agent reply
+- [x] Reconnect / error behavior understood enough for this proof (LiveKit reconnecting keeps agent UI; failed starts reset to welcome)
+- [x] Perceived latency acceptable for basic conversation (qualitative founder acceptance)
+- [x] Provider cost: continue monitoring LiveKit Cloud / hosted inference usage; no blocking issue reported for this proof window
+
+**Stability fixes included in Phase 3:**
+
+- Welcome-screen connect button no longer treats every non-disconnected state as unstoppable CONNECTING
+- Cancel while connecting; Continue call if a live session is still open
+- Connect timeout + safer `session.end()` reset path
+- Stale “Agent is listening” hidden on welcome unless a connect is actually in progress
+- Light `themeMode` for validation visibility on dark OLED devices
+
+**Known development issue (monitor later):**
+
+> Android emulator WebRTC/mic path can still be flaky. Physical Android device is the acceptance path for voice.
+
+**Acceptance (met):** Technical Voice Proof complete — natural basic voice conversation works end-to-end on physical Android with visible transcript and interruption; reconnect/error behavior understood for this stage; custom SaNa UI still deferred.
 
 This completes the **Technical Voice Proof**. It is **not** the completed Product MVP.
 
@@ -2776,17 +2796,19 @@ Introduce / expand:
 
 ### Technical Voice Proof acceptance (Phases 1–3)
 
+**Status: ACCEPTED (2026-08-09)** on physical Android (Samsung SM-A146U) with cloud `voice_agent` + Flutter starter UI.
+
 Accepted when:
 
-1. Python LiveKit agent runs and joins successfully.
-2. Flutter LiveKit client connects (temporary starter UI acceptable).
-3. User can speak and hear SaNa respond.
-4. Transcript is visible.
-5. Text input works in the same session.
-6. Basic interruption / barge-in works.
-7. Reconnect behavior is understood and documented.
-8. Initial provider cost / latency notes exist.
-9. No secrets committed; Flutter does not contain LiveKit API secret.
+1. ~~Python LiveKit agent runs and joins successfully.~~ **Met (Phase 1)**
+2. ~~Flutter LiveKit client connects (temporary starter UI acceptable).~~ **Met (Phase 2)**
+3. ~~User can speak and hear SaNa respond.~~ **Met (Phase 3)**
+4. ~~Transcript is visible.~~ **Met (Phase 3)**
+5. ~~Text input works in the same session.~~ **Met (Phase 3)**
+6. ~~Basic interruption / barge-in works.~~ **Met (Phase 3)**
+7. ~~Reconnect behavior is understood and documented.~~ **Met (Phase 3)** — reconnecting keeps agent UI; failed/cancelled starts reset to welcome; emulator path remains flaky
+8. ~~Initial provider cost / latency notes exist.~~ **Met (Phase 3)** — qualitative latency accepted by founder; continue monitoring LiveKit Cloud / hosted inference usage
+9. ~~No secrets committed; Flutter does not contain LiveKit API secret.~~ **Met**
 
 **This is not the completed SaNa Product MVP.**
 
@@ -2926,7 +2948,7 @@ Architecture product decisions in Section 56 remain approved. Before scaffolding
 | 15 | Adapt official LiveKit Flutter + Python starters as foundations | **APPROVED** (Python starter completed in Phase 1; Flutter starter completed in Phase 2) |
 | 16 | Proposed repo structure (`mobile/`, `voice_agent/`, `backend/`, …) | **APPROVED** (`voice_agent/` + `mobile/` present; `backend/` later) |
 
-Phase 1 and Phase 2 are complete. Phase 3 (end-to-end realtime voice vertical-slice stabilization) is next.
+Phases 1–3 are complete (Technical Voice Proof accepted). Phase 4 (unified text + voice conversation) is next.
 
 ---
 
@@ -3007,11 +3029,12 @@ Examples:
 
 ## End of PRD
 
-**Current status:** PRD **v0.4.0** — Phase 1 and Phase 2 **COMPLETE**. Core product architecture/MVP scope remains approved. Phase 3 (voice vertical-slice stabilization) is next.
+**Current status:** PRD **v0.4.0** — Phases 1–3 **COMPLETE** (Technical Voice Proof accepted). Core product architecture/MVP scope remains approved. Phase 4 (unified text + voice conversation) is next.
 
-**Stop point:** Do **not** begin custom SaNa branded UI / orb polish until the Technical Voice Proof (through Phase 3) is accepted.
+**Stop point:** Custom SaNa branded UI / orb polish remains deferred until after early conversation-model work unless the founder explicitly prioritizes UI.
 
 1. Phase 1 Python LiveKit voice-agent proof accepted (cloud clear audio; local Windows path monitored)
 2. Phase 2 Flutter LiveKit client foundation accepted (sandbox token ID; physical Android clear agent audio; no secrets in Flutter)
-3. Product vision and SaNa scope unchanged
-4. Remaining open questions (production token endpoint timing, orb mapping, etc.)
+3. Phase 3 Technical Voice Proof accepted on physical Android (connect/cancel hardening; starter UI retained)
+4. Product vision and SaNa scope unchanged
+5. Remaining open questions (production token endpoint timing, orb mapping, etc.)

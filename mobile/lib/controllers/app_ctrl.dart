@@ -17,6 +17,8 @@ enum AgentScreenState { visualizer, transcription }
 class AppCtrl extends ChangeNotifier {
   static const uuid = Uuid();
   static final _logger = Logger('AppCtrl');
+  static const Duration connectTimeout = Duration(seconds: 45);
+  static const Duration endTimeout = Duration(seconds: 12);
 
   // States
   AppScreenState appScreenState = AppScreenState.welcome;
@@ -68,6 +70,17 @@ class AppCtrl extends ChangeNotifier {
   bool isSendButtonEnabled = false;
   bool isSessionStarting = false;
   bool _hasCleanedUp = false;
+
+  /// True while a connect attempt is in-flight or LiveKit reports connecting.
+  bool get isConnecting =>
+      isSessionStarting || session.connectionState == sdk.ConnectionState.connecting;
+
+  /// Welcome-screen control should offer cancel whenever connect is active or
+  /// the session is not fully idle on the welcome screen.
+  bool get canCancelConnect =>
+      isConnecting ||
+      session.connectionState == sdk.ConnectionState.connected ||
+      session.connectionState == sdk.ConnectionState.reconnecting;
 
   AppCtrl() {
     final format = DateFormat('HH:mm:ss');
@@ -134,9 +147,18 @@ class AppCtrl extends ChangeNotifier {
     notifyListeners();
   }
 
-  void connect() async {
+  Future<void> connect() async {
     if (isSessionStarting) {
       _logger.fine('Connection attempt ignored: session already starting.');
+      return;
+    }
+
+    // Resume UI if media session is already live.
+    if (session.connectionState == sdk.ConnectionState.connected ||
+        session.connectionState == sdk.ConnectionState.reconnecting) {
+      _logger.info('Session already ${session.connectionState}; showing agent screen.');
+      appScreenState = AppScreenState.agent;
+      notifyListeners();
       return;
     }
 
@@ -145,15 +167,24 @@ class AppCtrl extends ChangeNotifier {
     notifyListeners();
 
     try {
-      await session.start();
-      if (session.connectionState == sdk.ConnectionState.connected) {
+      await session.start().timeout(connectTimeout);
+      if (session.connectionState == sdk.ConnectionState.connected ||
+          session.connectionState == sdk.ConnectionState.reconnecting) {
         appScreenState = AppScreenState.agent;
         notifyListeners();
+      } else {
+        _logger.warning(
+          'Session start finished without a ready connection '
+          '(state=${session.connectionState}). Resetting.',
+        );
+        await _resetToWelcome();
       }
+    } on TimeoutException catch (error, stackTrace) {
+      _logger.severe('Connection timed out after $connectTimeout', error, stackTrace);
+      await _resetToWelcome();
     } catch (error, stackTrace) {
       _logger.severe('Connection error: $error', error, stackTrace);
-      appScreenState = AppScreenState.welcome;
-      notifyListeners();
+      await _resetToWelcome();
     } finally {
       if (isSessionStarting) {
         isSessionStarting = false;
@@ -162,8 +193,28 @@ class AppCtrl extends ChangeNotifier {
     }
   }
 
+  /// Cancel an in-flight connect or force-return to a clean welcome state.
+  Future<void> cancelConnect() => disconnect();
+
   Future<void> disconnect() async {
-    await session.end();
+    _logger.info('Disconnecting session…');
+    isSessionStarting = false;
+    await _resetToWelcome();
+  }
+
+  Future<void> _resetToWelcome() async {
+    try {
+      await session.end().timeout(endTimeout);
+    } catch (error, stackTrace) {
+      _logger.warning('session.end during reset: $error', error, stackTrace);
+    }
+
+    try {
+      session.dismissError();
+    } catch (error, stackTrace) {
+      _logger.fine('dismissError during reset: $error', error, stackTrace);
+    }
+
     session.restoreMessageHistory(const []);
     appScreenState = AppScreenState.welcome;
     agentScreenState = AgentScreenState.visualizer;
@@ -176,6 +227,7 @@ class AppCtrl extends ChangeNotifier {
     switch (state) {
       case sdk.ConnectionState.connected:
       case sdk.ConnectionState.reconnecting:
+        // Keep agent UI visible across LiveKit automatic reconnect attempts.
         nextScreen = AppScreenState.agent;
         break;
       case sdk.ConnectionState.disconnected:
@@ -186,8 +238,19 @@ class AppCtrl extends ChangeNotifier {
         break;
     }
 
+    var shouldNotify = false;
     if (nextScreen != null && nextScreen != appScreenState) {
       appScreenState = nextScreen;
+      shouldNotify = true;
+    }
+
+    // Ensure welcome never stays locked after a remote disconnect.
+    if (state == sdk.ConnectionState.disconnected && isSessionStarting) {
+      isSessionStarting = false;
+      shouldNotify = true;
+    }
+
+    if (shouldNotify) {
       notifyListeners();
     }
   }
