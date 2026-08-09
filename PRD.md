@@ -1,6 +1,6 @@
 # SaNa — Product Requirements Document (PRD)
 
-**Status:** Phase 3 COMPLETE — Technical Voice Proof accepted on physical Android; Phase 4 not started
+**Status:** Phase 4 COMPLETE — unified voice+text session timeline on Flutter starter UI; Phase 5 next
 **Product:** SaNa
 **Document version:** 0.4.0
 **Date:** 2026-08-09
@@ -2657,15 +2657,25 @@ Completed:
 
 This completes the **Technical Voice Proof**. It is **not** the completed Product MVP.
 
-### Phase 4 — Unified text and voice conversation
+### Phase 4 — Unified text and voice conversation  ← **COMPLETE**
 
-- Typed and spoken messages use the same LiveKit / SaNa session context
-- One message timeline
-- Partial / final transcript handling
-- Message identifiers / idempotency architecture
-- Conversation sheet experience
+Phase 4 unifies typed and spoken turns in the active LiveKit session timeline. **Status: COMPLETE (2026-08-09).** Founder validated on physical Android: voice + typed turns share one session timeline (starter UI; no orb yet). PostgreSQL / Conversation Service persistence remains Phase 7.
 
-**Acceptance:** User can alternate voice and text in one session timeline without context loss; partials are not treated as durable finals.
+Implemented in `mobile/`:
+
+- Typed and spoken messages use the same LiveKit session context (`Session.sendText` + transcripts)
+- One session-scoped timeline (`ConversationTimeline`) keyed by message/segment id
+- Partial vs final handling in UI (streaming shows `…` / listening; idle or superseded turns finalize)
+- Client send ids tracked for idempotent typed upserts
+- Conversation sheet experience (auto-open transcript when timeline has turns; Voice/Typed labels)
+
+Still deferred to later phases:
+
+- Authoritative PostgreSQL persistence / Conversation Service (Phase 7)
+- FastAPI text path when voice is inactive (Phase 9+)
+- Full SaNa branded conversation chrome (Phase 5)
+
+**Acceptance (met):** User can alternate voice and text in one session timeline without context loss; partials are not treated as durable finals.
 
 ### Phase 5 — SaNa branded mobile interface
 
@@ -2948,7 +2958,7 @@ Architecture product decisions in Section 56 remain approved. Before scaffolding
 | 15 | Adapt official LiveKit Flutter + Python starters as foundations | **APPROVED** (Python starter completed in Phase 1; Flutter starter completed in Phase 2) |
 | 16 | Proposed repo structure (`mobile/`, `voice_agent/`, `backend/`, …) | **APPROVED** (`voice_agent/` + `mobile/` present; `backend/` later) |
 
-Phases 1–3 are complete (Technical Voice Proof accepted). Phase 4 (unified text + voice conversation) is next.
+Phases 1–4 are complete (Technical Voice Proof + unified session timeline accepted). Phase 5 (SaNa branded mobile interface / orb) is next.
 
 ---
 
@@ -3029,12 +3039,13 @@ Examples:
 
 ## End of PRD
 
-**Current status:** PRD **v0.4.0** — Phases 1–3 **COMPLETE** (Technical Voice Proof accepted). Core product architecture/MVP scope remains approved. Phase 4 (unified text + voice conversation) is next.
+**Current status:** PRD **v0.4.0** — Phases 1–4 **COMPLETE**; Phase 5 next (SaNa branded UI / orb). Core product architecture/MVP scope remains approved.
 
-**Stop point:** Custom SaNa branded UI / orb polish remains deferred until after early conversation-model work unless the founder explicitly prioritizes UI.
+**Stop point:** Custom SaNa branded UI / orb is the next implementation phase when the founder prioritizes it.
 
 1. Phase 1 Python LiveKit voice-agent proof accepted (cloud clear audio; local Windows path monitored)
 2. Phase 2 Flutter LiveKit client foundation accepted (sandbox token ID; physical Android clear agent audio; no secrets in Flutter)
 3. Phase 3 Technical Voice Proof accepted on physical Android (connect/cancel hardening; starter UI retained)
-4. Product vision and SaNa scope unchanged
-5. Remaining open questions (production token endpoint timing, orb mapping, etc.)
+4. Phase 4 unified voice+text session timeline accepted on physical Android (starter UI; persistence still Phase 7)
+5. Product vision and SaNa scope unchanged
+6. Remaining open questions (production token endpoint timing, orb mapping, etc.)

@@ -8,6 +8,8 @@ import 'package:logging/logging.dart';
 import 'package:uuid/uuid.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
+import 'conversation_timeline.dart';
+
 final String homepageAgentTokenEndpoint = 'https://livekit.com/api/homepage-agent/token';
 
 enum AppScreenState { welcome, agent }
@@ -34,6 +36,7 @@ class AppCtrl extends ChangeNotifier {
   late final sdk.Room room = sdk.Room(roomOptions: const sdk.RoomOptions(enableVisualizer: true));
   late final roomContext = components.RoomContext(room: room);
   late final sdk.Session session = _createSession(room: room);
+  late final ConversationTimeline conversationTimeline = ConversationTimeline(session);
 
   static sdk.Session _createSession({required sdk.Room room}) {
     // Development-only hardcoded credentials (optional).
@@ -99,12 +102,15 @@ class AppCtrl extends ChangeNotifier {
     });
 
     session.addListener(_handleSessionChange);
+    conversationTimeline.addListener(_handleTimelineChange);
   }
 
   Future<void> cleanUp() async {
     if (_hasCleanedUp) return;
     _hasCleanedUp = true;
 
+    conversationTimeline.removeListener(_handleTimelineChange);
+    conversationTimeline.dispose();
     session.removeListener(_handleSessionChange);
     await session.dispose();
     await room.dispose();
@@ -119,15 +125,26 @@ class AppCtrl extends ChangeNotifier {
     super.dispose();
   }
 
-  void sendMessage() async {
+  Future<void> sendMessage() async {
     isSendButtonEnabled = false;
 
-    final text = messageCtrl.text;
+    final text = messageCtrl.text.trim();
     messageCtrl.clear();
     notifyListeners();
 
     if (text.isEmpty) return;
-    await session.sendText(text);
+
+    // Prefer transcript sheet when the user is actively chatting by text.
+    if (agentScreenState != AgentScreenState.transcription) {
+      agentScreenState = AgentScreenState.transcription;
+      notifyListeners();
+    }
+
+    final sent = await session.sendText(text);
+    if (sent != null) {
+      // Same session timeline as voice; id is the client idempotency key.
+      conversationTimeline.trackClientSend(sent);
+    }
   }
 
   void toggleUserCamera(components.MediaDeviceContext? deviceCtx) {
@@ -216,9 +233,20 @@ class AppCtrl extends ChangeNotifier {
     }
 
     session.restoreMessageHistory(const []);
+    conversationTimeline.clear();
     appScreenState = AppScreenState.welcome;
     agentScreenState = AgentScreenState.visualizer;
     notifyListeners();
+  }
+
+  void _handleTimelineChange() {
+    // Reveal the conversation sheet once the unified timeline has content.
+    if (conversationTimeline.hasTurns &&
+        appScreenState == AppScreenState.agent &&
+        agentScreenState != AgentScreenState.transcription) {
+      agentScreenState = AgentScreenState.transcription;
+      notifyListeners();
+    }
   }
 
   void _handleSessionChange() {
