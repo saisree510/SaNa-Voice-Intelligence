@@ -1,6 +1,6 @@
 # SaNa — Product Requirements Document (PRD)
 
-**Status:** Phase 1 COMPLETE — LiveKit Python voice-agent proof accepted; Phase 2 not started
+**Status:** Phase 2 COMPLETE — Flutter LiveKit client connected to cloud `voice_agent`; Phase 3 not started
 **Product:** SaNa
 **Document version:** 0.4.0
 **Date:** 2026-08-09
@@ -12,6 +12,7 @@
 |---|---|---|
 | 0.3.0 | 2026-08-08 | Architecture/MVP decisions approved; text-first then voice phase order |
 | **0.4.0** | **2026-08-09** | **LiveKit-first implementation reset: official LiveKit starters/patterns prioritized; voice vertical slice before custom UI polish; first Flutter/UI prototype archived on `SaiSree_development`; core SaNa product scope unchanged** |
+| 0.4.0 (Phase 2 note) | 2026-08-09 | Phase 2 Flutter client foundation accepted: `mobile/` starter connected via LiveKit Cloud sandbox token ID; physical Android voice validated; custom SaNa UI still deferred |
 
 ### v0.4.0 revision summary
 
@@ -1562,7 +1563,7 @@ Flutter / Agent ──▶ SaNa Backend (backend/ — FastAPI)
 - LiveKit Cloud development / sandbox token mechanisms may be used where **officially supported**.
 - Credentials remain local and ignored by Git.
 - Sandbox / development token mechanisms are **development-only**.
-- Exact first-connection token mechanism: **TBD / Requires verification** (Open Question).
+- Exact first-connection token mechanism: **Resolved for Phase 2** — LiveKit Cloud sandbox token server ID (`SandboxTokenSource` / `LIVEKIT_SANDBOX_ID`); production FastAPI tokens remain later.
 
 #### Production
 
@@ -2402,7 +2403,7 @@ If local STT/LLM/TTS cannot meet conversational feel, use hybrid hosted componen
 | OpenRouter account | Later / optional for first proof | Optional if fully local | Account exists (per user); key config needs care; not required if starter defaults suffice for Phase 1 | provider/models test | — | API key local only | Free models available | Paid models/rate limits |
 | Ollama | Optional later | Recommended for local | **Not installed**; not required for first LiveKit proof | ollama version | `ollama --version` | No | Yes | Hardware |
 | LiveKit CLI + Cloud project | Yes (Phase 0–1) | Yes | **CLI installed; Cloud auth complete; project `sana` linked and default** — credentials outside repo | `lk` project/status (no secrets in docs) | read-only `lk docs …` | Cloud keys local only | Verify usage/charges before hosted inference | Usage |
-| LiveKit Flutter SDK | Phase 2 | Yes | Not in project yet | pubspec dependency after scaffolding | — | No | Yes | No |
+| LiveKit Flutter SDK | Phase 2 | Yes | **Phase 2 complete:** official starter under `mobile/` with LiveKit client/session patterns | pubspec dependency present | `flutter pub get` | No | Yes | No |
 | LiveKit Agents | Phase 1 | Yes | **Phase 1 complete:** official starter under `voice_agent/` with `uv` + Python 3.13; secrets/`.venv` ignored | project present | LiveKit CLI starter | Possibly provider keys | OSS free | Hosted inference may incur charges |
 | Microphone permissions | Later | Yes | OS/app permission at runtime | Emulator/device mic tests | — | No | Yes | No |
 | Supabase | Phase 6 | Yes | **Approved for MVP auth + PostgreSQL**; implementation begins in Phase 6; project not created yet | project dashboard | — | Yes | Free tier | Maybe |
@@ -2433,7 +2434,7 @@ If local STT/LLM/TTS cannot meet conversational feel, use hybrid hosted componen
 - [x] Cloud project `sana` linked and set as default
 - [x] Confirm API key/secret/CLI config are **not** written into PRD or Git
 - [x] Hosted inference used for Phase 1 proof (monitor Cloud usage going forward)
-- [ ] Confirm first Flutter development token mechanism when Phase 2 begins (**TBD / Requires verification**)
+- [x] Confirm first Flutter development token mechanism when Phase 2 begins — **Resolved:** LiveKit Cloud sandbox token server ID via `LIVEKIT_SANDBOX_ID` in Git-ignored `mobile/assets/.env` (`SandboxTokenSource`); no API secret in Flutter
 
 **Mobile toolchain**
 
@@ -2581,22 +2582,39 @@ Completed:
 
 > Local Windows agent execution produced choppy audio and intermittent room-connect behavior; the unchanged cloud deployment produced clear audio and reliable interruption. Treat this as a local Windows development-path issue and monitor it during later testing.
 
-### Phase 2 — Flutter LiveKit client foundation  ← **not started**
+### Phase 2 — Flutter LiveKit client foundation  ← **COMPLETE**
 
-- Scaffold / adapt official `agent-starter-flutter`
-- Place it under `mobile/`
-- Preserve relevant official session / media / transcript patterns
-- **Connect the Flutter LiveKit starter/client to the already verified Python agent** before building the complete custom SaNa interface
-- Confirm Android microphone permissions
-- Confirm audio input / output
-- Confirm text input
-- Confirm visible transcript
-- Confirm connection / reconnection states
-- Use the starter UI temporarily
-- Do **not** polish the final SaNa orb or complete branded SaNa interface yet
-- Introduce a **minimal secure LiveKit token endpoint** earlier only if the Flutter connection requires it; broader FastAPI backend remains Phase 9
+Phase 2 connects the official Flutter LiveKit starter to the already verified Phase 1 cloud agent. **Status: COMPLETE (2026-08-09).**
 
-**Acceptance:** Flutter client connects to the already verified SaNa Python agent; mic/audio/text/transcript/connection states demonstrated; no secrets in the app; nested starter `.git` not retained; custom SaNa UI still deferred.
+Completed:
+
+- Scaffolded official `agent-starter-flutter` **directly into `mobile/`**
+- Nested starter `.git` not retained; **parent repository retained**
+- Preserved official session / media / transcript starter patterns
+- Connected Flutter to the verified cloud agent via `Session.withAgent('voice_agent', …)` and `SandboxTokenSource`
+- Development token path: LiveKit Cloud **sandbox token server ID** in Git-ignored `mobile/assets/.env` as `LIVEKIT_SANDBOX_ID` (no LiveKit API key/secret in Flutter)
+- Confirmed Android microphone permissions
+- Confirmed audio input / output on a **physical Android device** (clear agent TTS)
+- Confirmed text input, visible transcript, and connection flow using the temporary starter UI
+- `flutter analyze` clean; starter tests passed
+- Android build path fixed for this machine (Temurin JDK 17 + Gradle wrapper bump); no custom SaNa UI work
+
+**Out of scope for Phase 2 (unchanged / deferred):**
+
+- Final SaNa branded UI / orb polish (later phases)
+- Minimal secure FastAPI LiveKit token endpoint (only when sandbox/dev tokens are no longer enough; broader backend remains Phase 9)
+- Full reconnect/error hardening and latency documentation (Phase 3)
+
+**Acceptance (met):**
+
+- Flutter client connects to the already verified SaNa Python / cloud agent (`voice_agent`)
+- Mic / audio / text / transcript / connection states demonstrated on physical Android
+- No secrets in the app; `assets/.env` Git-ignored
+- Nested starter `.git` not retained; custom SaNa UI still deferred
+
+**Known development issue (monitor in Phase 3):**
+
+> Android emulator WebRTC/mic path can be flaky (negotiation errors, stuck CONNECTING UI, weak host-mic routing). Physical Android device produced clear agent audio and is the required voice-validation path.
 
 ### Phase 3 — End-to-end realtime voice vertical slice
 
@@ -2856,11 +2874,11 @@ Architecture product decisions in Section 56 remain approved. Before scaffolding
 
 1. ~~Which officially supported initial STT/LLM/TTS combination should be used for the first LiveKit proof?~~ **Temporary decision:** use official LiveKit starter defaults for the first technical proof. Final provider selection and cost optimization remain open until the proof succeeds.
 2. What free credits/allowances and potential LiveKit Cloud / hosted-inference charges apply? Verify before running hosted inference. — **TBD / Requires verification**
-3. Should the first Flutter client be generated directly into `mobile/` or generated temporarily and then incorporated? — **TBD / Requires verification**
+3. ~~Should the first Flutter client be generated directly into `mobile/` or generated temporarily and then incorporated?~~ **Resolved:** scaffolded directly into `mobile/`; nested starter `.git` not retained; parent repo retained.
 4. ~~Should the Python starter be initialized directly into `voice_agent/` or generated temporarily and inspected first?~~ **Resolved:** scaffolded directly into `voice_agent/`; nested starter `.git` removed; parent repo retained.
 5. ~~Does the current LiveKit CLI support target-directory scaffolding without creating nested Git metadata?~~ **Resolved:** `lk agent init voice_agent --template agent-starter-python` creates `voice_agent/` and initially retained nested `.git` (removed before sync/commit).
-6. Which token mechanism should be used for the first Flutter development connection (Phase 2)? — **TBD / Requires verification**
-7. When should the minimal secure FastAPI LiveKit token endpoint be introduced (only when Flutter connection requires it) vs remaining on sandbox/dev tokens? — **TBD / Requires verification**
+6. ~~Which token mechanism should be used for the first Flutter development connection (Phase 2)?~~ **Resolved:** LiveKit Cloud sandbox token server ID via Git-ignored `LIVEKIT_SANDBOX_ID` + `SandboxTokenSource`; agent name `voice_agent`.
+7. When should the minimal secure FastAPI LiveKit token endpoint be introduced (only when Flutter connection requires it) vs remaining on sandbox/dev tokens? — **TBD / Requires verification** (sandbox sufficient for Phase 2; revisit for production / Phase 9 path)
 8. How will LiveKit session state map to the SaNa orb using the current Flutter/LiveKit APIs? — **TBD / Requires verification** (Phase 5 concern)
 9. Which parts of the archived first prototype (`SaiSree_development`) should later be selectively reused, if any? — **TBD / Requires verification**
 10. ~~Confirm `uv` is installed and Python **3.13** is used for the `voice_agent/` project env before Phase 1 scaffolding.~~ **Resolved:** `uv` installed; `voice_agent/` pinned to Python 3.13 and synced.
@@ -2882,6 +2900,8 @@ Architecture product decisions in Section 56 remain approved. Before scaffolding
 - Workspace outside OneDrive: `C:\Users\saisr\Projects\SANA-LiveKit`
 - Phase 1 Python LiveKit voice-agent proof **COMPLETE** (cloud audio clear; local Windows path has known audio/connect issues — monitor later)
 - `voice_agent/livekit.toml` is safe deployment metadata (subdomain + agent id) and is tracked; no secrets
+- Phase 2 Flutter LiveKit client foundation **COMPLETE** (`mobile/` starter; sandbox token ID; physical Android voice validated; no secrets in Flutter)
+- Exact sandbox token server URL is environment-specific and must not be treated as a committed secret; only the local ignored `LIVEKIT_SANDBOX_ID` is used by the app
 
 ---
 
@@ -2903,10 +2923,10 @@ Architecture product decisions in Section 56 remain approved. Before scaffolding
 | 12 | Git/GitHub: use existing repository; no new repo; no secret commits | **APPROVED** |
 | 13 | Visual identity: dark near-black/deep-navy + muted-lavender orb (refinable) | **APPROVED** |
 | 14 | LiveKit-first implementation order (voice vertical slice before UI polish) | **APPROVED** |
-| 15 | Adapt official LiveKit Flutter + Python starters as foundations | **APPROVED** (Python starter completed in Phase 1; Flutter starter is Phase 2) |
-| 16 | Proposed repo structure (`mobile/`, `voice_agent/`, `backend/`, …) | **APPROVED** (`voice_agent/` present; `mobile/` / `backend/` later) |
+| 15 | Adapt official LiveKit Flutter + Python starters as foundations | **APPROVED** (Python starter completed in Phase 1; Flutter starter completed in Phase 2) |
+| 16 | Proposed repo structure (`mobile/`, `voice_agent/`, `backend/`, …) | **APPROVED** (`voice_agent/` + `mobile/` present; `backend/` later) |
 
-Phase 1 is complete. Phase 2 (Flutter LiveKit client) requires explicit founder go-ahead before scaffolding.
+Phase 1 and Phase 2 are complete. Phase 3 (end-to-end realtime voice vertical-slice stabilization) is next.
 
 ---
 
@@ -2987,10 +3007,11 @@ Examples:
 
 ## End of PRD
 
-**Current status:** PRD **v0.4.0** — Phase 1 **COMPLETE**. Core product architecture/MVP scope remains approved. Phase 2 (Flutter LiveKit client) is **not started**.
+**Current status:** PRD **v0.4.0** — Phase 1 and Phase 2 **COMPLETE**. Core product architecture/MVP scope remains approved. Phase 3 (voice vertical-slice stabilization) is next.
 
-**Stop point:** Do **not** begin Phase 2 / Flutter scaffolding until the founder explicitly authorizes it.
+**Stop point:** Do **not** begin custom SaNa branded UI / orb polish until the Technical Voice Proof (through Phase 3) is accepted.
 
 1. Phase 1 Python LiveKit voice-agent proof accepted (cloud clear audio; local Windows path monitored)
-2. Product vision and SaNa scope unchanged
-3. Remaining Phase 2+ open questions (Flutter token mechanism, orb mapping, etc.)
+2. Phase 2 Flutter LiveKit client foundation accepted (sandbox token ID; physical Android clear agent audio; no secrets in Flutter)
+3. Product vision and SaNa scope unchanged
+4. Remaining open questions (production token endpoint timing, orb mapping, etc.)
