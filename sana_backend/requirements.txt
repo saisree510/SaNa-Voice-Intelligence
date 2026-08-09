@@ -1,0 +1,33 @@
+# FastAPI server: voice tokens (existing) + auth, chat, conversations (new).
+fastapi>=0.115
+uvicorn[standard]>=0.32
+pydantic>=2.9
+pydantic-settings>=2.6
+email-validator>=2.2  # required for pydantic's EmailStr
+python-dotenv>=1.0
+livekit-api>=1.0
+
+# Voice agent worker: joins the LiveKit room as SANA and runs the
+# STT -> LLM -> TTS pipeline via LiveKit Inference. Run as a separate
+# process from the FastAPI server (see README.md). Also used directly
+# (outside a voice session) as the default real AI provider for text
+# chat — see app/services/ai_service.py.
+livekit-agents>=1.6.1
+
+# Database
+sqlalchemy>=2.0
+psycopg2-binary>=2.9  # PostgreSQL driver (production/real DATABASE_URL)
+
+# Auth
+# (passlib was tried first but is unmaintained and broken against
+# modern bcrypt — confirmed by testing: "password cannot be longer
+# than 72 bytes" / AttributeError on bcrypt.__about__. Using bcrypt
+# directly instead.)
+bcrypt>=4.0
+pyjwt>=2.9
+
+# Testing
+pytest>=8.3
+pytest-asyncio>=0.24
+httpx>=0.27  # FastAPI's TestClient dependency
+httpx2>=2.9  # starlette.testclient's newer backend — avoids a deprecation warning
