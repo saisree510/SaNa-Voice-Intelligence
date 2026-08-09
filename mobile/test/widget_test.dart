@@ -20,8 +20,13 @@ void main() {
       },
     );
 
-    // Build our app and trigger a frame.
+    await tester.binding.setSurfaceSize(const Size(400, 900));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
     await tester.pumpWidget(const VoiceAssistantApp());
+    await tester.pump();
+    expect(find.text('Sana'), findsOneWidget);
+
     // Dispose resources started by the global controller to avoid pending timers.
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.runAsync(() async {

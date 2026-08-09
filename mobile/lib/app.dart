@@ -4,8 +4,8 @@ import 'package:provider/provider.dart';
 
 import 'controllers/app_ctrl.dart';
 import 'screens/agent_screen.dart';
-import 'screens/welcome_screen.dart';
-import 'ui/color_pallette.dart' show LKColorPaletteLight, LKColorPaletteDark;
+import 'screens/home_shell.dart';
+import 'ui/sana_theme.dart';
 import 'widgets/app_layout_switcher.dart';
 import 'widgets/session_error_banner.dart';
 
@@ -13,49 +13,6 @@ final appCtrl = AppCtrl();
 
 class VoiceAssistantApp extends StatelessWidget {
   const VoiceAssistantApp({super.key});
-
-  ThemeData buildTheme({required bool isLight}) {
-    final colorPallete = isLight ? LKColorPaletteLight() : LKColorPaletteDark();
-
-    return ThemeData(
-      useMaterial3: true,
-      cardColor: colorPallete.bg2,
-      scaffoldBackgroundColor: colorPallete.bg1,
-      canvasColor: colorPallete.bg1,
-      inputDecorationTheme: InputDecorationTheme(
-        fillColor: colorPallete.bg2,
-        hintStyle: TextStyle(
-          color: colorPallete.fg4,
-          fontSize: 14,
-        ),
-      ),
-      buttonTheme: ButtonThemeData(
-        disabledColor: Colors.red,
-        colorScheme: ColorScheme.dark(
-          primary: Colors.white,
-          secondary: Colors.white,
-          surface: colorPallete.fgAccent,
-        ),
-      ),
-      colorScheme: isLight
-          ? const ColorScheme.light(
-              primary: Colors.black,
-              secondary: Colors.black,
-              surface: Colors.white,
-            )
-          : const ColorScheme.dark(
-              primary: Colors.white,
-              secondary: Colors.white,
-              surface: Colors.black,
-            ),
-      textTheme: const TextTheme(
-        bodyMedium: TextStyle(
-          fontSize: 17,
-          fontWeight: FontWeight.w400,
-        ),
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext ctx) => MultiProvider(
@@ -68,22 +25,20 @@ class VoiceAssistantApp extends StatelessWidget {
         child: components.SessionContext(
           session: appCtrl.session,
           child: MaterialApp(
-            title: 'Voice Assistant',
-            theme: buildTheme(isLight: true),
-            darkTheme: buildTheme(isLight: false),
-            // Force light theme during Phase 3 voice validation so call UI
-            // controls remain visible on OLED phones in system dark mode.
-            themeMode: ThemeMode.light,
+            title: 'Sana',
+            theme: buildSanaTheme(),
+            darkTheme: buildSanaTheme(),
+            themeMode: ThemeMode.dark,
             home: Builder(
               builder: (ctx) => Center(
                 child: Container(
-                  constraints: BoxConstraints(maxWidth: 620),
+                  constraints: const BoxConstraints(maxWidth: 620),
                   child: Stack(
                     children: [
                       Selector<AppCtrl, AppScreenState>(
                         selector: (ctx, appCtx) => appCtx.appScreenState,
                         builder: (ctx, screen, _) => AppLayoutSwitcher(
-                          frontBuilder: (ctx) => const WelcomeScreen(),
+                          frontBuilder: (ctx) => const HomeShell(),
                           backBuilder: (ctx) => const AgentScreen(),
                           isFront: screen == AppScreenState.welcome,
                         ),

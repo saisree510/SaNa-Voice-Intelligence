@@ -129,15 +129,19 @@ class AgentLayoutSwitcher extends StatelessWidget {
 
         return Stack(
           children: [
-            Positioned.fill(
-              child: Padding(
-                padding: EdgeInsets.only(
-                  top: singleCellHeight + topPadding,
-                  bottom: 110,
+            // Keep conversation off-screen until the user opens chat.
+            // Building it only when visible avoids overlay + keyboard overflow
+            // on the full-screen orb call view.
+            if (layoutState.isTranscriptionVisible)
+              Positioned.fill(
+                child: Padding(
+                  padding: EdgeInsets.only(
+                    top: singleCellHeight + topPadding,
+                    bottom: 110,
+                  ),
+                  child: transcriptionsBuilder(context),
                 ),
-                child: transcriptionsBuilder(context),
               ),
-            ),
             // Overlay for transcriptions
             Positioned.fill(
               child: IgnorePointer(

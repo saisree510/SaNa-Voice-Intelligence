@@ -1,6 +1,6 @@
 # SaNa — Product Requirements Document (PRD)
 
-**Status:** Phase 4 COMPLETE — unified voice+text session timeline on Flutter starter UI; Phase 5 next
+**Status:** Phase 5 COMPLETE — Sana branded UI (black + muted-lavender orb, mode/nav shells); Phase 6 next
 **Product:** SaNa
 **Document version:** 0.4.0
 **Date:** 2026-08-09
@@ -2677,21 +2677,27 @@ Still deferred to later phases:
 
 **Acceptance (met):** User can alternate voice and text in one session timeline without context loss; partials are not treated as durable finals.
 
-### Phase 5 — SaNa branded mobile interface
+### Phase 5 — Sana branded mobile interface  ← **COMPLETE**
 
-Replace the temporary starter UI with the approved SaNa experience:
+Replace the temporary starter UI with the approved Sana experience. **Status: COMPLETE (2026-08-09).** Founder direction applied: black (not navy) canvas, display name **Sana**, conversation sheet opens only from the chat control.
 
-- Muted-lavender orb
-- Orb driven by real agent / session states
-- Personalized greeting placeholder
-- Mode controls
-- Conversation reveal
-- Minimal navigation (History / Projects / Profile shells as appropriate)
-- Responsive Android layouts
-- Accessibility
-- Physical-device testing
+Implemented in `mobile/`:
 
-**Acceptance:** Branded UI replaces starter visuals without breaking the proven voice vertical slice. Simple earlier state visualizer may remain until orb mapping is verified.
+- Black + muted-lavender theme tokens (`sana_theme.dart`)
+- Organic animated Sana orb with LiveKit session / `lk.agent.state` mapping (`SanaOrb` / `resolveSanaOrbState`)
+- Home shell: Sana brand, greeting placeholder (“Hey Sai, what are we planning to do today?”)
+- Mode chips (General live; Debate / Brainstorm / Build shells)
+- Minimal nav shells (Home / History / Projects / Profile)
+- Call UI uses full-screen orb; chat/transcript opens only via chat icon (not auto on speech)
+- App label renamed to Sana
+
+Deferred (not Phase 5 blockers):
+
+- Sign-in + first-run name onboarding (Phase 6)
+- Orb visual redesign if founder wants a cooler look later
+- Debate / Brainstorm / Build behavior (Phase 8)
+
+**Acceptance (met):** Branded UI replaces starter visuals without breaking the proven voice vertical slice.
 
 ### Phase 6 — Supabase authentication and onboarding
 
@@ -2958,7 +2964,7 @@ Architecture product decisions in Section 56 remain approved. Before scaffolding
 | 15 | Adapt official LiveKit Flutter + Python starters as foundations | **APPROVED** (Python starter completed in Phase 1; Flutter starter completed in Phase 2) |
 | 16 | Proposed repo structure (`mobile/`, `voice_agent/`, `backend/`, …) | **APPROVED** (`voice_agent/` + `mobile/` present; `backend/` later) |
 
-Phases 1–4 are complete (Technical Voice Proof + unified session timeline accepted). Phase 5 (SaNa branded mobile interface / orb) is next.
+Phases 1–5 are complete (Technical Voice Proof + unified timeline + Sana branded UI). Phase 6 (auth + onboarding) is next.
 
 ---
 
@@ -3039,13 +3045,14 @@ Examples:
 
 ## End of PRD
 
-**Current status:** PRD **v0.4.0** — Phases 1–4 **COMPLETE**; Phase 5 next (SaNa branded UI / orb). Core product architecture/MVP scope remains approved.
+**Current status:** PRD **v0.4.0** — Phases 1–5 **COMPLETE**; Phase 6 next (Supabase auth + onboarding). Core product architecture/MVP scope remains approved.
 
-**Stop point:** Custom SaNa branded UI / orb is the next implementation phase when the founder prioritizes it.
+**Stop point:** Phase 6 sign-in / first-run name capture before persistence and real modes.
 
 1. Phase 1 Python LiveKit voice-agent proof accepted (cloud clear audio; local Windows path monitored)
 2. Phase 2 Flutter LiveKit client foundation accepted (sandbox token ID; physical Android clear agent audio; no secrets in Flutter)
 3. Phase 3 Technical Voice Proof accepted on physical Android (connect/cancel hardening; starter UI retained)
-4. Phase 4 unified voice+text session timeline accepted on physical Android (starter UI; persistence still Phase 7)
-5. Product vision and SaNa scope unchanged
-6. Remaining open questions (production token endpoint timing, orb mapping, etc.)
+4. Phase 4 unified voice+text session timeline accepted on physical Android
+5. Phase 5 Sana branded UI accepted (black + lavender orb; chat via icon only; name onboarding still Phase 6)
+6. Product vision and Sana scope unchanged
+7. Remaining open questions (production token endpoint timing, orb visual redesign, etc.)

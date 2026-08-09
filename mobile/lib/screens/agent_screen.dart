@@ -8,14 +8,18 @@ import 'package:provider/provider.dart';
 import '../controllers/app_ctrl.dart';
 import '../controllers/conversation_timeline.dart';
 import '../support/agent_selector.dart';
+import '../ui/sana_theme.dart';
 import '../widgets/agent_layout_switcher.dart';
-import '../widgets/agent_status_indicator.dart';
 import '../widgets/camera_toggle_button.dart';
 import '../widgets/conversation_sheet.dart';
 import '../widgets/message_bar.dart';
+import '../widgets/sana_orb_view.dart';
 
 class AgentTrackView extends StatelessWidget {
-  const AgentTrackView({super.key});
+  const AgentTrackView({super.key, this.compact = false});
+
+  /// Smaller orb when conversation sheet is open (avoids layout overflow).
+  final bool compact;
 
   @override
   Widget build(BuildContext context) => AgentParticipantSelector(
@@ -30,32 +34,26 @@ class AgentTrackView extends StatelessWidget {
             value:
                 agentParticipant == null ? null : components.TrackReferenceContext(agentParticipant, pub: mediaTrack),
             child: Builder(
-              builder: (ctx) => Container(
-                // color: Colors.red,
-                padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 50),
-                alignment: Alignment.center,
-                child: Container(
-                  // color: Colors.blue,
-                  constraints: const BoxConstraints(maxHeight: 350),
-                  child: Builder(builder: (ctx) {
-                    final trackReferenceContext = ctx.watch<components.TrackReferenceContext?>();
-                    // Switch according to video or audio
+              builder: (ctx) => LayoutBuilder(
+                builder: (ctx, constraints) {
+                  final trackReferenceContext = ctx.watch<components.TrackReferenceContext?>();
 
-                    if (trackReferenceContext?.isVideo ?? false) {
-                      return const components.VideoTrackWidget();
-                    }
+                  if (trackReferenceContext?.isVideo ?? false) {
+                    return const components.VideoTrackWidget();
+                  }
 
-                    return const components.AudioVisualizerWidget(
-                      options: components.AudioVisualizerWidgetOptions(
-                        barCount: 5,
-                        width: 32,
-                        minHeight: 32,
-                        maxHeight: 320,
-                        // color: Theme.of(ctx).colorScheme.primary,
-                      ),
-                    );
-                  }),
-                ),
+                  final maxSide = constraints.biggest.shortestSide;
+                  final orbSize = compact
+                      ? (maxSide * 0.7).clamp(64.0, 120.0)
+                      : (maxSide * 0.55).clamp(160.0, 280.0);
+
+                  return Center(
+                    child: SanaOrbView(
+                      size: orbSize,
+                      showLabel: !compact,
+                    ),
+                  );
+                },
               ),
             ),
           ),
@@ -118,27 +116,16 @@ class AgentScreen extends StatelessWidget {
             isCameraVisible: appCtrl.isUserCameEnabled,
             isScreenshareVisible: appCtrl.isScreenshareEnabled,
           ),
-          builder: (ctx, agentLayoutState, child) => Stack(
-            children: [
-              _buildLayoutSwitcher(ctx, agentLayoutState),
-              // In transcription mode the chat placeholder shows the agent
-              // status instead.
-              if (!agentLayoutState.isTranscriptionVisible)
-                const Positioned(
-                  left: 0,
-                  right: 0,
-                  bottom: 110,
-                  child: Center(child: AgentStatusIndicator(hideWhenConnected: true)),
-                ),
-            ],
+          builder: (ctx, agentLayoutState, child) => ColoredBox(
+            color: SanaColors.nearBlack,
+            child: _buildLayoutSwitcher(ctx, agentLayoutState),
           ),
         ),
       );
 
   Widget _buildLayoutSwitcher(BuildContext ctx, AgentLayoutState agentLayoutState) => AgentLayoutSwitcher(
         layoutState: agentLayoutState,
-        // agentViewBuilder: (ctx) => AgentTrackView(),
-        buildAgentView: (ctx) => const AgentTrackView(),
+        buildAgentView: (ctx) => AgentTrackView(compact: agentLayoutState.isTranscriptionVisible),
         buildCameraView: (ctx) => Container(
           clipBehavior: Clip.hardEdge,
           decoration: BoxDecoration(
@@ -172,72 +159,60 @@ class AgentScreen extends StatelessWidget {
           ),
           child: const Text('Screenshare View'),
         ),
-        transcriptionsBuilder: (ctx) => Column(
-          mainAxisSize: MainAxisSize.max,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Expanded(
-              child: GestureDetector(
-                onTap: () => ctx.read<AppCtrl>().messageFocusNode.unfocus(),
-                child: Consumer2<sdk.Session, ConversationTimeline>(
-                  builder: (context, session, timeline, _) {
-                    if (!timeline.hasTurns) {
-                      return _AgentStatusPlaceholder(isAgentConnected: session.agent.isConnected);
-                    }
-                    return ConversationSheet(turns: timeline.turns);
-                  },
+        transcriptionsBuilder: (ctx) {
+          final keyboardInset = MediaQuery.viewInsetsOf(ctx).bottom;
+          return Padding(
+            padding: EdgeInsets.only(bottom: keyboardInset > 0 ? max(0, keyboardInset - 90) : 0),
+            child: Column(
+              mainAxisSize: MainAxisSize.max,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () => ctx.read<AppCtrl>().messageFocusNode.unfocus(),
+                    child: Consumer<ConversationTimeline>(
+                      builder: (context, timeline, _) {
+                        if (!timeline.hasTurns) {
+                          return const _AgentStatusPlaceholder();
+                        }
+                        return ConversationSheet(turns: timeline.turns);
+                      },
+                    ),
+                  ),
                 ),
-              ),
-            ),
-            Padding(
-              padding: EdgeInsets.only(left: 16, right: 16, bottom: max(0, MediaQuery.of(ctx).viewInsets.bottom - 80)),
-              child: Selector<AppCtrl, bool>(
-                selector: (ctx, appCtx) => appCtx.isSendButtonEnabled,
-                builder: (ctx, isSendEnabled, child) => MessageBar(
-                  focusNode: ctx.read<AppCtrl>().messageFocusNode,
-                  isSendEnabled: isSendEnabled,
-                  controller: ctx.read<AppCtrl>().messageCtrl,
-                  onSendTap: () => ctx.read<AppCtrl>().sendMessage(),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                  child: Selector<AppCtrl, bool>(
+                    selector: (ctx, appCtx) => appCtx.isSendButtonEnabled,
+                    builder: (ctx, isSendEnabled, child) => MessageBar(
+                      focusNode: ctx.read<AppCtrl>().messageFocusNode,
+                      isSendEnabled: isSendEnabled,
+                      controller: ctx.read<AppCtrl>().messageCtrl,
+                      onSendTap: () => ctx.read<AppCtrl>().sendMessage(),
+                    ),
+                  ),
                 ),
-              ),
+              ],
             ),
-          ],
-        ),
+          );
+        },
       );
 }
 
 class _AgentStatusPlaceholder extends StatelessWidget {
-  const _AgentStatusPlaceholder({required this.isAgentConnected});
-
-  final bool isAgentConnected;
+  const _AgentStatusPlaceholder();
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-    final colorScheme = Theme.of(context).colorScheme;
     return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.graphic_eq, size: 32, color: colorScheme.primary.withValues(alpha: 0.7)),
-          const SizedBox(height: 12),
-          Text(
-            isAgentConnected ? 'Agent is listening' : 'Waiting for agent',
-            style: textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          if (isAgentConnected)
-            Padding(
-              padding: const EdgeInsets.only(top: 6),
-              child: Text(
-                'Start a conversation to see messages here.',
-                style: textTheme.bodySmall?.copyWith(color: colorScheme.outline),
-                textAlign: TextAlign.center,
-              ),
-            ),
-        ],
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24),
+        child: Text(
+          'Speak with Sana, or type below. Conversation appears here.',
+          style: textTheme.bodyMedium,
+          textAlign: TextAlign.center,
+        ),
       ),
     );
   }

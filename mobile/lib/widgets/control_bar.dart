@@ -5,7 +5,7 @@ import 'package:provider/provider.dart';
 
 import '../app.dart';
 import '../controllers/app_ctrl.dart' show AppCtrl, AgentScreenState;
-import '../ui/color_pallette.dart' show LKColorPaletteLight;
+import '../ui/sana_theme.dart';
 import 'floating_glass.dart';
 
 class ControlBar extends StatelessWidget {
@@ -85,7 +85,7 @@ class ControlBar extends StatelessWidget {
                 flex: 1,
                 fit: FlexFit.tight,
                 child: FloatingGlassButton(
-                  iconColor: LKColorPaletteLight().fgModerate,
+                  iconColor: SanaColors.danger,
                   sfIcon: sf.SFIcons.sf_phone_down_fill,
                   onTap: () => ctx.read<AppCtrl>().disconnect(),
                 ),

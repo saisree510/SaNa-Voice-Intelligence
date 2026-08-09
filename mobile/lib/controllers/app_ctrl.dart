@@ -16,19 +16,45 @@ enum AppScreenState { welcome, agent }
 
 enum AgentScreenState { visualizer, transcription }
 
+enum HomeTab { home, history, projects, profile }
+
+/// Product modes — only General is live in Phase 5; others are UI shells.
+enum ConversationMode {
+  general,
+  debate,
+  brainstorm,
+  build,
+}
+
+extension ConversationModeLabel on ConversationMode {
+  String get label => switch (this) {
+        ConversationMode.general => 'General',
+        ConversationMode.debate => 'Debate',
+        ConversationMode.brainstorm => 'Brainstorm',
+        ConversationMode.build => 'Build',
+      };
+}
+
 class AppCtrl extends ChangeNotifier {
   static const uuid = Uuid();
   static final _logger = Logger('AppCtrl');
   static const Duration connectTimeout = Duration(seconds: 45);
   static const Duration endTimeout = Duration(seconds: 12);
 
+  /// Placeholder until Phase 6 onboarding stores the real name.
+  static const String placeholderUserName = 'Sai';
+
   // States
   AppScreenState appScreenState = AppScreenState.welcome;
   AgentScreenState agentScreenState = AgentScreenState.visualizer;
+  HomeTab homeTab = HomeTab.home;
+  ConversationMode conversationMode = ConversationMode.general;
 
   //Test
   bool isUserCameEnabled = false;
   bool isScreenshareEnabled = false;
+
+  String get greetingLine => 'Hey $placeholderUserName, what are we planning to do today?';
 
   final messageCtrl = TextEditingController();
   final messageFocusNode = FocusNode();
@@ -102,14 +128,12 @@ class AppCtrl extends ChangeNotifier {
     });
 
     session.addListener(_handleSessionChange);
-    conversationTimeline.addListener(_handleTimelineChange);
   }
 
   Future<void> cleanUp() async {
     if (_hasCleanedUp) return;
     _hasCleanedUp = true;
 
-    conversationTimeline.removeListener(_handleTimelineChange);
     conversationTimeline.dispose();
     session.removeListener(_handleSessionChange);
     await session.dispose();
@@ -161,6 +185,23 @@ class AppCtrl extends ChangeNotifier {
   void toggleAgentScreenMode() {
     agentScreenState =
         agentScreenState == AgentScreenState.visualizer ? AgentScreenState.transcription : AgentScreenState.visualizer;
+    notifyListeners();
+  }
+
+  void setHomeTab(HomeTab tab) {
+    if (tab == homeTab) return;
+    homeTab = tab;
+    notifyListeners();
+  }
+
+  void setConversationMode(ConversationMode mode) {
+    // Phase 5: only General is active; other chips are shells.
+    if (mode != ConversationMode.general) {
+      _logger.info('Mode ${mode.label} is a shell until a later phase.');
+      return;
+    }
+    if (mode == conversationMode) return;
+    conversationMode = mode;
     notifyListeners();
   }
 
@@ -237,16 +278,6 @@ class AppCtrl extends ChangeNotifier {
     appScreenState = AppScreenState.welcome;
     agentScreenState = AgentScreenState.visualizer;
     notifyListeners();
-  }
-
-  void _handleTimelineChange() {
-    // Reveal the conversation sheet once the unified timeline has content.
-    if (conversationTimeline.hasTurns &&
-        appScreenState == AppScreenState.agent &&
-        agentScreenState != AgentScreenState.transcription) {
-      agentScreenState = AgentScreenState.transcription;
-      notifyListeners();
-    }
   }
 
   void _handleSessionChange() {
