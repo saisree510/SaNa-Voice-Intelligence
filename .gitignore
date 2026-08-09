@@ -36,6 +36,7 @@ build/
 .pub-cache/
 .pub/
 build/
+build_locked_*/
 coverage/
 *.iml
 .flutter-plugins-dependencies
