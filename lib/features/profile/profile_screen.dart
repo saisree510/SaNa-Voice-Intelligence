@@ -16,7 +16,12 @@ class ProfileScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Profile', style: Theme.of(context).textTheme.headlineMedium),
+              Text(
+                'Profile',
+                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                  color: SanaColors.textPrimary,
+                ),
+              ),
               const SizedBox(height: SanaSpacing.sm),
               Text(
                 'Account, assistant name, and settings arrive with authentication.',

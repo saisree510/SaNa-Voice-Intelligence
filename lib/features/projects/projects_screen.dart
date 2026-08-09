@@ -16,7 +16,12 @@ class ProjectsScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Projects', style: Theme.of(context).textTheme.headlineMedium),
+              Text(
+                'Projects',
+                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                  color: SanaColors.textPrimary,
+                ),
+              ),
               const SizedBox(height: SanaSpacing.sm),
               Text(
                 'Build projects will live here once Build Mode is connected.',

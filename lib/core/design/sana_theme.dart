@@ -8,15 +8,15 @@ abstract final class SanaTheme {
     final base = ThemeData(
       useMaterial3: true,
       brightness: Brightness.dark,
-      scaffoldBackgroundColor: SanaColors.deepNavy,
+      scaffoldBackgroundColor: SanaColors.background,
       colorScheme: const ColorScheme.dark(
-        surface: SanaColors.deepNavy,
-        primary: SanaColors.accentTeal,
-        secondary: SanaColors.accentCyan,
-        tertiary: SanaColors.accentIndigo,
+        surface: SanaColors.background,
+        primary: SanaColors.lavender,
+        secondary: SanaColors.lavenderLight,
+        tertiary: SanaColors.violetDeep,
         error: SanaColors.danger,
-        onPrimary: SanaColors.voidBlack,
-        onSecondary: SanaColors.voidBlack,
+        onPrimary: SanaColors.background,
+        onSecondary: SanaColors.background,
         onSurface: SanaColors.textPrimary,
       ),
     );
@@ -39,8 +39,13 @@ abstract final class SanaTheme {
           color: SanaColors.textPrimary,
           fontWeight: FontWeight.w600,
         ),
-        titleLarge: display.titleLarge?.copyWith(
+        headlineSmall: display.headlineSmall?.copyWith(
           color: SanaColors.textPrimary,
+          fontWeight: FontWeight.w600,
+          letterSpacing: -0.4,
+        ),
+        titleLarge: display.titleLarge?.copyWith(
+          color: SanaColors.lavender,
           fontWeight: FontWeight.w600,
         ),
         titleMedium: body.titleMedium?.copyWith(
@@ -49,48 +54,46 @@ abstract final class SanaTheme {
         ),
         bodyLarge: body.bodyLarge?.copyWith(
           color: SanaColors.textPrimary,
-          height: 1.45,
+          height: 1.4,
         ),
         bodyMedium: body.bodyMedium?.copyWith(
           color: SanaColors.textSecondary,
-          height: 1.45,
+          height: 1.4,
         ),
-        bodySmall: body.bodySmall?.copyWith(
-          color: SanaColors.textMuted,
-        ),
+        bodySmall: body.bodySmall?.copyWith(color: SanaColors.textMuted),
         labelLarge: body.labelLarge?.copyWith(
           color: SanaColors.textPrimary,
-          fontWeight: FontWeight.w600,
+          fontWeight: FontWeight.w500,
         ),
-      ),
-      appBarTheme: AppBarTheme(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        centerTitle: false,
-        titleTextStyle: display.titleLarge?.copyWith(
-          color: SanaColors.textPrimary,
-          fontWeight: FontWeight.w600,
-          fontSize: 22,
+        labelMedium: body.labelMedium?.copyWith(
+          color: SanaColors.textMuted,
+          fontWeight: FontWeight.w500,
         ),
       ),
       navigationBarTheme: NavigationBarThemeData(
-        backgroundColor: SanaColors.panel.withValues(alpha: 0.92),
-        indicatorColor: SanaColors.accentTeal.withValues(alpha: 0.18),
+        backgroundColor: SanaColors.background,
+        elevation: 0,
+        height: 64,
+        indicatorColor: Colors.transparent,
+        shadowColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
         labelTextStyle: WidgetStateProperty.resolveWith((states) {
           final selected = states.contains(WidgetState.selected);
           return body.labelMedium?.copyWith(
-            color: selected ? SanaColors.accentTeal : SanaColors.textMuted,
+            color: selected ? SanaColors.lavender : SanaColors.textMuted,
             fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+            fontSize: 12,
           );
         }),
         iconTheme: WidgetStateProperty.resolveWith((states) {
           final selected = states.contains(WidgetState.selected);
           return IconThemeData(
-            color: selected ? SanaColors.accentTeal : SanaColors.textMuted,
+            color: selected ? SanaColors.lavender : SanaColors.textMuted,
+            size: 22,
           );
         }),
       ),
-      dividerColor: SanaColors.textMuted.withValues(alpha: 0.2),
+      dividerColor: SanaColors.border.withValues(alpha: 0.2),
     );
   }
 }

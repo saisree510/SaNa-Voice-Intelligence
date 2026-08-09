@@ -1,43 +1,40 @@
 import 'package:flutter/material.dart';
 
-/// Refinable SaNa color tokens (dark-first, calm blue/teal).
+/// Refinable SaNa color tokens.
+/// Primary identity: muted lavender on near-black (not cyan/teal).
 abstract final class SanaColors {
-  static const Color voidBlack = Color(0xFF070B14);
-  static const Color deepNavy = Color(0xFF0B1220);
-  static const Color panel = Color(0xFF121A2B);
-  static const Color panelElevated = Color(0xFF182338);
+  static const Color background = Color(0xFF080A12);
+  static const Color backgroundDeep = Color(0xFF0C0E18);
+  static const Color surface = Color(0xFF12141F);
+  static const Color surfaceElevated = Color(0xFF181A28);
 
-  static const Color textPrimary = Color(0xFFE8EEF8);
-  static const Color textSecondary = Color(0xFF9AADC4);
-  static const Color textMuted = Color(0xFF6B7F96);
+  static const Color lavender = Color(0xFFB88DE0);
+  static const Color lavenderLight = Color(0xFFD5B5EE);
+  static const Color violetDeep = Color(0xFF7656A6);
+  static const Color glow = Color(0xFFA978D0);
 
-  static const Color accentTeal = Color(0xFF2EC4B6);
-  static const Color accentCyan = Color(0xFF5CC8FF);
-  static const Color accentIndigo = Color(0xFF6B8CFF);
-  static const Color softGlow = Color(0x662EC4B6);
+  static const Color textPrimary = Color(0xFFF2EEF8);
+  static const Color textSecondary = Color(0xFFB7ADC8);
+  static const Color textMuted = Color(0xFF7E7593);
+  static const Color border = Color(0x66B88DE0);
 
-  static const Color danger = Color(0xFFFF6B7A);
-  static const Color warning = Color(0xFFFFC857);
+  static const Color danger = Color(0xFFE8A0A8);
+  static const Color warning = Color(0xFFE8C98A);
 
+  /// Near-black → deep navy, nearly invisible.
   static const LinearGradient atmosphere = LinearGradient(
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-    colors: [
-      Color(0xFF0B1220),
-      Color(0xFF101A2E),
-      Color(0xFF0A1624),
-      Color(0xFF071018),
-    ],
-    stops: [0.0, 0.35, 0.7, 1.0],
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
+    colors: [Color(0xFF0C0E18), Color(0xFF080A12), Color(0xFF07080F)],
   );
 
-  static const LinearGradient orbCore = LinearGradient(
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-    colors: [
-      Color(0xFF6B8CFF),
-      Color(0xFF2EC4B6),
-      Color(0xFF5CC8FF),
-    ],
-  );
+  // Backward-compatible aliases used by shell/placeholders during transition.
+  static const Color voidBlack = background;
+  static const Color deepNavy = backgroundDeep;
+  static const Color panel = surface;
+  static const Color panelElevated = surfaceElevated;
+  static const Color accentTeal = lavender;
+  static const Color accentCyan = lavenderLight;
+  static const Color accentIndigo = violetDeep;
+  static const Color softGlow = Color(0x33A978D0);
 }

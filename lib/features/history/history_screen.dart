@@ -16,7 +16,12 @@ class HistoryScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('History', style: Theme.of(context).textTheme.headlineMedium),
+              Text(
+                'History',
+                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                  color: SanaColors.textPrimary,
+                ),
+              ),
               const SizedBox(height: SanaSpacing.sm),
               Text(
                 'Past conversations will appear here after persistence is wired.',

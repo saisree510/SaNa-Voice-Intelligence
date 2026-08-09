@@ -11,7 +11,7 @@ void main() {
     const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
       statusBarIconBrightness: Brightness.light,
-      systemNavigationBarColor: SanaColors.deepNavy,
+      systemNavigationBarColor: SanaColors.background,
       systemNavigationBarIconBrightness: Brightness.light,
     ),
   );
