@@ -71,7 +71,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   @override
   void dispose() {
-    _timelineSub?.cancel();
+    unawaited(_timelineSub?.cancel());
     _userNameCtrl.dispose();
     _assistantNameCtrl.dispose();
     super.dispose();

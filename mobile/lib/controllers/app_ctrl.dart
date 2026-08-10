@@ -9,6 +9,8 @@ import 'package:uuid/uuid.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import 'conversation_timeline.dart';
+import '../models/conversation_turn.dart';
+import '../services/conversation_service.dart';
 
 final String homepageAgentTokenEndpoint = 'https://livekit.com/api/homepage-agent/token';
 
@@ -72,6 +74,59 @@ class AppCtrl extends ChangeNotifier {
   late final roomContext = components.RoomContext(room: room);
   late final sdk.Session session = _createSession(room: room);
   late final ConversationTimeline conversationTimeline = ConversationTimeline(session);
+
+  String? activeConversationId;
+  ConversationService? _conversationService;
+
+  void bindConversationService(ConversationService service) {
+    _conversationService = service;
+    conversationTimeline.onFinalTurn = (turn) {
+      if (activeConversationId != null && _conversationService != null) {
+        final role = turn.role == ConversationRole.user ? 'user' : 'assistant';
+        final source = turn.source == ConversationSource.voice ? 'voice' : 'text';
+
+        unawaited(_conversationService!.saveMessage(
+          conversationId: activeConversationId!,
+          sender: role,
+          content: turn.text,
+          source: source,
+          idempotencyKey: turn.id,
+        ));
+      }
+    };
+  }
+
+  Future<void> ensureActiveConversation() async {
+    if (_conversationService != null) {
+      // Check if current activeConversationId was deleted or is missing
+      if (activeConversationId != null) {
+        final exists = _conversationService!.conversations.any((c) => c.id == activeConversationId);
+        if (!exists) {
+          activeConversationId = null;
+        }
+      }
+
+      if (activeConversationId == null) {
+        final session = await _conversationService!.createConversation(
+          title: 'New Conversation',
+          mode: conversationMode.name,
+        );
+        activeConversationId = session.id;
+      }
+    }
+  }
+
+  Future<void> openPastConversation(
+    dynamic sessionModel,
+    ConversationService service,
+  ) async {
+    bindConversationService(service);
+    activeConversationId = sessionModel.id as String;
+    final messages = await service.fetchMessages(sessionModel.id as String);
+    conversationTimeline.rehydrateTurns(messages);
+    appScreenState = AppScreenState.agent;
+    notifyListeners();
+  }
 
   static sdk.Session _createSession({required sdk.Room room}) {
     // Development-only hardcoded credentials (optional).
@@ -220,6 +275,8 @@ class AppCtrl extends ChangeNotifier {
       return;
     }
 
+    await ensureActiveConversation();
+
     // Resume UI if media session is already live.
     if (session.connectionState == sdk.ConnectionState.connected ||
         session.connectionState == sdk.ConnectionState.reconnecting) {
@@ -282,6 +339,7 @@ class AppCtrl extends ChangeNotifier {
       _logger.fine('dismissError during reset: $error', error, stackTrace);
     }
 
+    activeConversationId = null;
     session.restoreMessageHistory(const []);
     conversationTimeline.clear();
     appScreenState = AppScreenState.welcome;

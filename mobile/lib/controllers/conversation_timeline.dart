@@ -35,6 +35,42 @@ class ConversationTimeline extends ChangeNotifier {
 
   bool get hasTurns => _ordered.isNotEmpty;
 
+  void Function(ConversationTurn turn)? onFinalTurn;
+
+  void rehydrateTurns(List<dynamic> persistedMessages) {
+    clear();
+    for (final item in persistedMessages) {
+      final String id = item.id;
+      final String roleStr = item.sender;
+      final String content = item.content;
+      final String sourceStr = item.source;
+      final DateTime time = item.createdAt;
+
+      final role = roleStr == 'user'
+          ? ConversationRole.user
+          : ConversationRole.agent;
+
+      final source = sourceStr == 'voice'
+          ? ConversationSource.voice
+          : ConversationSource.text;
+
+      final turn = ConversationTurn(
+        id: id,
+        timestamp: time,
+        role: role,
+        source: source,
+        text: content,
+        isFinal: true,
+      );
+
+      _turnsById[id] = turn;
+      _lastTextById[id] = content;
+      _knownClientSendIds.add(id);
+    }
+    _rebuildOrdered();
+    notifyListeners();
+  }
+
   void clear() {
     _finalizeTimer?.cancel();
     _finalizeTimer = null;
@@ -164,6 +200,8 @@ class ConversationTimeline extends ChangeNotifier {
     _lastTextById[turn.id] = turn.text;
   }
 
+  final Set<String> _notifiedFinalTurnIds = {};
+
   void _rebuildOrdered() {
     final values = _turnsById.values.toList()
       ..sort((a, b) {
@@ -172,6 +210,13 @@ class ConversationTimeline extends ChangeNotifier {
         return a.id.compareTo(b.id);
       });
     _ordered = List.unmodifiable(values);
+
+    for (final turn in _ordered) {
+      if (turn.isFinal && !_notifiedFinalTurnIds.contains(turn.id)) {
+        _notifiedFinalTurnIds.add(turn.id);
+        onFinalTurn?.call(turn);
+      }
+    }
   }
 
   @override

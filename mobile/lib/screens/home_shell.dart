@@ -4,9 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:livekit_client/livekit_client.dart' as sdk;
 import 'package:provider/provider.dart';
 
+import 'package:intl/intl.dart';
+
 import '../controllers/app_ctrl.dart';
 import '../models/sana_orb_state.dart';
 import '../services/auth_service.dart';
+import '../services/conversation_service.dart';
 import '../ui/sana_theme.dart';
 import '../widgets/sana_orb_view.dart';
 
@@ -76,10 +79,7 @@ class _HomeTabBody extends StatelessWidget {
       case HomeTab.home:
         return _SaNaHome(appCtrl: appCtrl);
       case HomeTab.history:
-        return const _PlaceholderPane(
-          title: 'History',
-          body: 'Past conversations will appear here after persistence lands.',
-        );
+        return const _HistoryPane();
       case HomeTab.projects:
         return const _PlaceholderPane(
           title: 'Projects',
@@ -380,6 +380,193 @@ class _ProfilePane extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
+        ],
+      ),
+    );
+  }
+}
+
+class _HistoryPane extends StatefulWidget {
+  const _HistoryPane();
+
+  @override
+  State<_HistoryPane> createState() => _HistoryPaneState();
+}
+
+class _HistoryPaneState extends State<_HistoryPane> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      unawaited(context.read<ConversationService>().fetchUserConversations());
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final conversationService = context.watch<ConversationService>();
+    final appCtrl = context.read<AppCtrl>();
+    final textTheme = Theme.of(context).textTheme;
+    final conversations = conversationService.conversations;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(28, 36, 28, 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Conversation History',
+            style: textTheme.headlineMedium?.copyWith(
+              color: SanaColors.lavender,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Tap any past session to rehydrate and resume',
+            style: textTheme.bodySmall?.copyWith(color: SanaColors.fgMuted),
+          ),
+          const SizedBox(height: 20),
+          Expanded(
+            child: conversationService.isLoading && conversations.isEmpty
+                ? const Center(
+                    child: CircularProgressIndicator(color: SanaColors.lavender),
+                  )
+                : conversations.isEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.chat_bubble_outline_rounded,
+                                size: 48, color: SanaColors.fgMuted),
+                            const SizedBox(height: 12),
+                            Text(
+                              'No past conversations yet',
+                              style: textTheme.titleMedium
+                                  ?.copyWith(color: SanaColors.fgSecondary),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'Start talking with Sana on the Home tab!',
+                              style: textTheme.bodySmall
+                                  ?.copyWith(color: SanaColors.fgMuted),
+                            ),
+                          ],
+                        ),
+                      )
+                    : RefreshIndicator(
+                        color: SanaColors.lavender,
+                        onRefresh: () =>
+                            conversationService.fetchUserConversations(),
+                        child: ListView.separated(
+                          itemCount: conversations.length,
+                          separatorBuilder: (_, __) =>
+                              const SizedBox(height: 12),
+                          itemBuilder: (context, index) {
+                            final session = conversations[index];
+                            final timeFormatted =
+                                DateFormat('MMM d, h:mm a').format(session.updatedAt);
+                            final preview = session.previewText ?? 'Voice & text session';
+
+                            return Material(
+                              color: SanaColors.surface,
+                              borderRadius: BorderRadius.circular(16),
+                              child: InkWell(
+                                borderRadius: BorderRadius.circular(16),
+                                onTap: () {
+                                  unawaited(appCtrl.openPastConversation(
+                                    session,
+                                    conversationService,
+                                  ));
+                                },
+                                child: Padding(
+                                  padding: const EdgeInsets.all(16),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Expanded(
+                                            child: Text(
+                                              session.title,
+                                              style: textTheme.titleMedium
+                                                  ?.copyWith(
+                                                fontWeight: FontWeight.bold,
+                                                color: SanaColors.fgPrimary,
+                                              ),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(
+                                                horizontal: 8, vertical: 3),
+                                            decoration: BoxDecoration(
+                                              color: SanaColors.lavender
+                                                  .withValues(alpha: 0.15),
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                            ),
+                                            child: Text(
+                                              session.mode.toUpperCase(),
+                                              style: const TextStyle(
+                                                color: SanaColors.lavender,
+                                                fontSize: 10,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 6),
+                                      Text(
+                                        preview,
+                                        style: textTheme.bodyMedium?.copyWith(
+                                          color: SanaColors.fgSecondary,
+                                        ),
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      const SizedBox(height: 10),
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Text(
+                                            timeFormatted,
+                                            style: textTheme.bodySmall
+                                                ?.copyWith(
+                                                    color: SanaColors.fgMuted),
+                                          ),
+                                          IconButton(
+                                            icon: const Icon(
+                                              Icons.delete_outline_rounded,
+                                              size: 18,
+                                              color: SanaColors.fgMuted,
+                                            ),
+                                            onPressed: () {
+                                              unawaited(
+                                                conversationService
+                                                    .deleteConversation(
+                                                        session.id),
+                                              );
+                                            },
+                                            visualDensity:
+                                                VisualDensity.compact,
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+          ),
         ],
       ),
     );

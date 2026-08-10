@@ -13,8 +13,11 @@ import 'ui/sana_theme.dart';
 import 'widgets/app_layout_switcher.dart';
 import 'widgets/session_error_banner.dart';
 
+import 'services/conversation_service.dart';
+
 final appCtrl = AppCtrl();
 final authService = AuthService();
+final conversationService = ConversationService();
 
 class VoiceAssistantApp extends StatelessWidget {
   const VoiceAssistantApp({super.key});
@@ -23,6 +26,7 @@ class VoiceAssistantApp extends StatelessWidget {
   Widget build(BuildContext ctx) => MultiProvider(
         providers: [
           ChangeNotifierProvider.value(value: authService),
+          ChangeNotifierProvider.value(value: conversationService),
           ChangeNotifierProvider.value(value: appCtrl),
           ChangeNotifierProvider.value(value: appCtrl.session),
           ChangeNotifierProvider.value(value: appCtrl.roomContext),
@@ -53,6 +57,7 @@ class _AuthGateState extends State<AuthGate> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<AppCtrl>().bindConversationService(context.read<ConversationService>());
       unawaited(context.read<AuthService>().initialize());
     });
   }
