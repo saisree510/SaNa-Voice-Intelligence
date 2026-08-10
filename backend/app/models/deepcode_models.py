@@ -37,3 +37,17 @@ class BuildStatusEvent(BaseModel):
     current_step: Optional[str] = None
     progress_percentage: int = 0
     events: List[DeepCodeEvent] = []
+
+
+class BuildProjectModel(BaseModel):
+    project_id: str
+    user_id: str
+    title: str
+    specification: str
+    workspace_path: str
+    status: str = "drafting"  # drafting, plan_generated, approved, executing, completed, failed
+    plan_summary: Optional[str] = None
+    session_id: Optional[str] = None
+    created_at: str = Field(default_factory=lambda: datetime.utcnow().isoformat())
+    updated_at: str = Field(default_factory=lambda: datetime.utcnow().isoformat())
+

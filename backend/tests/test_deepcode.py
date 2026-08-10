@@ -47,3 +47,34 @@ def test_run_build_turn():
     assert turn_data["status"] == "completed"
     assert len(turn_data["events"]) >= 3
     assert turn_data["events"][0]["event_type"] == "step_start"
+
+
+def test_create_project_and_approval_gate():
+    # 1. Create Build Project (Generates plan, status = plan_generated, DOES NOT execute)
+    create_res = client.post(
+        "/v1/build/projects",
+        json={
+            "title": "Flutter Realtime Dashboard",
+            "specification": "Build a dark mode voice control analytics dashboard",
+            "workspace_path": "c:/Users/saisr/Projects/dashboard_app",
+        }
+    )
+    assert create_res.status_code == 200
+    project_data = create_res.json()
+    project_id = project_data["project_id"]
+    assert project_data["status"] == "plan_generated"
+    assert "Awaiting explicit user approval" in project_data["plan_summary"]
+
+    # 2. Get Project Status before approval
+    get_res = client.get(f"/v1/build/projects/{project_id}")
+    assert get_res.status_code == 200
+    assert get_res.json()["status"] == "plan_generated"
+
+    # 3. Explicit Approval Gate -> Triggers execution
+    approve_res = client.post(f"/v1/build/projects/{project_id}/approve")
+    assert approve_res.status_code == 200
+    approve_data = approve_res.json()
+    assert approve_data["status"] == "completed"
+    assert "Build execution completed" in approve_data["result_summary"]
+    assert len(approve_data["events"]) >= 3
+

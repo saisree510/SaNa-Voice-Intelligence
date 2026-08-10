@@ -5,13 +5,18 @@ from pydantic import BaseModel
 
 from app.auth.auth_bearer import AuthenticatedUser, get_current_user
 from app.adapters.deepcode_adapter import DeepCodeAdapter
-from app.models.deepcode_models import DeepCodeSession, DeepCodeEvent
+from app.models.deepcode_models import (
+    DeepCodeSession,
+    DeepCodeEvent,
+    BuildProjectModel,
+)
 
 logger = logging.getLogger("backend.build_router")
 router = APIRouter(prefix="/v1/build", tags=["Build Mode"])
 
-# Global adapter instance for Phase 10 proof
+# Global adapter & project store
 deepcode_adapter = DeepCodeAdapter()
+build_projects_db: dict[str, BuildProjectModel] = {}
 
 
 class CreateSessionRequest(BaseModel):
@@ -28,6 +33,20 @@ class TurnResponse(BaseModel):
     session_id: str
     status: str
     events: List[DeepCodeEvent]
+
+
+class CreateProjectRequest(BaseModel):
+    title: str
+    specification: str
+    workspace_path: str
+
+
+class ApproveProjectResponse(BaseModel):
+    project_id: str
+    status: str
+    session_id: str
+    events: List[DeepCodeEvent]
+    result_summary: str
 
 
 @router.post("/sessions", response_model=DeepCodeSession)
@@ -98,3 +117,109 @@ async def run_build_turn(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Build turn execution failed: {str(e)}",
         )
+
+
+@router.post("/projects", response_model=BuildProjectModel)
+async def create_build_project(
+    request: CreateProjectRequest,
+    current_user: AuthenticatedUser = Depends(get_current_user),
+):
+    """
+    Step 1: Collects project specification and generates an implementation plan (status: plan_generated).
+    Entering Build Mode or drafting a project DOES NOT execute code automatically.
+    """
+    import uuid
+    from datetime import datetime
+
+    project_id = f"proj-{uuid.uuid4().hex[:8]}"
+    session = deepcode_adapter.create_session(workspace_path=request.workspace_path)
+
+    project = BuildProjectModel(
+        project_id=project_id,
+        user_id=current_user.id,
+        title=request.title,
+        specification=request.specification,
+        workspace_path=request.workspace_path,
+        status="plan_generated",
+        plan_summary=f"Implementation Plan generated for '{request.title}'. Awaiting explicit user approval before execution.",
+        session_id=session.session_id,
+        created_at=datetime.utcnow().isoformat(),
+        updated_at=datetime.utcnow().isoformat(),
+    )
+
+    build_projects_db[project_id] = project
+    logger.info(f"Created BuildProject {project_id} with status 'plan_generated' awaiting explicit approval.")
+    return project
+
+
+@router.get("/projects/{project_id}", response_model=BuildProjectModel)
+async def get_build_project(
+    project_id: str,
+    current_user: AuthenticatedUser = Depends(get_current_user),
+):
+    project = build_projects_db.get(project_id)
+    if not project:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Build project {project_id} not found",
+        )
+    return project
+
+
+@router.post("/projects/{project_id}/approve", response_model=ApproveProjectResponse)
+async def approve_and_execute_project(
+    project_id: str,
+    current_user: AuthenticatedUser = Depends(get_current_user),
+):
+    """
+    Step 2: EXPLICIT APPROVAL GATE. Upon user approval, transitions project status to 'executing',
+    runs DeepCode build turn in the workspace, and returns structured execution events and plain-text result summary.
+    """
+    from datetime import datetime
+
+    project = build_projects_db.get(project_id)
+    if not project:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Build project {project_id} not found",
+        )
+
+    if project.status == "executing":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Project execution is already in progress.",
+        )
+
+    # Transition to executing
+    project.status = "executing"
+    project.updated_at = datetime.utcnow().isoformat()
+
+    events = []
+    try:
+        async for event in deepcode_adapter.run_turn(
+            session_id=project.session_id,
+            prompt=project.specification,
+        ):
+            events.append(event)
+
+        project.status = "completed"
+        project.updated_at = datetime.utcnow().isoformat()
+
+        summary = f"Build execution completed for project '{project.title}'. Generated project files and spec blueprint in workspace '{project.workspace_path}'."
+        return ApproveProjectResponse(
+            project_id=project_id,
+            status=project.status,
+            session_id=project.session_id,
+            events=events,
+            result_summary=summary,
+        )
+
+    except Exception as e:
+        project.status = "failed"
+        project.updated_at = datetime.utcnow().isoformat()
+        logger.error(f"Execution failed for project {project_id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Project execution failed: {str(e)}",
+        )
+

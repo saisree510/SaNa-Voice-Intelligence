@@ -1,8 +1,8 @@
 # SaNa — Product Requirements Document (PRD)
 
-**Status:** Phase 10 COMPLETE — DeepCode integration proof and `DeepCodeAdapter` abstraction layer established; verified Pydantic event models; controlled workspace build sessions & router active. Phase 11 (Build Mode MVP) next.
+**Status:** Phase 11 COMPLETE — Build Mode MVP active; Tech Lead persona in voice agent; explicit approval gate API (`POST /v1/build/projects/{id}/approve`); DeepCode execution & result explanation complete. Phase 12 next.
 **Product:** SaNa
-**Document version:** 0.8.0
+**Document version:** 0.9.0
 **Date:** 2026-08-10
 **Audience:** Founder + future implementers (beginner-friendly)
 
@@ -19,7 +19,8 @@
 | 0.5.0 | 2026-08-10 | Phase 7 COMPLETE — Supabase PostgreSQL persistence schema (conversations, messages, conversation_events), turn idempotency, mode switch logging, and complete history rehydration |
 | 0.6.0 | 2026-08-10 | Phase 8 COMPLETE — Unified General, Debate, and Brainstorm modes; Brainstorm to Build transition trigger rule; unified voice & text mode event logging |
 | 0.7.0 | 2026-08-10 | Phase 9 COMPLETE — FastAPI application backend (`backend/`); Supabase JWT bearer auth; production-path `/v1/livekit/token` endpoint; conversation APIs and mobile TokenService |
-| **0.8.0** | **2026-08-10** | **Phase 10 COMPLETE — DeepCode integration proof; `DeepCodeAdapter` abstraction layer (`backend/app/adapters/deepcode_adapter.py`); Pydantic models; build session router `/v1/build/sessions`** |
+| 0.8.0 | 2026-08-10 | Phase 10 COMPLETE — DeepCode integration proof; `DeepCodeAdapter` abstraction layer (`backend/app/adapters/deepcode_adapter.py`); Pydantic models; build session router `/v1/build/sessions` |
+| **0.9.0** | **2026-08-10** | **Phase 11 COMPLETE — Build Mode MVP; Tech Lead voice persona; explicit plan approval gate (`POST /v1/build/projects/{id}/approve`); DeepCode execution & result explanation** |
 
 ### v0.4.0 revision summary
 
@@ -2762,16 +2763,16 @@ Deferred (not Phase 5 blockers):
 
 **Acceptance:** COMPLETE — Adapter parses structured JSON event shapes; session creation, resumption, and workspace turn execution verified with unit test coverage.
 
-### Phase 11 — Build Mode MVP
+### Phase 11 — Build Mode MVP (COMPLETE)
 
-- Requirements → clarification → specification → plan
-- Explicit approval before execution
-- `BuildProject`
-- DeepCode execution
-- Build status
-- Result explanation
+- **Tech Lead Voice Persona (`voice_agent/src/agent.py`):** Added `build` persona mode instructions in voice agent requiring explicit approval before triggering code execution.
+- **`BuildProject` Data Models (`backend/app/models/deepcode_models.py`):** Added `BuildProjectModel` tracking project spec, workspace path, status (`plan_generated`, `executing`, `completed`), and execution steps.
+- **Explicit Approval Gate Endpoint (`backend/app/routers/build_router.py`):**
+  - `POST /v1/build/projects`: Collects specification and generates plan (`status: plan_generated`, DOES NOT execute code automatically).
+  - `POST /v1/build/projects/{id}/approve`: **EXPLICIT APPROVAL GATE** that transitions project to `executing`, runs `DeepCodeAdapter` execution in project workspace, and returns 2-3 sentence result summary.
+- **Automated Tests:** Created `test_create_project_and_approval_gate` in `backend/tests/test_deepcode.py` with 100% passing test suite (`6 passed in 2.33s`).
 
-**Acceptance:** Entering Build Mode does not execute; explicit approval required; controlled workspace build succeeds and is explained by SaNa.
+**Acceptance:** COMPLETE — Entering Build Mode or drafting a project DOES NOT execute code automatically; explicit approval gate required; controlled workspace build succeeds and returns plain text explanation.
 
 ### Phase 12 — Persistent Build Projects
 
