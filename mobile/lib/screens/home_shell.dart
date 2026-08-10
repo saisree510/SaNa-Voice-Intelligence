@@ -216,8 +216,8 @@ class _ModeRow extends StatelessWidget {
           _ModeChip(
             label: mode.label,
             selected: appCtrl.conversationMode == mode,
-            enabled: mode == ConversationMode.general,
-            onTap: mode == ConversationMode.general
+            enabled: mode != ConversationMode.build,
+            onTap: mode != ConversationMode.build
                 ? () => appCtrl.setConversationMode(mode)
                 : null,
           ),

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -65,7 +66,18 @@ class AppCtrl extends ChangeNotifier {
   bool isUserCameEnabled = false;
   bool isScreenshareEnabled = false;
 
-  String get greetingLine => 'Hey $_customUserName, what are we planning to do today?';
+  String get greetingLine {
+    switch (conversationMode) {
+      case ConversationMode.general:
+        return 'Hey $_customUserName, what are we planning to do today?';
+      case ConversationMode.debate:
+        return 'Ready to test your ideas, $_customUserName? What topic shall we debate?';
+      case ConversationMode.brainstorm:
+        return 'Okay $_customUserName, what are we brainstorming today?';
+      case ConversationMode.build:
+        return 'Hey $_customUserName, ready to build a new project?';
+    }
+  }
 
   final messageCtrl = TextEditingController();
   final messageFocusNode = FocusNode();
@@ -122,10 +134,26 @@ class AppCtrl extends ChangeNotifier {
   ) async {
     bindConversationService(service);
     activeConversationId = sessionModel.id as String;
+
+    // Restore conversation mode from past session
+    if (sessionModel.mode != null) {
+      final modeStr = sessionModel.mode.toString().toLowerCase();
+      final modeMatch = ConversationMode.values.firstWhere(
+        (m) => m.name == modeStr,
+        orElse: () => ConversationMode.general,
+      );
+      setConversationMode(modeMatch);
+    }
+
     final messages = await service.fetchMessages(sessionModel.id as String);
     conversationTimeline.rehydrateTurns(messages);
     appScreenState = AppScreenState.agent;
     notifyListeners();
+
+    // Auto-connect voice session if disconnected
+    if (session.connectionState == sdk.ConnectionState.disconnected && !isSessionStarting) {
+      unawaited(connect());
+    }
   }
 
   static sdk.Session _createSession({required sdk.Room room}) {
@@ -259,14 +287,54 @@ class AppCtrl extends ChangeNotifier {
   }
 
   void setConversationMode(ConversationMode mode) {
-    // Phase 5: only General is active; other chips are shells.
-    if (mode != ConversationMode.general) {
-      _logger.info('Mode ${mode.label} is a shell until a later phase.');
-      return;
-    }
     if (mode == conversationMode) return;
     conversationMode = mode;
     notifyListeners();
+
+    // Send mode switch data packet to live voice agent if connected
+    if (room.connectionState == sdk.ConnectionState.connected && room.localParticipant != null) {
+      try {
+        final payload = json.encode({
+          'type': 'mode_switch',
+          'mode': mode.name,
+        });
+        unawaited(room.localParticipant!.publishData(
+          utf8.encode(payload),
+        ));
+      } catch (e) {
+        _logger.warning('Failed to send mode switch packet: $e');
+      }
+    }
+  }
+
+  void _sendInitialModePacket({int attempt = 0}) {
+    if (room.connectionState != sdk.ConnectionState.connected) return;
+
+    if (room.localParticipant != null) {
+      try {
+        unawaited(room.localParticipant!.setMetadata(json.encode({'mode': conversationMode.name})));
+        final payload = json.encode({
+          'type': 'mode_switch',
+          'mode': conversationMode.name,
+          'is_initial': true,
+        });
+        unawaited(room.localParticipant!.publishData(
+          utf8.encode(payload),
+        ));
+        _logger.info('Sent initial mode metadata & packet for mode: ${conversationMode.name}');
+      } catch (e) {
+        _logger.warning('Failed to send initial mode packet (attempt $attempt): $e');
+        if (attempt < 4) {
+          Future.delayed(const Duration(milliseconds: 300), () {
+            _sendInitialModePacket(attempt: attempt + 1);
+          });
+        }
+      }
+    } else if (attempt < 4) {
+      Future.delayed(const Duration(milliseconds: 300), () {
+        _sendInitialModePacket(attempt: attempt + 1);
+      });
+    }
   }
 
   Future<void> connect() async {
@@ -352,8 +420,10 @@ class AppCtrl extends ChangeNotifier {
     AppScreenState? nextScreen;
     switch (state) {
       case sdk.ConnectionState.connected:
+        _sendInitialModePacket();
+        nextScreen = AppScreenState.agent;
+        break;
       case sdk.ConnectionState.reconnecting:
-        // Keep agent UI visible across LiveKit automatic reconnect attempts.
         nextScreen = AppScreenState.agent;
         break;
       case sdk.ConnectionState.disconnected:
