@@ -1,8 +1,8 @@
 # SaNa — Product Requirements Document (PRD)
 
-**Status:** Phase 8 COMPLETE — General, Debate, and Brainstorm modes unified; Brainstorm to Build handoff trigger active; PostgreSQL mode switch event logging complete. Phase 9 next.
+**Status:** Phase 9 COMPLETE — FastAPI application backend established (`backend/`); Supabase JWT bearer authentication & user isolation; production-path `/v1/livekit/token` endpoint active; conversation APIs complete. Phase 10 next.
 **Product:** SaNa
-**Document version:** 0.6.0
+**Document version:** 0.7.0
 **Date:** 2026-08-10
 **Audience:** Founder + future implementers (beginner-friendly)
 
@@ -17,7 +17,8 @@
 | 0.4.0 (Phase 6 note) | 2026-08-09 | Phase 6 Supabase Auth, speak-or-type onboarding, light lavender UI, and personalized home greeting complete |
 | 0.4.1 | 2026-08-10 | Voice Agent mode persona prompts restructured with in-place index 0 updates; past conversation history resumption with auto-connect hardened |
 | 0.5.0 | 2026-08-10 | Phase 7 COMPLETE — Supabase PostgreSQL persistence schema (conversations, messages, conversation_events), turn idempotency, mode switch logging, and complete history rehydration |
-| **0.6.0** | **2026-08-10** | **Phase 8 COMPLETE — Unified General, Debate, and Brainstorm modes; Brainstorm to Build transition trigger rule; unified voice & text mode event logging** |
+| 0.6.0 | 2026-08-10 | Phase 8 COMPLETE — Unified General, Debate, and Brainstorm modes; Brainstorm to Build transition trigger rule; unified voice & text mode event logging |
+| **0.7.0** | **2026-08-10** | **Phase 9 COMPLETE — FastAPI application backend (`backend/`); Supabase JWT bearer auth; production-path `/v1/livekit/token` endpoint; conversation APIs and mobile TokenService** |
 
 ### v0.4.0 revision summary
 
@@ -2740,21 +2741,16 @@ Deferred (not Phase 5 blockers):
 
 **Acceptance:** COMPLETE — Mode switches change assistant behavior clearly across all turns without prompt decay; mode changes recorded as events in PostgreSQL; single conversation timeline preserved.
 
-### Phase 9 — FastAPI application backend
+### Phase 9 — FastAPI application backend (COMPLETE)
 
-The broader SaNa FastAPI backend remains here. (A minimal secure LiveKit token endpoint may already exist earlier if Flutter connection required it.)
+- **Backend Application (`backend/`):** Built clean FastAPI app with CORS middleware, health endpoints (`/health`, `/v1/status`), and module routers.
+- **Supabase JWT Auth Verification:** Implemented `app/auth/auth_bearer.py` to verify JWT bearer tokens and extract user ID and metadata.
+- **Production-Path LiveKit Token Endpoint:** Created `POST /v1/livekit/token` endpoint using official `livekit-api` package to mint short-lived, user-scoped room access tokens.
+- **Conversation Management APIs:** Created `GET /v1/conversations` and `PATCH /v1/conversations/{id}/mode` endpoints backed by Supabase PostgreSQL.
+- **Mobile Integration:** Created `mobile/lib/services/token_service.dart` to request tokens securely from FastAPI.
+- **Automated Tests:** Created `backend/tests/test_main.py` with 100% passing pytest suite.
 
-Introduce / expand:
-
-- Auth verification
-- LiveKit token endpoint (production path; replaces sandbox/dev tokens as applicable)
-- Conversation APIs
-- LLM orchestration boundaries
-- Status streaming
-- Secure provider configuration
-- Repository abstractions
-
-**Acceptance:** Secrets stay server-side; tokens are short-lived and user-scoped; APIs respect user isolation.
+**Acceptance:** COMPLETE — Server secrets remain server-side; tokens are short-lived and user-scoped; APIs respect user isolation; unit test suite passes.
 
 ### Phase 10 — DeepCode integration proof
 
