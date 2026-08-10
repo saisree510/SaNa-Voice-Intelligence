@@ -1,9 +1,9 @@
 # SaNa — Product Requirements Document (PRD)
 
-**Status:** Phase 6 COMPLETE — Supabase auth, speak-or-type onboarding, white + light-lavender UI, personalized greeting; Phase 7 next
+**Status:** Phase 6 COMPLETE & Mode Sparring / History Resumption Hardened — Supabase auth, speak-or-type onboarding, white + light-lavender UI, personalized greeting, past session resumption, and in-place mode prompt switching.
 **Product:** SaNa
-**Document version:** 0.4.0
-**Date:** 2026-08-09
+**Document version:** 0.4.1
+**Date:** 2026-08-10
 **Audience:** Founder + future implementers (beginner-friendly)
 
 ### Revision history
@@ -11,9 +11,11 @@
 | Version | Date | Summary |
 |---|---|---|
 | 0.3.0 | 2026-08-08 | Architecture/MVP decisions approved; text-first then voice phase order |
-| **0.4.0** | **2026-08-09** | **LiveKit-first implementation reset: official LiveKit starters/patterns prioritized; voice vertical slice before custom UI polish; first Flutter/UI prototype archived on `SaiSree_development`; core SaNa product scope unchanged** |
+| 0.4.0 | 2026-08-09 | LiveKit-first implementation reset: official LiveKit starters/patterns prioritized; voice vertical slice before custom UI polish; first Flutter/UI prototype archived on `SaiSree_development`; core SaNa product scope unchanged |
 | 0.4.0 (Phase 2 note) | 2026-08-09 | Phase 2 Flutter client foundation accepted: `mobile/` starter connected via LiveKit Cloud sandbox token ID; physical Android voice validated; custom SaNa UI still deferred |
 | 0.4.0 (Phase 3 note) | 2026-08-09 | Phase 3 voice vertical-slice stabilization accepted on physical Android; connect/cancel hardening; Technical Voice Proof complete; custom SaNa UI still deferred |
+| 0.4.0 (Phase 6 note) | 2026-08-09 | Phase 6 Supabase Auth, speak-or-type onboarding, light lavender UI, and personalized home greeting complete |
+| **0.4.1** | **2026-08-10** | **Voice Agent mode persona prompts restructured with in-place index 0 updates; past conversation history resumption with auto-connect hardened** |
 
 ### v0.4.0 revision summary
 
