@@ -1,8 +1,8 @@
 # SaNa — Product Requirements Document (PRD)
 
-**Status:** Phase 7 COMPLETE — Supabase PostgreSQL persistent conversations, message turn idempotency, mode switch event logging, and full rehydration complete. Phase 8 next.
+**Status:** Phase 8 COMPLETE — General, Debate, and Brainstorm modes unified; Brainstorm to Build handoff trigger active; PostgreSQL mode switch event logging complete. Phase 9 next.
 **Product:** SaNa
-**Document version:** 0.5.0
+**Document version:** 0.6.0
 **Date:** 2026-08-10
 **Audience:** Founder + future implementers (beginner-friendly)
 
@@ -16,7 +16,8 @@
 | 0.4.0 (Phase 3 note) | 2026-08-09 | Phase 3 voice vertical-slice stabilization accepted on physical Android; connect/cancel hardening; Technical Voice Proof complete; custom SaNa UI still deferred |
 | 0.4.0 (Phase 6 note) | 2026-08-09 | Phase 6 Supabase Auth, speak-or-type onboarding, light lavender UI, and personalized home greeting complete |
 | 0.4.1 | 2026-08-10 | Voice Agent mode persona prompts restructured with in-place index 0 updates; past conversation history resumption with auto-connect hardened |
-| **0.5.0** | **2026-08-10** | **Phase 7 COMPLETE — Supabase PostgreSQL persistence schema (conversations, messages, conversation_events), turn idempotency, mode switch logging, and complete history rehydration** |
+| 0.5.0 | 2026-08-10 | Phase 7 COMPLETE — Supabase PostgreSQL persistence schema (conversations, messages, conversation_events), turn idempotency, mode switch logging, and complete history rehydration |
+| **0.6.0** | **2026-08-10** | **Phase 8 COMPLETE — Unified General, Debate, and Brainstorm modes; Brainstorm to Build transition trigger rule; unified voice & text mode event logging** |
 
 ### v0.4.0 revision summary
 
@@ -2727,17 +2728,17 @@ Deferred (not Phase 5 blockers):
 
 **Acceptance:** PostgreSQL via Conversation Service is authoritative; partials never durable; reconnect/resume rehydrates without duplicate messages.
 
-### Phase 8 — General, Debate and Brainstorm modes
+### Phase 8 — General, Debate and Brainstorm modes (COMPLETE)
 
-- Shared mode architecture
-- General Mode
-- Debate Mode
-- Brainstorm Mode
-- Mode events
-- Brainstorm → Build handoff
-- Voice and text remain unified
+- **Shared mode architecture:** Unified `get_mode_instructions(mode)` and `apply_mode(mode)` in `voice_agent/src/agent.py`.
+- **General Mode:** Direct, helpful developer assistant persona with brief answers and standard professional tone.
+- **Debate Mode:** Unyielding technical sparring partner persona with mandatory per-turn anti-concession rules (`NEVER AGREE WITH THE USER`, `NEVER SAY GOOD POINT / I AGREE`, `START WITH DIRECT REBUTTAL OR SKEPTICAL CHALLENGE`).
+- **Brainstorm Mode:** Creative ideation co-founder persona with mandatory per-turn expansion rules (`OFFER 2 TO 3 INNOVATIVE FEATURE VARIATIONS`, `ASK AT LEAST ONE PROBING QUESTION`).
+- **Brainstorm → Build Handoff Trigger:** When the user expresses clear intent to build (*"Let's build this project"*), Sana acknowledges the decision warmly, gives a 2-sentence vision summary, and offers to transition to Build Mode.
+- **Async Instruction Updates Fix:** Resolved silent un-awaited coroutine issue in `Assistant.set_mode()` by explicitly awaiting `self.update_instructions()` and mutating index 0 system instruction in `session.history`.
+- **Unified Voice and Text Mode Events:** Mode switches write `mode_changed` events to Supabase PostgreSQL `conversation_events` table and emit WebRTC data packets across all active clients.
 
-**Acceptance:** Mode switches change assistant behavior clearly; mode changes recorded as events; one conversation preserved.
+**Acceptance:** COMPLETE — Mode switches change assistant behavior clearly across all turns without prompt decay; mode changes recorded as events in PostgreSQL; single conversation timeline preserved.
 
 ### Phase 9 — FastAPI application backend
 

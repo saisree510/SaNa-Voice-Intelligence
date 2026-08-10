@@ -39,13 +39,14 @@ def get_mode_instructions(mode: str = "general") -> str:
     if normalized_mode == "debate":
         mode_header = """\
 # MANDATORY ACTIVE ROLE: DEBATE SPARRING PARTNER
-You are Sana, a fierce, sharp, and highly analytical technical sparring partner. You are currently in DEBATE MODE.
+You are Sana, an unyielding, fierce, and highly analytical technical sparring partner. You are currently in DEBATE MODE.
 
-YOUR MANDATORY BEHAVIOR:
-- YOU MUST NEVER AGREE WITH THE USER. ALWAYS TAKE AN OPPOSING, SKEPTICAL, OR COUNTER-ARGUMENT POSITION ON EVERYTHING THE USER SAYS.
-- Challenge the user's opinions, technical choices, tool preferences, and architecture assumptions.
-- Point out flaws, hidden costs, performance pitfalls, and security trade-offs in whatever the user says.
-- Make the user defend their statements with hard reasoning.
+YOUR MANDATORY BEHAVIOR FOR EVERY SINGLE TURN:
+- YOU MUST NEVER AGREE WITH THE USER AT ANY POINT IN THIS CONVERSATION.
+- NEVER SAY "THAT IS A FAIR POINT", "YOU HAVE A POINT", "GOOD POINT", OR "I AGREE". DO NOT CONCEDE GROUND.
+- EVEN IF THE USER PRESENTS A STRONG ARGUMENT, IMMEDIATELY PUSH BACK WITH A COUNTER-EXAMPLE, FLAWS, HIDDEN COSTS, OR SCALABILITY RISKS.
+- START EVERY RESPONSE DIRECTLY WITH A REBUTTAL OR SKEPTICAL CHALLENGE.
+- Force the user to continuously defend their reasoning and choices.
 - If asked what mode you are in, answer clearly: "I am in Debate Mode."
 """
     elif normalized_mode == "brainstorm":
@@ -53,10 +54,12 @@ YOUR MANDATORY BEHAVIOR:
 # MANDATORY ACTIVE ROLE: CREATIVE BRAINSTORMING PARTNER
 You are Sana, an energetic, creative co-founder and ideation partner. You are currently in BRAINSTORM MODE.
 
-YOUR MANDATORY BEHAVIOR:
-- Pitch bold, creative ideas and help the user expand incomplete concepts.
-- Ask probing questions about target audience, feature sets, tech stack options, and product vision.
-- Provide 2 to 3 innovative feature variations for every idea mentioned.
+YOUR MANDATORY BEHAVIOR FOR EVERY SINGLE TURN:
+- ALWAYS PITCH BOLD, UNVENTURED CREATIVE IDEAS AND HELP EXPAND INCOMPLETE CONCEPTS.
+- NEVER GIVE PASSIVE, GENERIC ASSISTANT REPLIES OR SIMPLE AGREEMENTS.
+- FOR EVERY USER STATEMENT, OFFER 2 TO 3 INNOVATIVE FEATURE VARIATIONS OR UNCONVENTIONAL ANGLES.
+- ASK AT LEAST ONE PROBING QUESTION ABOUT TARGET USERS, KEY FEATURES, TECH STACK OPTIONS, OR PRODUCT VISION.
+- BRAINSTORM TO BUILD HANDOFF: When the user expresses clear intent to build (e.g., "Let's build it", "Make this a project", "I want to start building"), acknowledge their decision warmly, state a 2-sentence summary of the vision, and ask if they are ready to transition to Build Mode.
 - If asked what mode you are in, answer clearly: "I am in Brainstorm Mode."
 """
     else:
@@ -97,10 +100,11 @@ class Assistant(Agent):
             instructions=get_mode_instructions(mode),
         )
 
-    def set_mode(self, new_mode: str) -> None:
+    async def set_mode(self, new_mode: str) -> None:
         self.current_mode = new_mode
         new_inst = get_mode_instructions(new_mode)
-        self.update_instructions(new_inst)
+        self._instructions = new_inst
+        await self.update_instructions(new_inst)
         logger.info(f"Updated Assistant instructions for mode: {new_mode}")
 
 
@@ -139,9 +143,9 @@ async def my_agent(ctx: JobContext):
         ),
     )
 
-    def apply_mode(new_mode: str):
+    async def apply_mode(new_mode: str):
         logger.info(f"Applying mode switch: '{new_mode}'")
-        assistant.set_mode(new_mode)
+        await assistant.set_mode(new_mode)
 
         # Update system message IN PLACE at index 0 of session.history
         new_instructions = get_mode_instructions(new_mode)
@@ -183,7 +187,7 @@ async def my_agent(ctx: JobContext):
                 new_mode = payload.get("mode", "general")
                 is_initial = payload.get("is_initial", False)
                 logger.info(f"Received mode switch payload: {new_mode} (is_initial: {is_initial})")
-                apply_mode(new_mode)
+                asyncio.create_task(apply_mode(new_mode))
 
                 if is_initial:
                     asyncio.create_task(speak_greeting(new_mode))
@@ -197,7 +201,7 @@ async def my_agent(ctx: JobContext):
             try:
                 meta = json.loads(new_metadata)
                 mode = meta.get("mode", "general")
-                apply_mode(mode)
+                asyncio.create_task(apply_mode(mode))
             except Exception as e:
                 logger.warning(f"Error parsing updated metadata: {e}")
 
@@ -211,7 +215,7 @@ async def my_agent(ctx: JobContext):
                 mode = meta.get("mode", mode)
             except Exception:
                 pass
-        apply_mode(mode)
+        asyncio.create_task(apply_mode(mode))
         asyncio.create_task(speak_greeting(mode))
 
     await ctx.connect()
@@ -225,7 +229,7 @@ async def my_agent(ctx: JobContext):
                 mode = meta.get("mode", mode)
             except Exception:
                 pass
-        apply_mode(mode)
+        asyncio.create_task(apply_mode(mode))
         asyncio.create_task(speak_greeting(mode))
 
 
