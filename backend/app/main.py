@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
-from app.routers import livekit_router, conversations_router
+from app.routers import livekit_router, conversations_router, build_router
 
 # Configure structured logging
 logging.basicConfig(
@@ -14,7 +14,7 @@ logger = logging.getLogger("backend")
 
 app = FastAPI(
     title=settings.APP_NAME,
-    version="0.7.0",
+    version="0.8.0",
     description="SaNa Developer Conversational Intelligence Backend",
 )
 
@@ -30,6 +30,7 @@ app.add_middleware(
 # Register API routers
 app.include_router(livekit_router.router)
 app.include_router(conversations_router.router)
+app.include_router(build_router.router)
 
 
 @app.get("/health", tags=["Health"])

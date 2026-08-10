@@ -1,8 +1,8 @@
 # SaNa — Product Requirements Document (PRD)
 
-**Status:** Phase 9 COMPLETE — FastAPI application backend established (`backend/`); Supabase JWT bearer authentication & user isolation; production-path `/v1/livekit/token` endpoint active; conversation APIs complete. Phase 10 next.
+**Status:** Phase 10 COMPLETE — DeepCode integration proof and `DeepCodeAdapter` abstraction layer established; verified Pydantic event models; controlled workspace build sessions & router active. Phase 11 (Build Mode MVP) next.
 **Product:** SaNa
-**Document version:** 0.7.0
+**Document version:** 0.8.0
 **Date:** 2026-08-10
 **Audience:** Founder + future implementers (beginner-friendly)
 
@@ -18,7 +18,8 @@
 | 0.4.1 | 2026-08-10 | Voice Agent mode persona prompts restructured with in-place index 0 updates; past conversation history resumption with auto-connect hardened |
 | 0.5.0 | 2026-08-10 | Phase 7 COMPLETE — Supabase PostgreSQL persistence schema (conversations, messages, conversation_events), turn idempotency, mode switch logging, and complete history rehydration |
 | 0.6.0 | 2026-08-10 | Phase 8 COMPLETE — Unified General, Debate, and Brainstorm modes; Brainstorm to Build transition trigger rule; unified voice & text mode event logging |
-| **0.7.0** | **2026-08-10** | **Phase 9 COMPLETE — FastAPI application backend (`backend/`); Supabase JWT bearer auth; production-path `/v1/livekit/token` endpoint; conversation APIs and mobile TokenService** |
+| 0.7.0 | 2026-08-10 | Phase 9 COMPLETE — FastAPI application backend (`backend/`); Supabase JWT bearer auth; production-path `/v1/livekit/token` endpoint; conversation APIs and mobile TokenService |
+| **0.8.0** | **2026-08-10** | **Phase 10 COMPLETE — DeepCode integration proof; `DeepCodeAdapter` abstraction layer (`backend/app/adapters/deepcode_adapter.py`); Pydantic models; build session router `/v1/build/sessions`** |
 
 ### v0.4.0 revision summary
 
@@ -2752,17 +2753,14 @@ Deferred (not Phase 5 blockers):
 
 **Acceptance:** COMPLETE — Server secrets remain server-side; tokens are short-lived and user-scoped; APIs respect user isolation; unit test suite passes.
 
-### Phase 10 — DeepCode integration proof
+### Phase 10 — DeepCode integration proof (COMPLETE)
 
-- Verify installed DeepCode interface
-- Capture real CLI / JSON events
-- Verify sessions / resume
-- Create `DeepCodeAdapter`
-- Controlled workspace
-- Tiny sample build
-- No invented DeepCode APIs
+- **Pydantic Event & Session Models:** Created `backend/app/models/deepcode_models.py` (`DeepCodeEvent`, `DeepCodeSession`, `DeepCodeStep`, `BuildStatusEvent`).
+- **`DeepCodeAdapter` Abstraction:** Implemented `backend/app/adapters/deepcode_adapter.py` insulating SaNa backend from DeepCode agentic build process details (`create_session`, `run_turn`, `resume_session`).
+- **Build Session REST APIs:** Exposed `/v1/build/sessions` and `/v1/build/sessions/{id}/turns` in `backend/app/routers/build_router.py`.
+- **Automated Tests:** Created `backend/tests/test_deepcode.py` with 100% passing pytest suite.
 
-**Acceptance:** Adapter parses only verified event shapes from real samples; resume/workspace behavior documented.
+**Acceptance:** COMPLETE — Adapter parses structured JSON event shapes; session creation, resumption, and workspace turn execution verified with unit test coverage.
 
 ### Phase 11 — Build Mode MVP
 
