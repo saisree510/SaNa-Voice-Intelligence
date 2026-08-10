@@ -246,6 +246,71 @@ class ConversationService extends ChangeNotifier {
     return [];
   }
 
+  Future<void> updateMode({
+    required String conversationId,
+    required String mode,
+    String? fromMode,
+  }) async {
+    final idx = _conversations.indexWhere((c) => c.id == conversationId);
+    if (idx >= 0) {
+      final existing = _conversations[idx];
+      _conversations[idx] = ConversationSession(
+        id: existing.id,
+        userId: existing.userId,
+        title: existing.title,
+        mode: mode,
+        createdAt: existing.createdAt,
+        updatedAt: DateTime.now(),
+        previewText: existing.previewText,
+      );
+      notifyListeners();
+    }
+
+    await logEvent(
+      conversationId: conversationId,
+      eventType: 'mode_changed',
+      fromMode: fromMode,
+      toMode: mode,
+    );
+
+    if (_isLiveSupabase) {
+      try {
+        await _supabase!.from('conversations').update({
+          'mode': mode,
+          'updated_at': DateTime.now().toIso8601String(),
+        }).eq('id', conversationId);
+      } catch (e) {
+        _logger.fine('Supabase mode update failed: $e');
+      }
+    }
+  }
+
+  Future<void> logEvent({
+    required String conversationId,
+    required String eventType,
+    String? fromMode,
+    String? toMode,
+    Map<String, dynamic>? payload,
+  }) async {
+    final eventMap = {
+      'id': uuid.v4(),
+      'conversation_id': conversationId,
+      'event_type': eventType,
+      'from_mode': fromMode,
+      'to_mode': toMode,
+      'payload': payload ?? {},
+      'created_at': DateTime.now().toIso8601String(),
+    };
+
+    if (_isLiveSupabase) {
+      try {
+        await _supabase!.from('conversation_events').insert(eventMap);
+      } catch (e) {
+        _logger.fine('Supabase event log failed: $e');
+      }
+    }
+  }
+
   Future<void> deleteConversation(String conversationId) async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -259,6 +324,7 @@ class ConversationService extends ChangeNotifier {
       if (_isLiveSupabase) {
         try {
           await _supabase!.from('messages').delete().eq('conversation_id', conversationId);
+          await _supabase!.from('conversation_events').delete().eq('conversation_id', conversationId);
           await _supabase!.from('conversations').delete().eq('id', conversationId);
         } catch (_) {}
       }

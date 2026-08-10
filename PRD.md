@@ -1,8 +1,8 @@
 # SaNa — Product Requirements Document (PRD)
 
-**Status:** Phase 6 COMPLETE & Mode Sparring / History Resumption Hardened — Supabase auth, speak-or-type onboarding, white + light-lavender UI, personalized greeting, past session resumption, and in-place mode prompt switching.
+**Status:** Phase 7 COMPLETE — Supabase PostgreSQL persistent conversations, message turn idempotency, mode switch event logging, and full rehydration complete. Phase 8 next.
 **Product:** SaNa
-**Document version:** 0.4.1
+**Document version:** 0.5.0
 **Date:** 2026-08-10
 **Audience:** Founder + future implementers (beginner-friendly)
 
@@ -15,7 +15,8 @@
 | 0.4.0 (Phase 2 note) | 2026-08-09 | Phase 2 Flutter client foundation accepted: `mobile/` starter connected via LiveKit Cloud sandbox token ID; physical Android voice validated; custom SaNa UI still deferred |
 | 0.4.0 (Phase 3 note) | 2026-08-09 | Phase 3 voice vertical-slice stabilization accepted on physical Android; connect/cancel hardening; Technical Voice Proof complete; custom SaNa UI still deferred |
 | 0.4.0 (Phase 6 note) | 2026-08-09 | Phase 6 Supabase Auth, speak-or-type onboarding, light lavender UI, and personalized home greeting complete |
-| **0.4.1** | **2026-08-10** | **Voice Agent mode persona prompts restructured with in-place index 0 updates; past conversation history resumption with auto-connect hardened** |
+| 0.4.1 | 2026-08-10 | Voice Agent mode persona prompts restructured with in-place index 0 updates; past conversation history resumption with auto-connect hardened |
+| **0.5.0** | **2026-08-10** | **Phase 7 COMPLETE — Supabase PostgreSQL persistence schema (conversations, messages, conversation_events), turn idempotency, mode switch logging, and complete history rehydration** |
 
 ### v0.4.0 revision summary
 

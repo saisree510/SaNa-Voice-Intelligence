@@ -288,6 +288,7 @@ class AppCtrl extends ChangeNotifier {
 
   void setConversationMode(ConversationMode mode) {
     if (mode == conversationMode) return;
+    final oldMode = conversationMode;
     conversationMode = mode;
     notifyListeners();
 
@@ -304,6 +305,14 @@ class AppCtrl extends ChangeNotifier {
       } catch (e) {
         _logger.warning('Failed to send mode switch packet: $e');
       }
+    }
+
+    if (activeConversationId != null && _conversationService != null) {
+      unawaited(_conversationService!.updateMode(
+        conversationId: activeConversationId!,
+        mode: mode.name,
+        fromMode: oldMode.name,
+      ));
     }
   }
 
