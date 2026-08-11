@@ -33,7 +33,7 @@ class TokenService {
   final String backendUrl;
 
   TokenService({
-    this.backendUrl = 'http://10.0.2.2:8000', // Default Android emulator host address
+    this.backendUrl = 'http://192.168.1.204:8000',
   });
 
   /// Fetches a user-scoped LiveKit token from the FastAPI backend endpoint `/v1/livekit/token`

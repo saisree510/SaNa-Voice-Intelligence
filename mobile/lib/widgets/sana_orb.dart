@@ -108,32 +108,35 @@ class _SanaOrbState extends State<SanaOrb> with TickerProviderStateMixin {
       ),
     );
 
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        if (widget.onTap != null)
-          GestureDetector(
-            onTap: widget.onTap,
-            behavior: HitTestBehavior.opaque,
-            child: orb,
-          )
-        else
-          orb,
-        if (widget.showLabel) ...[
-          const SizedBox(height: 18),
-          AnimatedSwitcher(
-            duration: const Duration(milliseconds: 250),
-            child: Text(
-              widget.state.statusLabel,
-              key: ValueKey(widget.state),
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: SanaColors.fgSecondary,
-                    letterSpacing: 0.2,
-                  ),
+    return FittedBox(
+      fit: BoxFit.scaleDown,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (widget.onTap != null)
+            GestureDetector(
+              onTap: widget.onTap,
+              behavior: HitTestBehavior.opaque,
+              child: orb,
+            )
+          else
+            orb,
+          if (widget.showLabel) ...[
+            const SizedBox(height: 12),
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 250),
+              child: Text(
+                widget.state.statusLabel,
+                key: ValueKey(widget.state),
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: SanaColors.fgSecondary,
+                      letterSpacing: 0.2,
+                    ),
+              ),
             ),
-          ),
+          ],
         ],
-      ],
+      ),
     );
   }
 }

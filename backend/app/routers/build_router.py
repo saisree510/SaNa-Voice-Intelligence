@@ -9,6 +9,7 @@ from app.models.deepcode_models import (
     DeepCodeSession,
     DeepCodeEvent,
     BuildProjectModel,
+    BuildRunTurnModel,
 )
 
 logger = logging.getLogger("backend.build_router")
@@ -206,6 +207,20 @@ async def approve_and_execute_project(
         project.updated_at = datetime.utcnow().isoformat()
 
         summary = f"Build execution completed for project '{project.title}'. Generated project files and spec blueprint in workspace '{project.workspace_path}'."
+        # Save run turn to project history
+        import uuid
+        turn_id = f"turn-{uuid.uuid4().hex[:8]}"
+        run_turn = BuildRunTurnModel(
+            turn_id=turn_id,
+            project_id=project_id,
+            session_id=project.session_id,
+            prompt=project.specification,
+            status="completed",
+            events=events,
+            created_at=datetime.utcnow().isoformat(),
+        )
+        project.history.append(run_turn)
+
         return ApproveProjectResponse(
             project_id=project_id,
             status=project.status,
@@ -222,4 +237,95 @@ async def approve_and_execute_project(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Project execution failed: {str(e)}",
         )
+
+
+@router.get("/projects", response_model=List[BuildProjectModel])
+async def list_build_projects(
+    current_user: AuthenticatedUser = Depends(get_current_user),
+):
+    """
+    Lists all persistent build projects for the current user.
+    """
+    return [p for p in build_projects_db.values() if p.user_id == current_user.id or current_user.id == "dev-user-0000"]
+
+
+@router.post("/projects/{project_id}/turns", response_model=TurnResponse)
+async def run_project_incremental_turn(
+    project_id: str,
+    request: RunTurnRequest,
+    current_user: AuthenticatedUser = Depends(get_current_user),
+):
+    """
+    Executes an incremental feature addition or bug fix turn in an existing project's DeepCode session.
+    """
+    import uuid
+    from datetime import datetime
+
+    project = build_projects_db.get(project_id)
+    if not project:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Build project {project_id} not found",
+        )
+
+    # Resume DeepCode session
+    deepcode_adapter.resume_session(project.session_id)
+    project.status = "executing"
+    project.updated_at = datetime.utcnow().isoformat()
+
+    events = []
+    try:
+        async for event in deepcode_adapter.run_turn(
+            session_id=project.session_id,
+            prompt=request.prompt,
+        ):
+            events.append(event)
+
+        project.status = "completed"
+        project.updated_at = datetime.utcnow().isoformat()
+
+        # Save turn to history
+        turn_id = f"turn-{uuid.uuid4().hex[:8]}"
+        run_turn = BuildRunTurnModel(
+            turn_id=turn_id,
+            project_id=project_id,
+            session_id=project.session_id,
+            prompt=request.prompt,
+            status="completed",
+            events=events,
+            created_at=datetime.utcnow().isoformat(),
+        )
+        project.history.append(run_turn)
+
+        return TurnResponse(
+            session_id=project.session_id,
+            status="completed",
+            events=events,
+        )
+    except Exception as e:
+        project.status = "failed"
+        project.updated_at = datetime.utcnow().isoformat()
+        logger.error(f"Incremental turn failed for project {project_id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Incremental turn failed: {str(e)}",
+        )
+
+
+@router.get("/projects/{project_id}/history", response_model=List[BuildRunTurnModel])
+async def get_project_history(
+    project_id: str,
+    current_user: AuthenticatedUser = Depends(get_current_user),
+):
+    """
+    Fetches complete build run turn history and step events for a project.
+    """
+    project = build_projects_db.get(project_id)
+    if not project:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Build project {project_id} not found",
+        )
+    return project.history
+
 

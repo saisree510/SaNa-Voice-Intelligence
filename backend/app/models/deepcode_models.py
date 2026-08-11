@@ -39,6 +39,16 @@ class BuildStatusEvent(BaseModel):
     events: List[DeepCodeEvent] = []
 
 
+class BuildRunTurnModel(BaseModel):
+    turn_id: str
+    project_id: str
+    session_id: str
+    prompt: str
+    status: str = "completed"
+    events: List[DeepCodeEvent] = []
+    created_at: str = Field(default_factory=lambda: datetime.utcnow().isoformat())
+
+
 class BuildProjectModel(BaseModel):
     project_id: str
     user_id: str
@@ -48,6 +58,8 @@ class BuildProjectModel(BaseModel):
     status: str = "drafting"  # drafting, plan_generated, approved, executing, completed, failed
     plan_summary: Optional[str] = None
     session_id: Optional[str] = None
+    history: List[BuildRunTurnModel] = []
     created_at: str = Field(default_factory=lambda: datetime.utcnow().isoformat())
     updated_at: str = Field(default_factory=lambda: datetime.utcnow().isoformat())
+
 

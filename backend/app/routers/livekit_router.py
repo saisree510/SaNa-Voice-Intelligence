@@ -20,6 +20,10 @@ class TokenRequest(BaseModel):
 class TokenResponse(BaseModel):
     token: str
     url: str
+    server_url: str
+    serverUrl: str
+    participant_token: str
+    participantToken: str
     room_name: str
     participant_identity: str
     mode: str
@@ -44,6 +48,9 @@ async def create_livekit_token(
             can_publish=True,
             can_subscribe=True,
             can_publish_data=True,
+            can_update_own_metadata=True,
+            can_manage_agent_session=True,
+            agent=True,
         )
 
         token_builder = api.AccessToken(
@@ -60,9 +67,31 @@ async def create_livekit_token(
         token = token_builder.to_jwt()
         logger.info(f"Minted LiveKit token for user {current_user.id} in room {room_name} (mode: {request.mode})")
 
+        # Explicitly dispatch the registered cloud agent worker 'voice_agent' into the room
+        try:
+            lk_api = api.LiveKitAPI(
+                url=settings.LIVEKIT_URL,
+                api_key=settings.LIVEKIT_API_KEY,
+                api_secret=settings.LIVEKIT_API_SECRET,
+            )
+            await lk_api.agent_dispatch.create_dispatch(
+                api.CreateAgentDispatchRequest(
+                    room=room_name,
+                    agent_name="voice_agent",
+                )
+            )
+            await lk_api.aclose()
+            logger.info(f"Successfully dispatched agent 'voice_agent' into room {room_name}")
+        except Exception as dispatch_err:
+            logger.warning(f"Agent dispatch attempt info/warning: {dispatch_err}")
+
         return TokenResponse(
             token=token,
             url=settings.LIVEKIT_URL,
+            server_url=settings.LIVEKIT_URL,
+            serverUrl=settings.LIVEKIT_URL,
+            participant_token=token,
+            participantToken=token,
             room_name=room_name,
             participant_identity=participant_identity,
             mode=request.mode or "general",

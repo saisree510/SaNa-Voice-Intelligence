@@ -78,3 +78,39 @@ def test_create_project_and_approval_gate():
     assert "Build execution completed" in approve_data["result_summary"]
     assert len(approve_data["events"]) >= 3
 
+
+def test_persistent_project_continuation_and_history():
+    # 1. Create and approve project
+    create_res = client.post(
+        "/v1/build/projects",
+        json={
+            "title": "Persistent AI Assistant",
+            "specification": "Build a CLI assistant",
+            "workspace_path": "c:/Users/saisr/Projects/cli_assistant",
+        }
+    )
+    project_id = create_res.json()["project_id"]
+    client.post(f"/v1/build/projects/{project_id}/approve")
+
+    # 2. List projects
+    list_res = client.get("/v1/build/projects")
+    assert list_res.status_code == 200
+    projects = list_res.json()
+    assert any(p["project_id"] == project_id for p in projects)
+
+    # 3. Execute incremental feature turn on existing project
+    inc_res = client.post(
+        f"/v1/build/projects/{project_id}/turns",
+        json={"prompt": "Add voice logging module to CLI assistant"}
+    )
+    assert inc_res.status_code == 200
+    assert inc_res.json()["status"] == "completed"
+
+    # 4. Fetch project run history
+    hist_res = client.get(f"/v1/build/projects/{project_id}/history")
+    assert hist_res.status_code == 200
+    history = hist_res.json()
+    assert len(history) >= 2  # Initial approval turn + incremental turn
+    assert history[-1]["prompt"] == "Add voice logging module to CLI assistant"
+
+

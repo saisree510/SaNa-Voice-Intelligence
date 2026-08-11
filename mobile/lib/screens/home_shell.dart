@@ -102,7 +102,7 @@ class _SaNaHome extends StatelessWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final orbSize = (constraints.maxHeight * 0.32).clamp(140.0, 240.0);
+        final orbSize = (constraints.maxHeight * 0.28).clamp(120.0, 200.0);
 
         return SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 28),
@@ -216,10 +216,8 @@ class _ModeRow extends StatelessWidget {
           _ModeChip(
             label: mode.label,
             selected: appCtrl.conversationMode == mode,
-            enabled: mode != ConversationMode.build,
-            onTap: mode != ConversationMode.build
-                ? () => appCtrl.setConversationMode(mode)
-                : null,
+            enabled: true,
+            onTap: () => appCtrl.setConversationMode(mode),
           ),
       ],
     );
