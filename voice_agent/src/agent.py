@@ -1,6 +1,7 @@
 import asyncio
 import json
 import logging
+import os
 import textwrap
 from datetime import datetime
 
@@ -15,7 +16,7 @@ from livekit.agents import (
     inference,
     room_io,
 )
-from livekit.plugins import ai_coustics
+from livekit.plugins import ai_coustics, cartesia, groq, silero
 
 logger = logging.getLogger("agent")
 
@@ -25,11 +26,11 @@ load_dotenv(".env.local")
 def get_greeting_for_mode(mode: str) -> str:
     m = mode.lower()
     if m == "debate":
-        return "Ready to test your ideas? What topic shall we debate today?"
+        return "Ready to test your ideas? What topic shall we debate about?"
     elif m == "brainstorm":
-        return "Okay, what are we brainstorming today?"
+        return "Okay, what are we brainstorming about?"
     elif m == "build":
-        return "Build Mode active. What feature or project specification are we executing today?"
+        return "Hey, ready to build a new project? What feature shall we build today?"
     else:
         return "Hey there! What are we planning to do today?"
 
@@ -126,34 +127,24 @@ server = AgentServer()
 
 @server.rtc_session(agent_name="voice_agent")
 async def my_agent(ctx: JobContext):
-    ctx.log_context_fields = {
-        "room": ctx.room.name,
-    }
+    groq_key = os.getenv("GROQ_API_KEY")
+    cartesia_key = os.getenv("CARTESIA_API_KEY")
+    logger.info(f"Connecting session in room '{ctx.room.name}'. GROQ_API_KEY present: {bool(groq_key)}, CARTESIA_API_KEY present: {bool(cartesia_key)}")
 
     assistant = Assistant(mode="general")
     greeting_spoken = False
 
     session = AgentSession(
-        stt=inference.STT(model="deepgram/nova-3", language="multi"),
-        tts=inference.TTS(
-            model="cartesia/sonic-3", voice="9626c31c-bec5-4cca-baa8-f8ba9e84c8bc"
-        ),
-        turn_handling=TurnHandlingOptions(
-            turn_detection=inference.TurnDetector(),
-        ),
+        stt=groq.STT(model="whisper-large-v3-turbo", api_key=groq_key),
+        llm=groq.LLM(model="llama-3.3-70b-versatile", api_key=groq_key),
+        tts=cartesia.TTS(api_key=cartesia_key),
+        vad=silero.VAD.load(),
         preemptive_generation=False,
     )
 
     await session.start(
         agent=assistant,
         room=ctx.room,
-        room_options=room_io.RoomOptions(
-            audio_input=room_io.AudioInputOptions(
-                noise_cancellation=ai_coustics.audio_enhancement(
-                    model=ai_coustics.EnhancerModel.QUAIL_VF_S
-                ),
-            ),
-        ),
     )
 
     async def apply_mode(new_mode: str):
@@ -230,8 +221,6 @@ async def my_agent(ctx: JobContext):
                 pass
         asyncio.create_task(apply_mode(mode))
         asyncio.create_task(speak_greeting(mode))
-
-    await ctx.connect()
 
     # Fallback greeting if participant is already connected upon agent join
     for p in ctx.room.remote_participants.values():

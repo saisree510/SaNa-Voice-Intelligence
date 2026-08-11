@@ -12,6 +12,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'conversation_timeline.dart';
 import '../models/conversation_turn.dart';
 import '../services/conversation_service.dart';
+import '../services/token_service.dart';
 
 final String homepageAgentTokenEndpoint = 'https://livekit.com/api/homepage-agent/token';
 
@@ -71,11 +72,11 @@ class AppCtrl extends ChangeNotifier {
       case ConversationMode.general:
         return 'Hey $_customUserName, what are we planning to do today?';
       case ConversationMode.debate:
-        return 'Ready to test your ideas, $_customUserName? What topic shall we debate?';
+        return 'Ready to test your ideas, $_customUserName? What topic shall we debate about?';
       case ConversationMode.brainstorm:
-        return 'Okay $_customUserName, what are we brainstorming today?';
+        return 'Okay $_customUserName, what are we brainstorming about?';
       case ConversationMode.build:
-        return 'Hey $_customUserName, ready to build a new project?';
+        return 'Hey $_customUserName, ready to build a new project? What feature shall we build today?';
     }
   }
 
@@ -171,20 +172,15 @@ class AppCtrl extends ChangeNotifier {
       );
     }
 
-    final sandboxId = dotenv.env['LIVEKIT_SANDBOX_ID']?.replaceAll('"', '');
-    final sdk.TokenSourceConfigurable tokenSource;
-    if (sandboxId == null || sandboxId.isEmpty || sandboxId == '<your-sandbox-id>') {
-      tokenSource = sdk.EndpointTokenSource(url: Uri.parse(homepageAgentTokenEndpoint));
-    } else {
-      // Development sandbox token server (ID only; no API secret in Flutter).
-      tokenSource = sdk.SandboxTokenSource(sandboxId: sandboxId);
-    }
+    // Use AuthenticatedTokenSource to attach Supabase JWT headers
+    final tokenSource = AuthenticatedTokenSource();
 
-    // Explicitly dispatch the SaNa cloud agent by name.
     return sdk.Session.withAgent(
       'voice_agent',
       tokenSource: tokenSource,
-      options: sdk.SessionOptions(room: room),
+      options: sdk.SessionOptions(
+        room: room,
+      ),
     );
   }
 
@@ -369,7 +365,9 @@ class AppCtrl extends ChangeNotifier {
 
     try {
       await session.start().timeout(connectTimeout);
-      if (session.connectionState == sdk.ConnectionState.connected ||
+
+      if (room.connectionState == sdk.ConnectionState.connected ||
+          session.connectionState == sdk.ConnectionState.connected ||
           session.connectionState == sdk.ConnectionState.reconnecting) {
         appScreenState = AppScreenState.agent;
         notifyListeners();
@@ -430,6 +428,11 @@ class AppCtrl extends ChangeNotifier {
     switch (state) {
       case sdk.ConnectionState.connected:
         _sendInitialModePacket();
+        try {
+          unawaited(room.localParticipant?.setMicrophoneEnabled(true));
+        } catch (e) {
+          _logger.warning('Failed to enable mic on connection: $e');
+        }
         nextScreen = AppScreenState.agent;
         break;
       case sdk.ConnectionState.reconnecting:
@@ -458,5 +461,26 @@ class AppCtrl extends ChangeNotifier {
     if (shouldNotify) {
       notifyListeners();
     }
+  }
+}
+
+class AuthenticatedTokenSource implements sdk.TokenSourceConfigurable {
+  final TokenService tokenService = TokenService();
+
+  @override
+  Future<sdk.TokenSourceResponse> fetch(sdk.TokenRequestOptions options) async {
+    final res = await tokenService.fetchToken(
+      mode: 'general', // Mode will be updated in setConversationMode if needed
+      roomName: options.roomName,
+    );
+    if (res == null) {
+      throw Exception('Failed to fetch authenticated token from backend');
+    }
+    return sdk.TokenSourceResponse(
+      serverUrl: res.url,
+      participantToken: res.token,
+      roomName: res.roomName,
+      participantName: res.participantIdentity,
+    );
   }
 }

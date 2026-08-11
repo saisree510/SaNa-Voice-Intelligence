@@ -1,9 +1,9 @@
 # SaNa — Product Requirements Document (PRD)
 
-**Status:** Phase 11 COMPLETE — Build Mode MVP active; Tech Lead persona in voice agent; explicit approval gate API (`POST /v1/build/projects/{id}/approve`); DeepCode execution & result explanation complete. Phase 12 next.
+**Status:** Phase 12 COMPLETE & Hardened — Direct Cartesia TTS active; LiveKit Cloud fresh project `sana-jjdz0xfv` deployed; Silero VAD crash fixed; synchronized mode greetings across voice & UI. Phase 13 next.
 **Product:** SaNa
-**Document version:** 0.9.0
-**Date:** 2026-08-10
+**Document version:** 1.1.0
+**Date:** 2026-08-11
 **Audience:** Founder + future implementers (beginner-friendly)
 
 ### Revision history
@@ -20,7 +20,9 @@
 | 0.6.0 | 2026-08-10 | Phase 8 COMPLETE — Unified General, Debate, and Brainstorm modes; Brainstorm to Build transition trigger rule; unified voice & text mode event logging |
 | 0.7.0 | 2026-08-10 | Phase 9 COMPLETE — FastAPI application backend (`backend/`); Supabase JWT bearer auth; production-path `/v1/livekit/token` endpoint; conversation APIs and mobile TokenService |
 | 0.8.0 | 2026-08-10 | Phase 10 COMPLETE — DeepCode integration proof; `DeepCodeAdapter` abstraction layer (`backend/app/adapters/deepcode_adapter.py`); Pydantic models; build session router `/v1/build/sessions` |
-| **0.9.0** | **2026-08-10** | **Phase 11 COMPLETE — Build Mode MVP; Tech Lead voice persona; explicit plan approval gate (`POST /v1/build/projects/{id}/approve`); DeepCode execution & result explanation** |
+| 0.9.0 | 2026-08-10 | Phase 11 COMPLETE — Build Mode MVP; Tech Lead voice persona; explicit plan approval gate (`POST /v1/build/projects/{id}/approve`); DeepCode execution & result explanation |
+| 1.0.0 | 2026-08-10 | Phase 12 COMPLETE — Persistent Build Projects; project listing (`GET /v1/build/projects`); incremental feature turns (`POST /v1/build/projects/{id}/turns`); run history (`GET /v1/build/projects/{id}/history`) |
+| **1.1.0** | **2026-08-11** | **Direct Cartesia TTS integration; LiveKit Cloud fresh project `sana-jjdz0xfv` deployment; Silero VAD crash resolution; explicit mobile mic unmuting; synchronized mode greetings across voice & UI** |
 
 ### v0.4.0 revision summary
 
@@ -2774,15 +2776,14 @@ Deferred (not Phase 5 blockers):
 
 **Acceptance:** COMPLETE — Entering Build Mode or drafting a project DOES NOT execute code automatically; explicit approval gate required; controlled workspace build succeeds and returns plain text explanation.
 
-### Phase 12 — Persistent Build Projects
+### Phase 12 — Persistent Build Projects (COMPLETE)
 
-- Reopen project
-- Continue DeepCode session
-- Add features
-- Fix bugs
-- Artifacts / run history
+- **Project Listing Endpoint:** `GET /v1/build/projects` returns all active and past build projects.
+- **Incremental Turn Continuation Endpoint:** `POST /v1/build/projects/{id}/turns` resumes the existing DeepCode session and executes feature addition or bugfix turns without re-scaffolding from scratch.
+- **Run Turn History Endpoint:** `GET /v1/build/projects/{id}/history` fetches full step execution history, prompts, and generated events (`BuildRunTurnModel`).
+- **Automated Tests:** Created `test_persistent_project_continuation_and_history` in `backend/tests/test_deepcode.py` with 100% passing pytest suite (`7 passed in 4.62s`).
 
-**Acceptance:** Same project can be continued across sessions without regenerating everything.
+**Acceptance:** COMPLETE — Same project can be reopened, continued across sessions, and modified incrementally with full run history preserved.
 
 ### Phase 13 — Security, testing and production hardening
 

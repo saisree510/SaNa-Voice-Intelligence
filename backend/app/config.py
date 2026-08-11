@@ -9,9 +9,9 @@ class Settings(BaseSettings):
     PORT: int = 8000
     
     # LiveKit configuration
-    LIVEKIT_URL: str = "wss://sana-b8u74t7v.livekit.cloud"
-    LIVEKIT_API_KEY: str = "APIbjA4T5tuugnd"
-    LIVEKIT_API_SECRET: str = "wQ04yWjM1F2y98DkL3mP4v7N8qR1s2T3u4V5w6X7y8Z"
+    LIVEKIT_URL: str = "wss://sana-jjdz0xfv.livekit.cloud"
+    LIVEKIT_API_KEY: str = "APIQnhXyFWJBjJW"
+    LIVEKIT_API_SECRET: str = "XLh2uGFGCF1S3xJ6VeS0IlqFm2IdoaZ7lfR9w7o7YQH"
     
     # Supabase configuration
     SUPABASE_URL: str = "https://hpexmttbykelgkggjdvi.supabase.co"
