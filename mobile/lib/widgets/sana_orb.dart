@@ -171,17 +171,6 @@ class _SanaOrbPainter extends CustomPainter {
     final coreColor = state == SanaOrbState.error ? SanaColors.danger : SanaColors.lavender;
     final deepColor = state == SanaOrbState.error ? const Color(0xFF5A2E2A) : SanaColors.lavenderDeep;
 
-    // Soft outer halo rings
-    for (var i = 3; i >= 1; i--) {
-      final ringPulse = pulse * intensity;
-      final radius = baseRadius * (1.35 + i * 0.28 + breathe * 0.08 + ringPulse * 0.12);
-      final paint = Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.2
-        ..color = coreColor.withValues(alpha: 0.08 + (0.06 * (4 - i)) * intensity);
-      canvas.drawCircle(center, radius, paint);
-    }
-
     // Organic blob body
     final path = _organicPath(
       center: center,
@@ -205,13 +194,6 @@ class _SanaOrbPainter extends CustomPainter {
       Paint()
         ..shader = gradient.createShader(Rect.fromCircle(center: center, radius: baseRadius * 1.4))
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 0.5),
-    );
-
-    // Inner glow highlight
-    canvas.drawCircle(
-      center.translate(-baseRadius * 0.15, -baseRadius * 0.18),
-      baseRadius * (0.28 + breathe * 0.04),
-      Paint()..color = SanaColors.fgPrimary.withValues(alpha: 0.12 + pulse * 0.08 * intensity),
     );
 
     // Thinking: slow rotating arc accent

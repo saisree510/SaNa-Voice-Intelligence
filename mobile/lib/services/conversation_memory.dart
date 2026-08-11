@@ -9,6 +9,7 @@ const int conversationRestoreMaxMessageCharacters = 4000;
 Map<String, dynamic> buildConversationRestorePayload({
   required String conversationId,
   required List<PersistedMessage> messages,
+  required String mode,
   int maxPayloadBytes = conversationRestoreMaxPayloadBytes,
 }) {
   final selected = <Map<String, dynamic>>[];
@@ -30,6 +31,7 @@ Map<String, dynamic> buildConversationRestorePayload({
     final candidatePayload = <String, dynamic>{
       'type': 'conversation_restore',
       'conversation_id': conversationId,
+      'mode': mode,
       'messages': candidateMessages,
     };
     if (utf8.encode(jsonEncode(candidatePayload)).length > maxPayloadBytes) break;
@@ -39,6 +41,7 @@ Map<String, dynamic> buildConversationRestorePayload({
   return <String, dynamic>{
     'type': 'conversation_restore',
     'conversation_id': conversationId,
+    'mode': mode,
     'messages': selected,
   };
 }

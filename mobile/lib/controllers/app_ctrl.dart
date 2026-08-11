@@ -192,6 +192,7 @@ class AppCtrl extends ChangeNotifier {
       final payload = buildConversationRestorePayload(
         conversationId: conversationId,
         messages: _restoredMessages,
+        mode: conversationMode.name,
       );
       unawaited(participant.publishData(utf8.encode(jsonEncode(payload))));
       _logger.info(

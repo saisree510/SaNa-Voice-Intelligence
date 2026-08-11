@@ -21,12 +21,14 @@ void main() {
     final payload = buildConversationRestorePayload(
       conversationId: 'conversation-1',
       messages: messages,
+      mode: 'debate',
       maxPayloadBytes: 700,
     );
     final encoded = utf8.encode(jsonEncode(payload));
     final restored = payload['messages'] as List<dynamic>;
 
     expect(payload['type'], 'conversation_restore');
+    expect(payload['mode'], 'debate');
     expect(encoded.length, lessThanOrEqualTo(700));
     expect(restored, isNotEmpty);
     expect((restored.last as Map<String, dynamic>)['id'], 'message-7');

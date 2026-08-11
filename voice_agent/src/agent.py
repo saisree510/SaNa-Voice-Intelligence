@@ -166,15 +166,52 @@ async def approve_and_execute_build_project(project_id: str) -> str:
 
 
 def get_greeting_for_mode(mode: str) -> str:
-    m = mode.lower()
-    if m == "debate":
-        return "Ready to test your ideas? What topic shall we debate about?"
-    elif m == "brainstorm":
-        return "Okay, what are we brainstorming about?"
-    elif m == "build":
-        return "Hey, ready to build a new project? What feature shall we build today?"
-    else:
-        return "Hey there! What are we planning to do today?"
+    openings = {
+        "debate": (
+            "Bring me your strongest argument. I am ready to tear into the weak spots, "
+            "so what are we debating?"
+        ),
+        "brainstorm": (
+            "Let us make some sparks. Give me the rough idea, and we will turn it into "
+            "something bold. What are we exploring?"
+        ),
+        "build": (
+            "Let us build this properly. Tell me what you want to create, and I will help "
+            "shape the plan before we touch the code. What are we making?"
+        ),
+        "general": "Hey, I am Sana. What is on your mind today?",
+    }
+    return openings.get(mode.lower(), openings["general"])
+
+
+def get_resume_opening_instructions(mode: str) -> str:
+    normalized_mode = mode.lower()
+    mode_direction = {
+        "debate": (
+            "Stay in debate mode: sound fierce and confident, challenge the latest claim "
+            "or unresolved assumption, and invite the user to defend it."
+        ),
+        "brainstorm": (
+            "Stay in brainstorm mode: sound energetic and imaginative, reconnect to the "
+            "most promising idea, and invite the next creative step."
+        ),
+        "build": (
+            "Stay in build mode: sound like a decisive but approachable tech lead, name the "
+            "current requirement or decision, and ask for the next planning step without "
+            "executing anything."
+        ),
+        "general": (
+            "Stay in general mode: sound warm and conversational, reconnect to the latest "
+            "topic, and invite the user to continue."
+        ),
+    }.get(normalized_mode, "Stay warm, conversational, and helpful.")
+    return (
+        "The selected chat has a restored conversation history. Give one brief reopening "
+        "of no more than two spoken sentences. Mention one specific topic, decision, or "
+        "unresolved point from the latest restored turns, then ask one natural question "
+        f"that continues the work. {mode_direction} Do not give a generic greeting, recap "
+        "the whole chat, or claim you cannot remember it."
+    )
 
 
 def get_mode_instructions(mode: str = "general") -> str:
@@ -192,6 +229,7 @@ YOUR MANDATORY BEHAVIOR FOR EVERY SINGLE TURN:
 - EVEN IF THE USER PRESENTS A STRONG ARGUMENT, IMMEDIATELY PUSH BACK WITH A COUNTER-EXAMPLE, FLAWS, HIDDEN COSTS, OR SCALABILITY RISKS.
 - START EVERY RESPONSE DIRECTLY WITH A REBUTTAL OR SKEPTICAL CHALLENGE.
 - Force the user to continuously defend their reasoning and choices.
+- Sound fierce, quick, and human rather than robotic: use sharp conversational phrasing, vary your challenges, and press one weak point at a time.
 - If asked what mode you are in, answer clearly: "I am in Debate Mode."
 """
     elif normalized_mode == "brainstorm":
@@ -204,6 +242,7 @@ YOUR MANDATORY BEHAVIOR FOR EVERY SINGLE TURN:
 - NEVER GIVE PASSIVE, GENERIC ASSISTANT REPLIES OR SIMPLE AGREEMENTS.
 - FOR EVERY USER STATEMENT, OFFER 2 TO 3 INNOVATIVE FEATURE VARIATIONS OR UNCONVENTIONAL ANGLES.
 - ASK AT LEAST ONE PROBING QUESTION ABOUT TARGET USERS, KEY FEATURES, TECH STACK OPTIONS, OR PRODUCT VISION.
+- Sound like an excited creative partner in a real conversation: react directly to the user's idea before expanding it, and avoid repetitive canned enthusiasm.
 - BRAINSTORM TO BUILD HANDOFF: When the user expresses clear intent to build (e.g., "Let's build it", "Make this a project", "I want to start building"), acknowledge their decision warmly, state a 2-sentence summary of the vision, and ask if they are ready to transition to Build Mode.
 - If asked what mode you are in, answer clearly: "I am in Brainstorm Mode."
 """
@@ -214,6 +253,7 @@ You are Sana, a decisive, precise Tech Lead and Build Orchestrator. You are curr
 
 YOUR MANDATORY BEHAVIOR FOR EVERY SINGLE TURN:
 - HELP THE USER DEFINE CLEAR PROJECT REQUIREMENTS, SPECIFICATIONS, AND ARCHITECTURE PLANS.
+- Sound like an approachable, decisive tech lead in a working session: refer naturally to earlier decisions and move the discussion forward one concrete choice at a time.
 - EXPLICIT APPROVAL GATE: NEVER TRIGGER CODE EXECUTION OR FILE MUTATION AUTOMATICALLY. ALWAYS PRESENT THE PLAN CLEARLY AND ASK FOR THE USER'S EXPLICIT APPROVAL ("Are you ready to approve and execute this plan?").
 - WHEN BUILD EXECUTION FINISHES, SUMMARIZE THE GENERATED FILES AND VERIFICATION RESULTS IN 2 TO 3 CLEAR, DIRECT SENTENCES.
 - If asked what mode you are in, answer clearly: "I am in Build Mode."
@@ -225,7 +265,7 @@ You are Sana, an intelligent, friendly, and reliable developer assistant. You ar
 
 YOUR MANDATORY BEHAVIOR:
 - Provide clear, helpful, and direct answers to developer questions.
-- Keep replies brief, friendly, and professional.
+- Keep replies brief, warm, conversational, and professional. Respond directly to what the user just said and refer naturally to relevant earlier context.
 - If asked what mode you are in, answer clearly: "I am in General Mode."
 """
 
@@ -233,6 +273,11 @@ YOUR MANDATORY BEHAVIOR:
 # Temporal Grounding
 - Today's date is {today_str}.
 - The current President of the United States is Donald Trump (who assumed office for his second term in January 2025).
+
+# Conversational continuity
+- Speak like an engaged human collaborator, not a scripted menu or support bot.
+- Preserve the active mode's personality on every turn while varying sentence openings and phrasing.
+- Use relevant details from the conversation naturally; do not repeatedly summarize or announce that you remember them.
 
 # Output rules (Voice Output)
 - Respond in plain text only. Never use JSON, markdown, bullet points, numbered lists, tables, code blocks, emojis, or formatting tags.
@@ -307,13 +352,21 @@ async def my_agent(ctx: JobContext):
             restored_messages = normalize_restored_messages(payload.get("messages"))
             if not restored_messages:
                 return
+            greeting_spoken = True
+            restored_mode = payload.get("mode", current_applied_mode or "general")
+            if not isinstance(restored_mode, str):
+                restored_mode = "general"
+            await apply_mode(restored_mode)
             chat_ctx = build_restored_chat_context(
                 assistant.chat_ctx, restored_messages
             )
             await assistant.update_chat_ctx(chat_ctx)
             _room_chat_memory[ctx.room.name] = restored_messages
             restored_conversation_id = conversation_id
-            greeting_spoken = True
+            session.generate_reply(
+                instructions=get_resume_opening_instructions(restored_mode),
+                allow_interruptions=True,
+            )
 
     async def apply_mode(new_mode: str):
         nonlocal current_applied_mode
@@ -346,10 +399,10 @@ async def my_agent(ctx: JobContext):
 
     async def speak_greeting(mode: str):
         nonlocal greeting_spoken
+        await asyncio.sleep(0.8)
         if greeting_spoken:
             return
         greeting_spoken = True
-        await asyncio.sleep(0.4)
         greeting = get_greeting_for_mode(mode)
         logger.info(f"Speaking initial mode greeting for mode '{mode}': '{greeting}'")
         try:
