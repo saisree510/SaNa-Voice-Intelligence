@@ -30,6 +30,9 @@ class RealConversationService implements ConversationService {
   String? _conversationId;
 
   @override
+  String? get conversationId => _conversationId;
+
+  @override
   Future<String> sendMessage({
     required String modeId,
     required List<ChatMessage> history,

@@ -61,6 +61,24 @@ class RealAuthService implements AuthService {
   }
 
   @override
+  Future<void> updateName({required String token, required String name}) async {
+    final http.Response response;
+    try {
+      response = await _http.patch(
+        _uri('/auth/me'),
+        headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer $token'},
+        body: jsonEncode({'name': name}),
+      );
+    } catch (e) {
+      throw NetworkException("Couldn't reach SANA's servers. Check your connection and try again.", e);
+    }
+
+    if (response.statusCode != 200) {
+      throw AuthException(extractBackendErrorDetail(response) ?? "Couldn't save your name. Please try again.");
+    }
+  }
+
+  @override
   Future<void> logout() async {
     // JWTs are stateless — nothing to call server-side. AuthProvider
     // just drops the token client-side (see AuthProvider.logout).

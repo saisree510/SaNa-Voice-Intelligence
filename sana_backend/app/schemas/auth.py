@@ -16,6 +16,7 @@ class LoginRequest(BaseModel):
 class UserPublic(BaseModel):
     id: str
     email: str
+    name: str | None = None
     created_at: datetime
 
     model_config = {'from_attributes': True}
@@ -25,3 +26,7 @@ class TokenResponse(BaseModel):
     access_token: str
     token_type: str = 'bearer'
     user: UserPublic
+
+
+class UpdateNameRequest(BaseModel):
+    name: str = Field(min_length=1, max_length=100)

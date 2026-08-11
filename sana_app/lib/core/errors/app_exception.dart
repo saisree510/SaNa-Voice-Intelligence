@@ -38,6 +38,16 @@ final class AiException extends AppException {
   ]) : super(message, cause: cause);
 }
 
+/// Failures from Build mode's build-job API (BuildAgent) — starting a
+/// build, checking its status, listing/reading files, downloading the
+/// artifact.
+final class BuildException extends AppException {
+  const BuildException([
+    String message = 'Something went wrong with the build. Please try again.',
+    Object? cause,
+  ]) : super(message, cause: cause);
+}
+
 /// Failures from microphone/speech-to-text/text-to-speech.
 final class VoiceException extends AppException {
   const VoiceException(super.message, {super.cause});

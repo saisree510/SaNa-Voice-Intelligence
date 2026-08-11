@@ -5,3 +5,13 @@ __pycache__/
 .env.local
 .pytest_cache/
 sana.db
+
+# Generated project workspaces + packaged ZIP artifacts (BuildAgent /
+# DeepCodeService) -- BUILD_WORKSPACES_ROOT defaults to sana-builds/ as
+# a *sibling* of sana_backend/ and sana_app/ (see build_workspace.py),
+# not nested under either, so this line only takes effect if that root
+# is ever pointed inside sana_backend instead. Listed here anyway so
+# it's covered the moment sana_backend becomes (or is nested inside) a
+# git repo, and as documentation of the real default location.
+sana-builds/
+_artifacts/

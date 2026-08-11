@@ -5,8 +5,11 @@ import secrets
 from fastapi import APIRouter, Depends, HTTPException, Response
 from livekit.api import AccessToken, RoomAgentDispatch, RoomConfiguration, VideoGrants
 from pydantic import BaseModel, Field
+from sqlalchemy.orm import Session
 
 from ..core.config import get_settings
+from ..db.session import get_db
+from ..models.conversation import Conversation
 from ..models.user import User
 from ..modes import MODE_INSTRUCTIONS
 from .deps import get_current_user
@@ -29,18 +32,53 @@ class TokenRequest(BaseModel):
     mode: str
     user_id: str
     user_name: str
+    # Set to resume an existing voice conversation (e.g. the user just
+    # stopped the mic and started it again a moment later) instead of
+    # starting a fresh one — see voice_agent.py, which loads that
+    # conversation's prior turns into the agent's context so it actually
+    # remembers what was already said. None/omitted starts a new one.
+    conversation_id: str | None = None
 
 
 class TokenResponse(BaseModel):
     url: str
     token: str
     room_name: str
+    # Always the conversation this call is (now) part of — a freshly
+    # created one if the request didn't provide conversation_id, or the
+    # same one echoed back if it did. The client remembers this and
+    # passes it back on the *next* token request to keep resuming the
+    # same thread across mic stop/start, until "New Chat" clears it.
+    conversation_id: str
 
 
 @router.post('/token', response_model=TokenResponse)
-def create_voice_token(body: TokenRequest) -> TokenResponse:
+def create_voice_token(body: TokenRequest, db: Session = Depends(get_db)) -> TokenResponse:
     if body.mode not in MODE_INSTRUCTIONS:
         raise HTTPException(status_code=400, detail=f"Unknown mode '{body.mode}'.")
+
+    if body.conversation_id:
+        conversation = db.get(Conversation, body.conversation_id)
+        if conversation is None:
+            raise HTTPException(status_code=404, detail='Conversation not found.')
+        if conversation.user_id != body.user_id:
+            raise HTTPException(status_code=403, detail='You do not have access to this conversation.')
+        if conversation.mode != body.mode:
+            raise HTTPException(
+                status_code=400,
+                detail=f"This conversation is in '{conversation.mode}' mode, not '{body.mode}'.",
+            )
+    else:
+        # Created now, synchronously, rather than lazily by the agent on
+        # the first turn (the old behavior) — the client needs the real
+        # id back in this same response so it can offer to resume this
+        # exact call next time, even one that ends before anyone says
+        # anything. Title is filled in later (see voice_transcript_service.py),
+        # once the user's first real words exist to title it with.
+        conversation = Conversation(user_id=body.user_id, mode=body.mode)
+        db.add(conversation)
+        db.commit()
+        db.refresh(conversation)
 
     settings = get_settings()
     room_name = f'sana-{body.mode}-{secrets.token_hex(4)}'
@@ -48,8 +86,17 @@ def create_voice_token(body: TokenRequest) -> TokenResponse:
     # Metadata travels with the agent dispatch, so the worker knows which
     # mode's instructions to load and who it's talking to — without the
     # client needing a second round trip. userId is what lets the agent
-    # save the transcript under the right account (see voice_agent.py).
-    agent_metadata = json.dumps({'mode': body.mode, 'userName': body.user_name, 'userId': body.user_id})
+    # save the transcript under the right account; conversationId is
+    # what lets it resume one instead of always starting fresh (see
+    # voice_agent.py).
+    agent_metadata = json.dumps(
+        {
+            'mode': body.mode,
+            'userName': body.user_name,
+            'userId': body.user_id,
+            'conversationId': conversation.id,
+        }
+    )
 
     token = (
         AccessToken(settings.livekit_api_key, settings.livekit_api_secret)
@@ -71,7 +118,9 @@ def create_voice_token(body: TokenRequest) -> TokenResponse:
         .to_jwt()
     )
 
-    return TokenResponse(url=settings.livekit_url, token=token, room_name=room_name)
+    return TokenResponse(
+        url=settings.livekit_url, token=token, room_name=room_name, conversation_id=conversation.id
+    )
 
 
 class SpeakRequest(BaseModel):

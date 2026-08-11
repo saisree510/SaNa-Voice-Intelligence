@@ -49,7 +49,14 @@ async def send_message(
     history = [{'role': m.role, 'content': m.content} for m in conversation.messages]
 
     try:
-        reply_text = await ai_provider.generate_reply(mode=mode, history=history, user_message=message)
+        reply_text = await ai_provider.generate_reply(
+            mode=mode,
+            history=history,
+            user_message=message,
+            conversation_id=conversation.id,
+            user_name=user.name,
+            user_id=user.id,
+        )
     except AITimeoutError as e:
         db.rollback()
         raise HTTPException(

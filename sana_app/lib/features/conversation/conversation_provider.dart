@@ -25,7 +25,7 @@ class ConversationProvider extends ChangeNotifier {
     ConversationHistoryService? historyService,
   })  : _conversationService = conversationService,
         _historyService = historyService ?? LocalConversationHistoryService() {
-    _loadHistory();
+    _ready = _loadHistory();
   }
 
   final AppMode mode;
@@ -37,10 +37,41 @@ class ConversationProvider extends ChangeNotifier {
   bool isThinking = false;
   String? errorMessage;
   bool _historyLoaded = false;
+  late final Future<void> _ready;
+
+  /// Resolves once cached messages *and* the last-active conversation id
+  /// have both been restored — see [_loadHistory]. Callers that need to
+  /// mirror [conversationId] elsewhere (voice's resumeConversation, in
+  /// unified_conversation_screen.dart) await this first so they don't
+  /// read it before the restore has actually happened.
+  Future<void> get ready => _ready;
+
+  /// The backend conversation thread this session is currently
+  /// continuing — see [ConversationService.conversationId]. Build mode
+  /// uses this to look up build jobs tied to the open conversation.
+  String? get conversationId => _conversationService.conversationId;
+
+  /// Persists a conversation id this provider didn't mint itself — used
+  /// when a *voice* turn resolves/continues a conversation for this same
+  /// mode (see unified_conversation_screen.dart), so a voice-only visit
+  /// survives a refresh the same way a text one does, without voice
+  /// needing its own copy of [ConversationHistoryService].
+  Future<void> persistExternalConversationId(String? conversationId) {
+    return _historyService.saveActiveConversationId(userId, mode.id, conversationId);
+  }
 
   Future<void> _loadHistory() async {
     final saved = await _historyService.load(userId, mode.id);
     messages.addAll(saved);
+    // Restores *which* backend conversation these cached messages belong
+    // to — without this, a page refresh/app restart shows the same
+    // messages but the next one sent silently starts a brand-new
+    // conversation, splitting one thread into two while looking like a
+    // single, oddly-ordered one on screen.
+    final savedConversationId = await _historyService.loadActiveConversationId(userId, mode.id);
+    if (savedConversationId != null) {
+      _conversationService.resumeConversation(savedConversationId);
+    }
     _historyLoaded = true;
     notifyListeners();
   }
@@ -62,6 +93,11 @@ class ConversationProvider extends ChangeNotifier {
         userText: trimmed,
       );
       messages.add(ChatMessage.sana(reply));
+      // The service may have just minted a brand-new conversation id (the
+      // first message of a fresh thread) — persist it immediately so a
+      // refresh right after this one still continues the same thread
+      // instead of forking another new one.
+      await _historyService.saveActiveConversationId(userId, mode.id, _conversationService.conversationId);
     } catch (e) {
       errorMessage = errorMessageFor(e);
     } finally {
@@ -109,6 +145,7 @@ class ConversationProvider extends ChangeNotifier {
     errorMessage = null;
     notifyListeners();
     await _persist();
+    await _historyService.saveActiveConversationId(userId, mode.id, null);
   }
 
   /// Replaces the current transcript with a previously-had conversation
@@ -122,5 +159,6 @@ class ConversationProvider extends ChangeNotifier {
     errorMessage = null;
     notifyListeners();
     await _persist();
+    await _historyService.saveActiveConversationId(userId, mode.id, conversationId);
   }
 }

@@ -8,6 +8,7 @@ from fastapi.responses import JSONResponse
 from sqlalchemy.exc import SQLAlchemyError
 
 from .api.auth import router as auth_router
+from .api.build import router as build_router
 from .api.chat import router as chat_router
 from .api.conversations import router as conversations_router
 from .api.voice import router as voice_router
@@ -56,6 +57,7 @@ def handle_database_error(request: Request, exc: SQLAlchemyError) -> JSONRespons
 
 
 app.include_router(auth_router)
+app.include_router(build_router)
 app.include_router(chat_router)
 app.include_router(conversations_router)
 app.include_router(voice_router)

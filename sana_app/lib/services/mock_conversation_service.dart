@@ -15,6 +15,10 @@ import 'conversation_service.dart';
 class MockConversationService implements ConversationService {
   final _random = Random();
 
+  // The mock has no server-side conversation to track at all.
+  @override
+  String? get conversationId => null;
+
   @override
   Future<String> sendMessage({
     required String modeId,

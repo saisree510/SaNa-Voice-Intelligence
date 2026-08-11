@@ -3,6 +3,7 @@ def test_register_creates_account_and_returns_token(client):
     assert resp.status_code == 201
     body = resp.json()
     assert body['user']['email'] == 'new@example.com'
+    assert body['user']['name'] is None  # not onboarded yet
     assert 'id' in body['user']
     assert 'password' not in body['user']
     assert 'password_hash' not in body['user']
@@ -48,3 +49,31 @@ def test_protected_endpoint_accepts_valid_token(client, register_and_login):
     _, headers = register_and_login('protected@example.com')
     resp = client.get('/conversations', headers=headers)
     assert resp.status_code == 200
+
+
+def test_update_name_sets_it_and_returns_the_updated_user(client, register_and_login):
+    _, headers = register_and_login('namesetter@example.com')
+    resp = client.patch('/auth/me', json={'name': 'Ada'}, headers=headers)
+    assert resp.status_code == 200
+    assert resp.json()['name'] == 'Ada'
+
+
+def test_update_name_requires_auth(client):
+    resp = client.patch('/auth/me', json={'name': 'Ada'})
+    assert resp.status_code == 401
+
+
+def test_update_name_rejects_empty_name(client, register_and_login):
+    _, headers = register_and_login('emptyname@example.com')
+    resp = client.patch('/auth/me', json={'name': ''}, headers=headers)
+    assert resp.status_code == 422
+
+
+def test_login_reflects_a_previously_set_name(client, register_and_login):
+    _, headers = register_and_login('persistedname@example.com', password='password123')
+    client.patch('/auth/me', json={'name': 'Grace'}, headers=headers)
+
+    resp = client.post(
+        '/auth/login', json={'email': 'persistedname@example.com', 'password': 'password123'}
+    )
+    assert resp.json()['user']['name'] == 'Grace'

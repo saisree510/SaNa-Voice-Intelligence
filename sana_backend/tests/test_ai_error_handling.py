@@ -9,17 +9,17 @@ from app.services.ai_service import AIProvider, AIServiceError, AITimeoutError, 
 
 
 class _TimeoutProvider(AIProvider):
-    async def generate_reply(self, *, mode, history, user_message):
+    async def generate_reply(self, *, mode, history, user_message, conversation_id, user_name, user_id=None):
         raise AITimeoutError('simulated timeout')
 
 
 class _UnexpectedProvider(AIProvider):
-    async def generate_reply(self, *, mode, history, user_message):
+    async def generate_reply(self, *, mode, history, user_message, conversation_id, user_name, user_id=None):
         raise AIUnexpectedResponseError('simulated empty response')
 
 
 class _GenericFailureProvider(AIProvider):
-    async def generate_reply(self, *, mode, history, user_message):
+    async def generate_reply(self, *, mode, history, user_message, conversation_id, user_name, user_id=None):
         raise AIServiceError('simulated provider outage')
 
 

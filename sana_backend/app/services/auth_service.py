@@ -35,3 +35,16 @@ def authenticate_user(db: Session, *, email: str, password: str) -> User:
 
 def issue_token_for(user: User) -> str:
     return create_access_token(subject=user.id)
+
+
+def update_name(db: Session, *, user: User, name: str) -> User:
+    user.name = name
+    try:
+        db.commit()
+    except SQLAlchemyError as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail='Could not save your name.'
+        ) from e
+    db.refresh(user)
+    return user

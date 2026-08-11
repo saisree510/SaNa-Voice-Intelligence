@@ -18,11 +18,28 @@ import 'voice_service.dart';
 /// LiveKit's servers without going through our backend first, so the
 /// LiveKit API secret never has to exist on-device.
 class _SanaTokenSource implements TokenSourceFixed {
-  _SanaTokenSource({required this.modeId, required this.userId, required this.userName});
+  _SanaTokenSource({
+    required this.modeId,
+    required this.userId,
+    required this.userName,
+    required this.resumeConversationId,
+  });
 
   final String modeId;
   final String userId;
   final String userName;
+  // Passed straight through to the backend if non-null (see
+  // app/api/voice.py's TokenRequest.conversation_id) to continue that
+  // conversation instead of starting a new one.
+  final String? resumeConversationId;
+
+  // Set by fetch() once the response arrives -- LiveKitVoiceService.start()
+  // reads this straight after `await session.start()` to learn (or
+  // re-confirm) which conversation this call belongs to. There's no
+  // richer return path than TokenSourceResponse's fixed shape (roomName
+  // etc.), so this is the plain, direct way to hand an extra value back
+  // to the caller that constructed this source.
+  String? resolvedConversationId;
 
   @override
   Future<TokenSourceResponse> fetch() async {
@@ -31,7 +48,12 @@ class _SanaTokenSource implements TokenSourceFixed {
       response = await http.post(
         Uri.parse('${AppConfig.backendBaseUrl}/api/voice/token'),
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'mode': modeId, 'user_id': userId, 'user_name': userName}),
+        body: jsonEncode({
+          'mode': modeId,
+          'user_id': userId,
+          'user_name': userName,
+          if (resumeConversationId != null) 'conversation_id': resumeConversationId,
+        }),
       );
     } catch (e) {
       throw NetworkException(
@@ -43,6 +65,7 @@ class _SanaTokenSource implements TokenSourceFixed {
       throw NetworkException('Voice service returned an error (${response.statusCode}).');
     }
     final data = jsonDecode(response.body) as Map<String, dynamic>;
+    resolvedConversationId = data['conversation_id'] as String?;
     return TokenSourceResponse(
       serverUrl: data['url'] as String,
       participantToken: data['token'] as String,
@@ -61,6 +84,16 @@ class LiveKitVoiceService extends VoiceService {
   VoiceState _state = VoiceState.idle;
   String? _errorMessage;
   bool _disposed = false;
+  String? _conversationId;
+
+  @override
+  String? get conversationId => _conversationId;
+
+  @override
+  void startNewConversation() => _conversationId = null;
+
+  @override
+  void resumeConversation(String conversationId) => _conversationId = conversationId;
 
   /// [end]'s cleanup is async but [dispose] can't await it (Flutter's
   /// dispose() is sync) — it fires end() and returns immediately, so
@@ -98,9 +131,16 @@ class LiveKitVoiceService extends VoiceService {
       }
     }
 
-    final session = Session.fromFixedTokenSource(
-      _SanaTokenSource(modeId: modeId, userId: userId, userName: userName),
+    // Continues _conversationId if this isn't the first call this app
+    // session (see VoiceService.conversationId's doc comment) — the
+    // backend creates a fresh one and hands it back if it's null.
+    final tokenSource = _SanaTokenSource(
+      modeId: modeId,
+      userId: userId,
+      userName: userName,
+      resumeConversationId: _conversationId,
     );
+    final session = Session.fromFixedTokenSource(tokenSource);
     _session = session;
     session.addListener(_onSessionChanged);
 
@@ -109,6 +149,7 @@ class LiveKitVoiceService extends VoiceService {
     _safeNotify();
 
     await session.start();
+    _conversationId = tokenSource.resolvedConversationId ?? _conversationId;
   }
 
   @override

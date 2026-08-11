@@ -78,6 +78,13 @@ class MockAuthService implements AuthService {
   }
 
   @override
+  Future<void> updateName({required String token, required String name}) async {
+    // No server to sync to — MockAuthService has no backend at all;
+    // UserProfileService (local storage) already has the name, which
+    // is all this mock's world model consists of.
+  }
+
+  @override
   Future<void> logout() async {
     // Nothing to clear — no session token is persisted in V1 (see
     // UserProfileService docs for why the profile itself still is).

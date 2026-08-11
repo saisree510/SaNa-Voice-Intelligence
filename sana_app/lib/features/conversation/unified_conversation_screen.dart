@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -6,11 +8,14 @@ import 'package:go_router/go_router.dart';
 import '../../core/constants/app_modes.dart';
 import '../../core/constants/app_routes.dart';
 import '../../core/errors/error_display.dart';
+import '../../services/build_service.dart';
 import '../../services/conversation_history_api_service.dart';
 import '../../services/livekit_voice_service.dart';
 import '../../services/real_conversation_service.dart';
 import '../../services/voice_service.dart';
 import '../auth/auth_provider.dart';
+import '../build/build_job_provider.dart';
+import '../build/widgets/build_workspace_panel.dart';
 import 'conversation_provider.dart';
 import 'models/conversation_summary.dart';
 import 'widgets/chat_bubble.dart';
@@ -41,13 +46,25 @@ class UnifiedConversationScreen extends StatefulWidget {
 }
 
 class _ModeSession {
-  _ModeSession(this.mode, this.textProvider, this.voiceService, this.controller, this.scrollController);
+  _ModeSession(
+    this.mode,
+    this.textProvider,
+    this.voiceService,
+    this.controller,
+    this.scrollController,
+    this.buildJobProvider,
+  );
 
   final AppMode mode;
   final ConversationProvider textProvider;
   final VoiceService voiceService;
   final TextEditingController controller;
   final ScrollController scrollController;
+
+  /// Only non-null for the Build-mode session — tracks the build job
+  /// (if any) tied to this session's current conversation. See
+  /// [BuildWorkspacePanel].
+  final BuildJobProvider? buildJobProvider;
 }
 
 class _UnifiedConversationScreenState extends State<UnifiedConversationScreen> {
@@ -79,11 +96,25 @@ class _UnifiedConversationScreenState extends State<UnifiedConversationScreen> {
           LiveKitVoiceService(),
           TextEditingController(),
           ScrollController(),
+          // Only Build mode tracks a build job — Debate/Brainstorm never
+          // trigger one, so there's nothing for this to watch there.
+          mode.id == 'build'
+              ? BuildJobProvider(buildService: BuildService(getAuthToken: () => authProvider.authToken))
+              : null,
         ),
     ];
 
     for (final session in _sessions) {
       session.voiceService.addListener(() => session.textProvider.mergeExternal(session.voiceService.transcript));
+      // Text's restore (conversation_provider.dart's _loadHistory) is the
+      // one that reads persisted state; mirror whatever it finds into
+      // voice too, once it's actually loaded — so resuming by voice
+      // right after a refresh continues the same thread a text message
+      // would, instead of voice starting a separate one from scratch.
+      session.textProvider.ready.then((_) {
+        final restoredId = session.textProvider.conversationId;
+        if (restoredId != null) session.voiceService.resumeConversation(restoredId);
+      });
     }
   }
 
@@ -94,8 +125,19 @@ class _UnifiedConversationScreenState extends State<UnifiedConversationScreen> {
       session.scrollController.dispose();
       session.textProvider.dispose();
       session.voiceService.dispose();
+      session.buildJobProvider?.dispose();
     }
     super.dispose();
+  }
+
+  /// Checks whether the message/call that just finished for [session]
+  /// started (or advanced) a build, and if so starts the workspace
+  /// panel tracking it. No-op outside Build mode.
+  void _refreshBuildFor(_ModeSession session) {
+    final provider = session.buildJobProvider;
+    if (provider == null) return;
+    final conversationId = session.voiceService.conversationId ?? session.textProvider.conversationId;
+    unawaited(provider.refreshForConversation(conversationId));
   }
 
   Future<void> _selectTab(int index) async {
@@ -113,27 +155,35 @@ class _UnifiedConversationScreenState extends State<UnifiedConversationScreen> {
     if (text.trim().isEmpty) return;
     session.controller.clear();
     if (session.voiceService.isActive) {
-      session.voiceService.sendText(text);
+      unawaited(session.voiceService.sendText(text).then((_) => _refreshBuildFor(session)));
     } else {
-      session.textProvider.sendText(text);
+      unawaited(session.textProvider.sendText(text).then((_) => _refreshBuildFor(session)));
     }
   }
 
   Future<void> _toggleVoiceFor(_ModeSession session) async {
     if (session.voiceService.isActive) {
       await session.voiceService.end();
+      _refreshBuildFor(session);
       return;
     }
     final auth = context.read<AuthProvider>();
     final userId = auth.user?.id ?? 'unknown';
     final userName = auth.profile?.name ?? 'there';
     await session.voiceService.start(modeId: session.mode.id, userId: userId, userName: userName);
+    // The token exchange above resolves (creates or confirms) which
+    // conversation this call belongs to — persist it as this mode's
+    // active thread so a refresh right after starting a call still
+    // continues it, the same way a sent text message does.
+    await session.textProvider.persistExternalConversationId(session.voiceService.conversationId);
   }
 
   Future<void> _startNewChat() async {
     final session = _current;
     if (session.voiceService.isActive) await session.voiceService.end();
+    session.voiceService.startNewConversation();
     await session.textProvider.startNewConversation();
+    session.buildJobProvider?.reset();
   }
 
   /// Tapping a chat in [ChatsDrawer] calls this — closes the drawer, ends
@@ -154,6 +204,15 @@ class _UnifiedConversationScreenState extends State<UnifiedConversationScreen> {
         conversationId: selected.id,
       );
       await session.textProvider.loadConversation(selected.id, loadedMessages);
+      // So tapping the mic next continues *this* thread (voice or
+      // text turns alike) instead of whatever voice conversation was
+      // active before, or a brand-new one.
+      session.voiceService.resumeConversation(selected.id);
+      // Reopening a Build conversation should restore whatever build
+      // it already has (in progress or completed), not show a stale
+      // panel from the conversation switched away from.
+      session.buildJobProvider?.reset();
+      _refreshBuildFor(session);
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(errorMessageFor(e))));
@@ -266,6 +325,7 @@ class _ModeConversationBody extends StatelessWidget {
           return Column(
             children: [
               if (inCall) _VoiceStatusBar(state: voice.state),
+              if (session.buildJobProvider != null) BuildWorkspacePanel(provider: session.buildJobProvider!),
               Expanded(
                 child: messages.isEmpty
                     ? (inCall

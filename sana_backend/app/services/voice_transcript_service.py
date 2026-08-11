@@ -19,18 +19,18 @@ logger = logging.getLogger('sana-backend')
 
 
 class VoiceTranscriptRecorder:
-    """One instance per voice call. [conversation_id] starts unset and
-    is created lazily on the first turn — a call where nobody says
-    anything (hangs up during SANA's opening line, say) still shouldn't
-    leave a phantom empty conversation behind... except SANA's own
-    opening line *is* the first turn in practice, so in effect a
-    conversation is created as soon as there's anything at all to show.
+    """One instance per voice call. [conversation_id] is normally
+    already known — app/api/voice.py's /api/voice/token creates (or
+    validates/reuses, for a resumed call) the Conversation row up front
+    and hands its id down through job metadata — but stays supported as
+    None (created lazily on the first turn instead) for resilience
+    against an older client that doesn't send one yet.
     """
 
-    def __init__(self, *, user_id: str, mode: str) -> None:
+    def __init__(self, *, user_id: str, mode: str, conversation_id: str | None = None) -> None:
         self._user_id = user_id
         self._mode = mode
-        self.conversation_id: str | None = None
+        self.conversation_id: str | None = conversation_id
 
     def record(self, *, role: str, text: str) -> None:
         if role not in ('user', 'assistant') or not text.strip():
@@ -67,3 +67,21 @@ class VoiceTranscriptRecorder:
             db.rollback()
         finally:
             db.close()
+
+
+def load_conversation_history(conversation_id: str) -> list[dict[str, str]]:
+    """[{"role": ..., "content": ...}, ...], oldest first — same shape
+    ai_service.py builds from text-chat history, so voice_agent.py can
+    seed a resumed call's ChatContext the same way. Empty list (not an
+    error) if the conversation has no messages yet or doesn't exist —
+    callers treat that the same as "nothing to resume", falling back to
+    a normal fresh-start greeting.
+    """
+    db = SessionLocal()
+    try:
+        conversation = db.get(Conversation, conversation_id)
+        if conversation is None:
+            return []
+        return [{'role': m.role, 'content': m.content} for m in conversation.messages]
+    finally:
+        db.close()

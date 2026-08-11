@@ -8,6 +8,13 @@ import '../features/conversation/models/chat_message.dart';
 /// provider API key server-side (see README §17–18: the key never lives
 /// in this app). No screen or provider changes when that swap happens.
 abstract interface class ConversationService {
+  /// The backend conversation thread subsequent [sendMessage] calls
+  /// continue, if any — null before the first message of a fresh
+  /// conversation. Build mode uses this to find "the build job(s) tied
+  /// to this conversation" (see BuildJobProvider) without introducing
+  /// a second, parallel id of its own.
+  String? get conversationId;
+
   /// [modeId] is one of 'debate' | 'brainstorm' | 'build' (see [AppModes]).
   /// [history] is the conversation so far, oldest first, not including
   /// [userText]. Returns SANA's reply text.

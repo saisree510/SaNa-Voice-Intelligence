@@ -25,5 +25,13 @@ abstract interface class AuthService {
   /// Mock: doesn't send a real email. Real implementation will.
   Future<void> sendPasswordReset({required String email});
 
+  /// Persists the user's name server-side (see sana_backend's
+  /// PATCH /auth/me) — called once, right after onboarding, by
+  /// AuthProvider.completeOnboarding. Without this, the name only ever
+  /// lived in this device's local storage and the AI never knew it —
+  /// SANA would insist it didn't know your name even after you'd told
+  /// the app.
+  Future<void> updateName({required String token, required String name});
+
   Future<void> logout();
 }

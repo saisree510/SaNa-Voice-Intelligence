@@ -11,6 +11,7 @@ import 'conversation_history_service.dart';
 /// hanging up a voice call, switching modes, or reopening the app.
 class LocalConversationHistoryService implements ConversationHistoryService {
   String _keyFor(String userId, String modeId) => 'sana_history_${userId}_$modeId';
+  String _conversationIdKeyFor(String userId, String modeId) => 'sana_active_conversation_${userId}_$modeId';
 
   @override
   Future<List<ChatMessage>> load(String userId, String modeId) async {
@@ -28,5 +29,22 @@ class LocalConversationHistoryService implements ConversationHistoryService {
       _keyFor(userId, modeId),
       jsonEncode(messages.map((m) => m.toJson()).toList()),
     );
+  }
+
+  @override
+  Future<String?> loadActiveConversationId(String userId, String modeId) async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_conversationIdKeyFor(userId, modeId));
+  }
+
+  @override
+  Future<void> saveActiveConversationId(String userId, String modeId, String? conversationId) async {
+    final prefs = await SharedPreferences.getInstance();
+    final key = _conversationIdKeyFor(userId, modeId);
+    if (conversationId == null) {
+      await prefs.remove(key);
+    } else {
+      await prefs.setString(key, conversationId);
+    }
   }
 }

@@ -18,8 +18,9 @@ from abc import ABC, abstractmethod
 from functools import lru_cache
 
 from ..core.config import get_settings
-from ..modes import MODE_CHAT_INSTRUCTIONS
-from .build_tools import BUILD_MODE_TOOLS
+from ..modes import MODE_CHAT_INSTRUCTIONS, current_datetime_note, user_name_note
+from .build_agent import BuildAgent
+from .build_tools import BUILD_MODE_TOOLS, make_build_project_tool, make_check_build_progress_tool
 
 # Guards against a pathological loop where the model keeps calling
 # tools and never produces a final answer.
@@ -40,11 +41,34 @@ class AIUnexpectedResponseError(AIServiceError):
 
 class AIProvider(ABC):
     @abstractmethod
-    async def generate_reply(self, *, mode: str, history: list[dict[str, str]], user_message: str) -> str:
+    async def generate_reply(
+        self,
+        *,
+        mode: str,
+        history: list[dict[str, str]],
+        user_message: str,
+        conversation_id: str,
+        user_name: str | None,
+        user_id: str | None = None,
+    ) -> str:
         """[history] is prior turns as [{"role": "user"|"assistant", "content": str}, ...],
         oldest first, not including [user_message]. Returns SANA's reply text.
         Raises an AIServiceError subclass on failure — never lets a raw
         provider exception escape.
+
+        [conversation_id] is the persisted Conversation row's id (see
+        chat_service.py) — Build mode's implementation uses it as the
+        BuildAgent workspace/job id, one generated-project workspace per
+        Conversation. Every other provider/mode ignores it.
+
+        [user_name] is the user's name if they've completed onboarding
+        (see users.name / PATCH /auth/me), else None — lets SANA
+        actually know who it's talking to instead of asking every time.
+
+        [user_id] is who owns any BuildJob created in Build mode (see
+        build_tools.py) — always set from a real /chat/message request
+        (chat_service.py has an authenticated User), optional only so
+        MockAIProvider/tests don't need one.
         """
         raise NotImplementedError
 
@@ -72,7 +96,16 @@ class MockAIProvider(AIProvider):
         ],
     }
 
-    async def generate_reply(self, *, mode: str, history: list[dict[str, str]], user_message: str) -> str:
+    async def generate_reply(
+        self,
+        *,
+        mode: str,
+        history: list[dict[str, str]],
+        user_message: str,
+        conversation_id: str,
+        user_name: str | None,
+        user_id: str | None = None,
+    ) -> str:
         templates = self._TEMPLATES.get(mode, self._TEMPLATES['build'])
         template = random.choice(templates)
         return template.format(msg=user_message[:120])
@@ -84,7 +117,16 @@ class LiveKitInferenceProvider(AIProvider):
     def __init__(self, model: str) -> None:
         self._model = model
 
-    async def generate_reply(self, *, mode: str, history: list[dict[str, str]], user_message: str) -> str:
+    async def generate_reply(
+        self,
+        *,
+        mode: str,
+        history: list[dict[str, str]],
+        user_message: str,
+        conversation_id: str,
+        user_name: str | None,
+        user_id: str | None = None,
+    ) -> str:
         # Imported lazily so MockAIProvider (and anything importing this
         # module just for the AIProvider type) never needs livekit-agents
         # available, and so tests using the mock provider stay fast.
@@ -95,6 +137,10 @@ class LiveKitInferenceProvider(AIProvider):
         instructions = MODE_CHAT_INSTRUCTIONS.get(mode)
         if instructions is None:
             raise AIUnexpectedResponseError(f"Unknown mode '{mode}'.")
+        # Computed fresh per request, not baked into MODE_CHAT_INSTRUCTIONS
+        # -- see current_datetime_note's/user_name_note's docstrings for why.
+        instructions += current_datetime_note()
+        instructions += user_name_note(user_name)
 
         chat_ctx = ChatContext.empty()
         chat_ctx.add_message(role='system', content=instructions)
@@ -105,9 +151,25 @@ class LiveKitInferenceProvider(AIProvider):
                 chat_ctx.add_message(role=role, content=content)
         chat_ctx.add_message(role='user', content=user_message)
 
-        # File-access tools (read-only sana_app/sana_backend source) are
-        # only offered in Build mode — see build_tools.py.
-        tools = BUILD_MODE_TOOLS if mode == 'build' else []
+        # Tools are Build-mode-only — Debate/Brainstorm get none, same
+        # as before. The read-only source-browsing tools are shared,
+        # stateless module-level tools; build_project/check_build_progress
+        # are bound fresh to *this* conversation (job id = conversation_id,
+        # one build workspace per Conversation row, stable across every
+        # message in it, shared between the two tools via the same
+        # holder/BuildAgent instance) — see make_build_project_tool's
+        # docstring.
+        tools = []
+        if mode == 'build':
+            build_agent = BuildAgent()
+            job_id_holder: dict[str, str | None] = {'job_id': conversation_id}
+            tools = [
+                *BUILD_MODE_TOOLS,
+                make_build_project_tool(
+                    build_agent, job_id_holder, user_id=user_id, conversation_id=conversation_id
+                ),
+                make_check_build_progress_tool(build_agent, job_id_holder),
+            ]
         tool_ctx = ToolContext(tools=tools) if tools else None
 
         llm = LLM(model=self._model)

@@ -19,7 +19,16 @@ class ProfileScreen extends StatelessWidget {
     final initial = name.isNotEmpty ? name[0].toUpperCase() : 'S';
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Profile')),
+      appBar: AppBar(
+        title: const Text('Profile'),
+        actions: [
+          IconButton(
+            onPressed: () => context.read<AuthProvider>().logout(),
+            icon: Icon(Icons.logout_rounded, color: theme.colorScheme.error),
+            tooltip: 'Log out',
+          ),
+        ],
+      ),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(24),

@@ -92,6 +92,12 @@ class AuthProvider extends ChangeNotifier {
       _run(() => _authService.sendPasswordReset(email: email));
 
   Future<bool> completeOnboarding(String name) => _run(() async {
+        // Backend first: if this fails, the whole call fails and
+        // _run() surfaces errorMessage instead of quietly finishing
+        // onboarding with a name only this device knows — which is
+        // exactly the bug this fixes (SANA insisting it doesn't know
+        // your name even after you told the app).
+        await _authService.updateName(token: authToken!, name: name);
         final updated = _profile!.copyWith(name: name, onboardingCompleted: true);
         await _profileService.saveProfile(updated);
         _profile = updated;
