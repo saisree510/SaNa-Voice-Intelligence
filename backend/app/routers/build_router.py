@@ -129,18 +129,30 @@ async def create_build_project(
     Step 1: Collects project specification and generates an implementation plan (status: plan_generated).
     Entering Build Mode or drafting a project DOES NOT execute code automatically.
     """
+    import os
+    import re
     import uuid
     from datetime import datetime
 
     project_id = f"proj-{uuid.uuid4().hex[:8]}"
-    session = deepcode_adapter.create_session(workspace_path=request.workspace_path)
+
+    # Normalize workspace path or provision a dedicated draft folder
+    raw_workspace = request.workspace_path.strip() if request.workspace_path else ""
+    if not raw_workspace:
+        slug = re.sub(r'[^a-zA-Z0-9_-]', '_', request.title.lower())
+        raw_workspace = f"c:/Users/saisr/Projects/SANA-LiveKit/drafts/{slug}_{project_id}"
+
+    workspace_path = os.path.abspath(os.path.normpath(raw_workspace))
+    os.makedirs(workspace_path, exist_ok=True)
+
+    session = deepcode_adapter.create_session(workspace_path=workspace_path)
 
     project = BuildProjectModel(
         project_id=project_id,
         user_id=current_user.id,
         title=request.title,
         specification=request.specification,
-        workspace_path=request.workspace_path,
+        workspace_path=workspace_path,
         status="plan_generated",
         plan_summary=f"Implementation Plan generated for '{request.title}'. Awaiting explicit user approval before execution.",
         session_id=session.session_id,
@@ -149,7 +161,7 @@ async def create_build_project(
     )
 
     build_projects_db[project_id] = project
-    logger.info(f"Created BuildProject {project_id} with status 'plan_generated' awaiting explicit approval.")
+    logger.info(f"Created BuildProject {project_id} in workspace '{workspace_path}' with status 'plan_generated' awaiting explicit approval.")
     return project
 
 

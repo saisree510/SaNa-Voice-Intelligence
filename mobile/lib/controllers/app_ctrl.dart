@@ -422,12 +422,17 @@ class AppCtrl extends ChangeNotifier {
     notifyListeners();
   }
 
+  bool _initialModePacketSent = false;
+
   void _handleSessionChange() {
     final sdk.ConnectionState state = session.connectionState;
     AppScreenState? nextScreen;
     switch (state) {
       case sdk.ConnectionState.connected:
-        _sendInitialModePacket();
+        if (!_initialModePacketSent) {
+          _initialModePacketSent = true;
+          _sendInitialModePacket();
+        }
         try {
           unawaited(room.localParticipant?.setMicrophoneEnabled(true));
         } catch (e) {
@@ -439,6 +444,7 @@ class AppCtrl extends ChangeNotifier {
         nextScreen = AppScreenState.agent;
         break;
       case sdk.ConnectionState.disconnected:
+        _initialModePacketSent = false;
         nextScreen = AppScreenState.welcome;
         break;
       case sdk.ConnectionState.connecting:
