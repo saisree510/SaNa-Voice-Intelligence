@@ -1,8 +1,8 @@
 # SaNa — Product Requirements Document (PRD)
 
-**Status:** Phase 13 COMPLETE — Security, Voice-to-Build Handoff Integration & Production Hardening active; user isolation enforced; LiveKit function tools (`create_build_project_plan`, `approve_and_execute_build_project`); automated integration test suite (`10/10 passed`). Product MVP achieved.
+**Status:** Phase 13 COMPLETE ? Security, Voice-to-Build Handoff Integration & Production Hardening active; current local-save development path uses a dedicated local LiveKit worker (`voice_agent_local`) plus local backend orchestration. Product MVP achieved.
 **Product:** SaNa
-**Document version:** 1.2.0
+**Document version:** 1.2.1
 **Date:** 2026-08-11
 **Audience:** Founder + future implementers (beginner-friendly)
 
@@ -24,6 +24,7 @@
 | 1.0.0 | 2026-08-10 | Phase 12 COMPLETE — Persistent Build Projects; project listing (`GET /v1/build/projects`); incremental feature turns (`POST /v1/build/projects/{id}/turns`); run history (`GET /v1/build/projects/{id}/history`) |
 | 1.1.0 | 2026-08-11 | Direct Cartesia TTS integration; LiveKit Cloud fresh project `sana-jjdz0xfv` deployment; Silero VAD crash resolution; explicit mobile mic unmuting; synchronized mode greetings across voice & UI |
 | **1.2.0** | **2026-08-11** | **Phase 13 COMPLETE — Security, Voice-to-Build Handoff Integration & Production Hardening; user-isolated build projects; LiveKit function tools (`create_build_project_plan`, `approve_and_execute_build_project`); automated integration test suite (`10/10 passed`)** |
+| **1.2.1** | **2026-08-11** | **Local-first Build Mode validation path documented: dedicated local worker routing (`voice_agent_local`), local backend save path for trusted PC drafts, LiveKit Inference Cartesia TTS, and stronger speaking-orb pulse** |
 
 ### v0.4.0 revision summary
 
@@ -323,6 +324,18 @@ SaNa helps developers:
 
 **Simple summary:**
 SaNa is the product experience. DeepCode is the builder. LiveKit is the realtime voice pipe.
+
+### Current implementation note (2026-08-11)
+
+For reliable local Build Mode saves during development, SaNa currently supports a dedicated local-worker path:
+
+- mobile app requests the dedicated agent name `voice_agent_local`
+- backend dispatches `voice_agent_local` into the LiveKit room
+- the local voice agent runs on the founder PC
+- the local FastAPI backend runs on the same PC
+- build files are written into trusted local draft folders on that PC
+
+This local-first path exists to guarantee that Build Mode writes land on the developer machine rather than on a cloud worker filesystem.
 
 ---
 
@@ -718,6 +731,9 @@ Skip onboarding if profile already has required fields.
 ---
 
 ## 14. Home experience
+
+Current implementation note: the SaNa orb's speaking animation now uses a slightly stronger speaking pulse amplitude so active speech reads more clearly in the UI.
+
 
 After onboarding, open the primary conversation screen.
 
@@ -1730,6 +1746,9 @@ These can share provider settings conceptually, but may use different models (e.
 ---
 
 ## 30. TTS architecture
+
+Current implementation note: the voice agent now uses **LiveKit Inference Cartesia TTS** (`cartesia/sonic-3`) rather than a direct Cartesia API plugin path. This keeps the realtime TTS path aligned with the LiveKit agent stack used by the current local worker configuration.
+
 
 **TTS = Text-to-Speech** (“speaker that turns words into voice”)
 
