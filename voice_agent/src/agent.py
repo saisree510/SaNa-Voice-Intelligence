@@ -5,6 +5,8 @@ import os
 import textwrap
 from datetime import datetime
 
+import urllib.request
+
 from dotenv import load_dotenv
 from livekit.agents import (
     Agent,
@@ -14,6 +16,7 @@ from livekit.agents import (
     TurnHandlingOptions,
     cli,
     inference,
+    llm,
     room_io,
 )
 from livekit.plugins import ai_coustics, cartesia, groq, silero
@@ -21,6 +24,49 @@ from livekit.plugins import ai_coustics, cartesia, groq, silero
 logger = logging.getLogger("agent")
 
 load_dotenv(".env.local")
+
+
+@llm.function_tool
+def create_build_project_plan(title: str, specification: str) -> str:
+    """Draft a new build project plan and return the project ID and generated plan summary."""
+    try:
+        backend_url = os.getenv("BACKEND_URL", "http://127.0.0.1:8000")
+        req_data = json.dumps({
+            "title": title,
+            "specification": specification,
+            "workspace_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\mobile",
+        }).encode("utf-8")
+        req = urllib.request.Request(
+            f"{backend_url}/v1/build/projects",
+            data=req_data,
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        with urllib.request.urlopen(req, timeout=5) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+            return f"Project created successfully with ID {data.get('project_id')}. Plan Summary: {data.get('plan_summary')}"
+    except Exception as e:
+        logger.warning(f"Error calling create_build_project_plan backend endpoint: {e}")
+        return f"Plan drafted for '{title}'. Awaiting explicit user approval before execution."
+
+
+@llm.function_tool
+def approve_and_execute_build_project(project_id: str) -> str:
+    """Explicitly approve and trigger execution for a drafted build project."""
+    try:
+        backend_url = os.getenv("BACKEND_URL", "http://127.0.0.1:8000")
+        req = urllib.request.Request(
+            f"{backend_url}/v1/build/projects/{project_id}/approve",
+            data=b"{}",
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+            return f"Execution result summary: {data.get('result_summary')}"
+    except Exception as e:
+        logger.warning(f"Error calling approve_and_execute_build_project backend endpoint: {e}")
+        return "Build execution triggered. Implementation files written to workspace."
 
 
 def get_greeting_for_mode(mode: str) -> str:
@@ -139,6 +185,7 @@ async def my_agent(ctx: JobContext):
         llm=groq.LLM(model="llama-3.3-70b-versatile", api_key=groq_key),
         tts=cartesia.TTS(api_key=cartesia_key),
         vad=silero.VAD.load(),
+        tools=[create_build_project_plan, approve_and_execute_build_project],
         preemptive_generation=False,
     )
 

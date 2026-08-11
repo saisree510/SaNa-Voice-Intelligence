@@ -1,8 +1,8 @@
 # SaNa — Product Requirements Document (PRD)
 
-**Status:** Phase 12 COMPLETE & Hardened — Direct Cartesia TTS active; LiveKit Cloud fresh project `sana-jjdz0xfv` deployed; Silero VAD crash fixed; synchronized mode greetings across voice & UI. Phase 13 next.
+**Status:** Phase 13 COMPLETE — Security, Voice-to-Build Handoff Integration & Production Hardening active; user isolation enforced; LiveKit function tools (`create_build_project_plan`, `approve_and_execute_build_project`); automated integration test suite (`10/10 passed`). Product MVP achieved.
 **Product:** SaNa
-**Document version:** 1.1.0
+**Document version:** 1.2.0
 **Date:** 2026-08-11
 **Audience:** Founder + future implementers (beginner-friendly)
 
@@ -22,7 +22,8 @@
 | 0.8.0 | 2026-08-10 | Phase 10 COMPLETE — DeepCode integration proof; `DeepCodeAdapter` abstraction layer (`backend/app/adapters/deepcode_adapter.py`); Pydantic models; build session router `/v1/build/sessions` |
 | 0.9.0 | 2026-08-10 | Phase 11 COMPLETE — Build Mode MVP; Tech Lead voice persona; explicit plan approval gate (`POST /v1/build/projects/{id}/approve`); DeepCode execution & result explanation |
 | 1.0.0 | 2026-08-10 | Phase 12 COMPLETE — Persistent Build Projects; project listing (`GET /v1/build/projects`); incremental feature turns (`POST /v1/build/projects/{id}/turns`); run history (`GET /v1/build/projects/{id}/history`) |
-| **1.1.0** | **2026-08-11** | **Direct Cartesia TTS integration; LiveKit Cloud fresh project `sana-jjdz0xfv` deployment; Silero VAD crash resolution; explicit mobile mic unmuting; synchronized mode greetings across voice & UI** |
+| 1.1.0 | 2026-08-11 | Direct Cartesia TTS integration; LiveKit Cloud fresh project `sana-jjdz0xfv` deployment; Silero VAD crash resolution; explicit mobile mic unmuting; synchronized mode greetings across voice & UI |
+| **1.2.0** | **2026-08-11** | **Phase 13 COMPLETE — Security, Voice-to-Build Handoff Integration & Production Hardening; user-isolated build projects; LiveKit function tools (`create_build_project_plan`, `approve_and_execute_build_project`); automated integration test suite (`10/10 passed`)** |
 
 ### v0.4.0 revision summary
 

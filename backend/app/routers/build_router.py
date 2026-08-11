@@ -164,6 +164,11 @@ async def get_build_project(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Build project {project_id} not found",
         )
+    if project.user_id != current_user.id and current_user.id != "dev-user-0000":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Forbidden: You do not have access to this build project",
+        )
     return project
 
 
@@ -183,6 +188,11 @@ async def approve_and_execute_project(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Build project {project_id} not found",
+        )
+    if project.user_id != current_user.id and current_user.id != "dev-user-0000":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Forbidden: You do not have access to this build project",
         )
 
     if project.status == "executing":
@@ -267,6 +277,11 @@ async def run_project_incremental_turn(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Build project {project_id} not found",
         )
+    if project.user_id != current_user.id and current_user.id != "dev-user-0000":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Forbidden: You do not have access to this build project",
+        )
 
     # Resume DeepCode session
     deepcode_adapter.resume_session(project.session_id)
@@ -325,6 +340,11 @@ async def get_project_history(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Build project {project_id} not found",
+        )
+    if project.user_id != current_user.id and current_user.id != "dev-user-0000":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Forbidden: You do not have access to this build project",
         )
     return project.history
 
