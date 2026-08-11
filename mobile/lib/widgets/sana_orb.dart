@@ -170,11 +170,12 @@ class _SanaOrbPainter extends CustomPainter {
 
     final coreColor = state == SanaOrbState.error ? SanaColors.danger : SanaColors.lavender;
     final deepColor = state == SanaOrbState.error ? const Color(0xFF5A2E2A) : SanaColors.lavenderDeep;
+    final pulseAmplitude = state == SanaOrbState.speaking ? 0.10 : 0.04 * intensity;
 
     // Organic blob body
     final path = _organicPath(
       center: center,
-      radius: baseRadius * (0.92 + breathe * 0.06 + pulse * 0.04 * intensity),
+      radius: baseRadius * (0.92 + breathe * 0.06 + pulse * pulseAmplitude),
       spin: spin,
       wobble: 0.08 + intensity * 0.06,
     );

@@ -20,7 +20,7 @@ from livekit.agents import (
     llm,
     room_io,
 )
-from livekit.plugins import ai_coustics, cartesia, groq, silero
+from livekit.plugins import ai_coustics, groq, silero
 
 logger = logging.getLogger("agent")
 
@@ -312,12 +312,11 @@ class Assistant(Agent):
 server = AgentServer()
 
 
-@server.rtc_session(agent_name="voice_agent")
+@server.rtc_session(agent_name="voice_agent_local")
 async def my_agent(ctx: JobContext):
     groq_key = os.getenv("GROQ_API_KEY")
-    cartesia_key = os.getenv("CARTESIA_API_KEY")
     logger.info(
-        f"Connecting session in room '{ctx.room.name}'. GROQ_API_KEY present: {bool(groq_key)}, CARTESIA_API_KEY present: {bool(cartesia_key)}"
+        f"Connecting session in room '{ctx.room.name}'. GROQ_API_KEY present: {bool(groq_key)}. Using LiveKit Inference for Cartesia TTS."
     )
 
     assistant = Assistant(mode="general")
@@ -326,7 +325,11 @@ async def my_agent(ctx: JobContext):
     session = AgentSession(
         stt=groq.STT(model="whisper-large-v3-turbo", api_key=groq_key),
         llm=groq.LLM(model="llama-3.3-70b-versatile", api_key=groq_key),
-        tts=cartesia.TTS(api_key=cartesia_key),
+        tts=inference.TTS(
+            model="cartesia/sonic-3",
+            voice="f786b574-daa5-4673-aa0c-cbe3e8534c02",
+            language="en",
+        ),
         vad=silero.VAD.load(),
         tools=[create_build_project_plan, approve_and_execute_build_project],
         preemptive_generation=False,

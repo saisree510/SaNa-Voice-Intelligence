@@ -77,11 +77,11 @@ async def create_livekit_token(
             await lk_api.agent_dispatch.create_dispatch(
                 api.CreateAgentDispatchRequest(
                     room=room_name,
-                    agent_name="voice_agent",
+                    agent_name="voice_agent_local",
                 )
             )
             await lk_api.aclose()
-            logger.info(f"Successfully dispatched agent 'voice_agent' into room {room_name}")
+            logger.info(f"Successfully dispatched agent 'voice_agent_local' into room {room_name}")
         except Exception as dispatch_err:
             logger.warning(f"Agent dispatch attempt info/warning: {dispatch_err}")
 

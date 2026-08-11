@@ -227,7 +227,7 @@ class AppCtrl extends ChangeNotifier {
     final tokenSource = AuthenticatedTokenSource();
 
     return sdk.Session.withAgent(
-      'voice_agent',
+      'voice_agent_local',
       tokenSource: tokenSource,
       options: sdk.SessionOptions(
         room: room,
