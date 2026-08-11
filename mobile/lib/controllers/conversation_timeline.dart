@@ -40,19 +40,15 @@ class ConversationTimeline extends ChangeNotifier {
   void rehydrateTurns(List<dynamic> persistedMessages) {
     clear();
     for (final item in persistedMessages) {
-      final String id = item.id;
+      final String id = item.idempotencyKey ?? item.id;
       final String roleStr = item.sender;
       final String content = item.content;
       final String sourceStr = item.source;
       final DateTime time = item.createdAt;
 
-      final role = roleStr == 'user'
-          ? ConversationRole.user
-          : ConversationRole.agent;
+      final role = roleStr == 'user' ? ConversationRole.user : ConversationRole.agent;
 
-      final source = sourceStr == 'voice'
-          ? ConversationSource.voice
-          : ConversationSource.text;
+      final source = sourceStr == 'voice' ? ConversationSource.voice : ConversationSource.text;
 
       final turn = ConversationTurn(
         id: id,
@@ -66,6 +62,7 @@ class ConversationTimeline extends ChangeNotifier {
       _turnsById[id] = turn;
       _lastTextById[id] = content;
       _knownClientSendIds.add(id);
+      _notifiedFinalTurnIds.add(id);
     }
     _rebuildOrdered();
     notifyListeners();
@@ -77,6 +74,7 @@ class ConversationTimeline extends ChangeNotifier {
     _turnsById.clear();
     _lastTextById.clear();
     _knownClientSendIds.clear();
+    _notifiedFinalTurnIds.clear();
     _ordered = const [];
     notifyListeners();
   }

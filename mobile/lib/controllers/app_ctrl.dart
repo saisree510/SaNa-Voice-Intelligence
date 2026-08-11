@@ -7,10 +7,11 @@ import 'package:livekit_client/livekit_client.dart' as sdk;
 import 'package:livekit_components/livekit_components.dart' as components;
 import 'package:logging/logging.dart';
 import 'package:uuid/uuid.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import 'conversation_timeline.dart';
+import '../models/conversation_model.dart';
 import '../models/conversation_turn.dart';
+import '../services/conversation_memory.dart';
 import '../services/conversation_service.dart';
 import '../services/token_service.dart';
 
@@ -90,6 +91,8 @@ class AppCtrl extends ChangeNotifier {
 
   String? activeConversationId;
   ConversationService? _conversationService;
+  List<PersistedMessage> _restoredMessages = const [];
+  String? _restoreRetriesScheduledForConversationId;
 
   void bindConversationService(ConversationService service) {
     _conversationService = service;
@@ -147,6 +150,7 @@ class AppCtrl extends ChangeNotifier {
     }
 
     final messages = await service.fetchMessages(sessionModel.id as String);
+    _restoredMessages = List.unmodifiable(messages);
     conversationTimeline.rehydrateTurns(messages);
     appScreenState = AppScreenState.agent;
     notifyListeners();
@@ -154,6 +158,52 @@ class AppCtrl extends ChangeNotifier {
     // Auto-connect voice session if disconnected
     if (session.connectionState == sdk.ConnectionState.disconnected && !isSessionStarting) {
       unawaited(connect());
+    } else if (session.connectionState == sdk.ConnectionState.connected) {
+      _scheduleConversationRestorePackets();
+    }
+  }
+
+  void _scheduleConversationRestorePackets() {
+    final conversationId = activeConversationId;
+    if (conversationId == null || _restoredMessages.isEmpty) return;
+    if (_restoreRetriesScheduledForConversationId == conversationId) return;
+    _restoreRetriesScheduledForConversationId = conversationId;
+
+    const retryDelays = <Duration>[
+      Duration.zero,
+      Duration(milliseconds: 600),
+      Duration(seconds: 2),
+      Duration(seconds: 5),
+    ];
+    for (final delay in retryDelays) {
+      Future.delayed(delay, () {
+        if (activeConversationId != conversationId || room.connectionState != sdk.ConnectionState.connected) {
+          return;
+        }
+        _publishConversationRestorePacket(conversationId);
+      });
+    }
+  }
+
+  void _publishConversationRestorePacket(String conversationId) {
+    final participant = room.localParticipant;
+    if (participant == null) return;
+    try {
+      final payload = buildConversationRestorePayload(
+        conversationId: conversationId,
+        messages: _restoredMessages,
+      );
+      unawaited(participant.publishData(utf8.encode(jsonEncode(payload))));
+      _logger.info(
+        'Sent conversation restore packet for $conversationId '
+        'with ${(payload['messages'] as List).length} turns.',
+      );
+    } catch (error, stackTrace) {
+      _logger.warning(
+        'Failed to send conversation restore packet: $error',
+        error,
+        stackTrace,
+      );
     }
   }
 
@@ -189,8 +239,7 @@ class AppCtrl extends ChangeNotifier {
   bool _hasCleanedUp = false;
 
   /// True while a connect attempt is in-flight or LiveKit reports connecting.
-  bool get isConnecting =>
-      isSessionStarting || session.connectionState == sdk.ConnectionState.connecting;
+  bool get isConnecting => isSessionStarting || session.connectionState == sdk.ConnectionState.connecting;
 
   /// Welcome-screen control should offer cancel whenever connect is active or
   /// the session is not fully idle on the welcome screen.
@@ -415,6 +464,8 @@ class AppCtrl extends ChangeNotifier {
     }
 
     activeConversationId = null;
+    _restoredMessages = const [];
+    _restoreRetriesScheduledForConversationId = null;
     session.restoreMessageHistory(const []);
     conversationTimeline.clear();
     appScreenState = AppScreenState.welcome;
@@ -429,6 +480,7 @@ class AppCtrl extends ChangeNotifier {
     AppScreenState? nextScreen;
     switch (state) {
       case sdk.ConnectionState.connected:
+        _scheduleConversationRestorePackets();
         if (!_initialModePacketSent) {
           _initialModePacketSent = true;
           _sendInitialModePacket();
