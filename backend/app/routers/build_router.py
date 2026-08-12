@@ -518,10 +518,23 @@ async def list_build_projects(
     current_user: AuthenticatedUser = Depends(get_current_user),
 ):
     _ensure_build_mode_enabled()
-    return project_store.list_projects_for_user(
+    projects = project_store.list_projects_for_user(
         user_id=current_user.id,
         is_dev_user=_is_dev_user(current_user),
     )
+    if projects or _is_dev_user(current_user) or settings.ENVIRONMENT.lower() == 'production':
+        return projects
+
+    claimed_projects = project_store.claim_legacy_dev_projects_for_user(current_user.id)
+    if claimed_projects:
+        logger.info(
+            'Claimed %s legacy dev-user build project(s) for authenticated user %s.',
+            len(claimed_projects),
+            current_user.id,
+        )
+        return claimed_projects
+
+    return projects
 
 
 @router.post('/projects/{project_id}/turns', response_model=TurnResponse)

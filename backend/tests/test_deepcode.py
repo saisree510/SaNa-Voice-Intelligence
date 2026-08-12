@@ -168,3 +168,40 @@ def test_persistent_project_continuation_and_history():
     history = hist_res.json()
     assert len(history) >= 2
     assert history[-1]["prompt"] == "Add voice logging module to CLI assistant"
+
+
+def test_authenticated_user_claims_legacy_dev_projects_in_development():
+    workspace_path = _workspace("legacy_claim_project")
+    create_res = client.post(
+        "/v1/build/projects",
+        json={
+            "title": "Legacy Claim Project",
+            "specification": "Build a project created before auth wiring",
+            "workspace_path": workspace_path,
+        },
+    )
+    assert create_res.status_code == 200
+    project_id = create_res.json()["project_id"]
+    client.post(f"/v1/build/projects/{project_id}/approve")
+
+    token = __import__('jwt').encode(
+        {"sub": "user-claimed-1000", "email": "claimed@example.com"},
+        "different-secret",
+        algorithm="HS256",
+    )
+    headers = {"Authorization": f"Bearer {token}"}
+
+    from unittest.mock import patch
+
+    with patch("app.auth.auth_bearer.settings.SUPABASE_JWT_SECRET", "legacy-secret"), patch(
+        "app.auth.auth_bearer.settings.ENVIRONMENT", "development"
+    ), patch("app.routers.build_router.settings.ENVIRONMENT", "development"):
+        list_res = client.get("/v1/build/projects", headers=headers)
+
+    assert list_res.status_code == 200
+    projects = list_res.json()
+    assert any(p["project_id"] == project_id for p in projects)
+
+    get_res = client.get(f"/v1/build/projects/{project_id}", headers=headers)
+    assert get_res.status_code == 200
+    assert get_res.json()["user_id"] == "user-claimed-1000"

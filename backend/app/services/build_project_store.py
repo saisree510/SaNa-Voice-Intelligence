@@ -58,6 +58,31 @@ class BuildProjectStore:
             projects = [project for project in projects if project.user_id == user_id]
         return sorted(projects, key=lambda project: project.updated_at, reverse=True)
 
+    def claim_legacy_dev_projects_for_user(self, user_id: str) -> list[BuildProjectModel]:
+        claimed: list[BuildProjectModel] = []
+        with self._lock:
+            data = self._read_data_unlocked()
+            updated = False
+            for project_id, item in data.items():
+                if not isinstance(item, dict):
+                    continue
+                if item.get('user_id') != 'dev-user-0000':
+                    continue
+                workspace_path = item.get('workspace_path')
+                if not isinstance(workspace_path, str):
+                    continue
+                try:
+                    self.validate_workspace_path(workspace_path)
+                except ValueError:
+                    continue
+                item['user_id'] = user_id
+                data[project_id] = item
+                updated = True
+                claimed.append(BuildProjectModel.model_validate(item))
+            if updated:
+                self._write_data_unlocked(data)
+        return sorted(claimed, key=lambda project: project.updated_at, reverse=True)
+
     def upsert_project(self, project: BuildProjectModel) -> None:
         with self._lock:
             data = self._read_data_unlocked()
