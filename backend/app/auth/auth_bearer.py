@@ -18,6 +18,32 @@ class AuthenticatedUser:
         self.metadata = metadata or {}
 
 
+def _decode_unverified_claims(token: str) -> Dict[str, Any]:
+    return jwt.decode(token, options={"verify_signature": False, "verify_aud": False})
+
+
+def _decode_authenticated_claims(token: str) -> Dict[str, Any]:
+    if not settings.SUPABASE_JWT_SECRET:
+        return _decode_unverified_claims(token)
+
+    try:
+        return jwt.decode(
+            token,
+            settings.SUPABASE_JWT_SECRET,
+            algorithms=["HS256"],
+            options={"verify_aud": False},
+        )
+    except jwt.PyJWTError as exc:
+        if settings.ENVIRONMENT.lower() == "production":
+            raise
+        logger.warning(
+            "JWT verification failed in %s environment; falling back to unverified decode for development compatibility: %s",
+            settings.ENVIRONMENT,
+            exc,
+        )
+        return _decode_unverified_claims(token)
+
+
 async def get_current_user(
     credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
 ) -> AuthenticatedUser:
@@ -32,16 +58,7 @@ async def get_current_user(
 
     token = credentials.credentials
     try:
-        if settings.SUPABASE_JWT_SECRET:
-            payload = jwt.decode(
-                token,
-                settings.SUPABASE_JWT_SECRET,
-                algorithms=["HS256"],
-                options={"verify_aud": False},
-            )
-        else:
-            # Decode payload without verifying signature if secret not provided in dev
-            payload = jwt.decode(token, options={"verify_signature": False, "verify_aud": False})
+        payload = _decode_authenticated_claims(token)
 
         user_id = payload.get("sub")
         email = payload.get("email")

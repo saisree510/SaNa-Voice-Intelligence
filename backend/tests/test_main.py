@@ -1,4 +1,5 @@
 import jwt
+from unittest.mock import patch
 from fastapi.testclient import TestClient
 from app.main import app
 
@@ -40,3 +41,28 @@ def test_livekit_token_generation_unauthenticated_dev():
     )
     assert claims["video"]["canManageAgentSession"] is True
     assert claims["video"].get("agent") in (None, False)
+
+
+def test_build_projects_dev_fallback_accepts_signature_mismatch_token():
+    token = jwt.encode({"sub": "user-1234", "email": "user@example.com"}, "different-secret", algorithm="HS256")
+    headers = {"Authorization": f"Bearer {token}"}
+
+    with patch("app.auth.auth_bearer.settings.SUPABASE_JWT_SECRET", "legacy-secret"), patch(
+        "app.auth.auth_bearer.settings.ENVIRONMENT", "development"
+    ):
+        response = client.get("/v1/build/projects", headers=headers)
+
+    assert response.status_code == 200
+    assert isinstance(response.json(), list)
+
+
+def test_build_projects_production_rejects_signature_mismatch_token():
+    token = jwt.encode({"sub": "user-1234", "email": "user@example.com"}, "different-secret", algorithm="HS256")
+    headers = {"Authorization": f"Bearer {token}"}
+
+    with patch("app.auth.auth_bearer.settings.SUPABASE_JWT_SECRET", "legacy-secret"), patch(
+        "app.auth.auth_bearer.settings.ENVIRONMENT", "production"
+    ):
+        response = client.get("/v1/build/projects", headers=headers)
+
+    assert response.status_code == 401
