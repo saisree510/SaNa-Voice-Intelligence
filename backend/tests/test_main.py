@@ -1,3 +1,4 @@
+import jwt
 from fastapi.testclient import TestClient
 from app.main import app
 
@@ -31,3 +32,11 @@ def test_livekit_token_generation_unauthenticated_dev():
     assert data["mode"] == "debate"
     assert "url" in data
     assert "participant_identity" in data
+
+    claims = jwt.decode(
+        data["token"],
+        options={"verify_signature": False, "verify_aud": False},
+        algorithms=["HS256"],
+    )
+    assert claims["video"]["canManageAgentSession"] is True
+    assert claims["video"].get("agent") in (None, False)

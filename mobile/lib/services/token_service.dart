@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 class LiveKitTokenResponse {
   final String token;
@@ -59,14 +58,9 @@ class TokenService {
         }
         return null;
       }
-      final session = Supabase.instance.client.auth.currentSession;
       final headers = <String, String>{
         'Content-Type': 'application/json',
       };
-
-      if (session?.accessToken != null) {
-        headers['Authorization'] = 'Bearer ${session!.accessToken}';
-      }
 
       final uri = Uri.parse('$backendUrl/v1/livekit/token');
       final response = await http.post(
@@ -77,6 +71,7 @@ class TokenService {
           if (roomName != null) 'room_name': roomName,
         }),
       );
+
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body) as Map<String, dynamic>;

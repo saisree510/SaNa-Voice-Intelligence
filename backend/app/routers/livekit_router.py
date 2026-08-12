@@ -50,7 +50,6 @@ async def create_livekit_token(
             can_publish_data=True,
             can_update_own_metadata=True,
             can_manage_agent_session=True,
-            agent=True,
         )
 
         token_builder = api.AccessToken(
