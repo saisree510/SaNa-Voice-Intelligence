@@ -68,3 +68,4 @@ Notes:
 - Railway's attached volume is the trusted build root for demo project workspaces.
 - The mobile app release build should pass `--dart-define=SANA_BACKEND_URL=https://<your-railway-backend>.up.railway.app`.
 - The mobile app release build can optionally pass `--dart-define=SANA_AGENT_NAME=voice_agent`, though release builds default to `voice_agent`.
+- Railway redeploy note (2026-08-12): a no-op documentation commit may be used to trigger a fresh GitHub-connected build when Railway build infrastructure fails before the app starts.
