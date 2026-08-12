@@ -6,6 +6,7 @@ import textwrap
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
+import urllib.parse
 import urllib.request
 
 from dotenv import load_dotenv
@@ -40,6 +41,36 @@ RESTORED_MEMORY_MAX_CONTENT_CHARS = 4000
 
 def get_backend_url() -> str:
     return os.getenv("BACKEND_URL", "").strip()
+
+
+def is_remote_backend_url(backend_url: str) -> bool:
+    if not backend_url:
+        return False
+    try:
+        hostname = (urllib.parse.urlparse(backend_url).hostname or "").strip().lower()
+    except Exception:
+        return True
+    return hostname not in {"", "127.0.0.1", "localhost"}
+
+
+def get_local_build_workspaces_root() -> str:
+    configured_root = os.getenv("SANA_BUILD_WORKSPACES_ROOT", "").strip()
+    if configured_root:
+        return os.path.abspath(configured_root)
+    return os.path.abspath(
+        os.path.join(os.path.dirname(__file__), "..", "..", "drafts")
+    )
+
+
+def build_local_draft_workspace(title: str, *, project_id: Optional[str] = None) -> str:
+    slug = re.sub(r"[^a-zA-Z0-9_-]", "_", title.lower()).strip("_")
+    slug = slug or (project_id or f"project_{uuid.uuid4().hex[:8]}")
+    return os.path.abspath(os.path.join(get_local_build_workspaces_root(), slug))
+
+
+def build_project_download_url(backend_url: str, project_id: str) -> str:
+    base = backend_url.rstrip("/")
+    return f"{base}/v1/build/projects/{project_id}/download"
 
 
 def normalize_restored_messages(
@@ -91,19 +122,21 @@ def build_restored_chat_context(
 @llm.function_tool
 async def create_build_project_plan(title: str, specification: str) -> str:
     """Draft a new build project plan and return the project ID and generated plan summary."""
-    slug = re.sub(r"[^a-zA-Z0-9_-]", "_", title.lower())
-    draft_workspace = os.path.abspath(
-        f"C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\{slug}"
-    )
+    configured_backend_url = get_backend_url()
+    backend_url = configured_backend_url or "http://127.0.0.1:8000"
+    requested_workspace = None
+    if not is_remote_backend_url(backend_url):
+        requested_workspace = build_local_draft_workspace(title)
+
     try:
-        backend_url = get_backend_url() or "http://127.0.0.1:8000"
-        req_data = json.dumps(
-            {
-                "title": title,
-                "specification": specification,
-                "workspace_path": draft_workspace,
-            }
-        ).encode("utf-8")
+        payload = {
+            "title": title,
+            "specification": specification,
+        }
+        if requested_workspace:
+            payload["workspace_path"] = requested_workspace
+
+        req_data = json.dumps(payload).encode("utf-8")
         req = urllib.request.Request(
             f"{backend_url}/v1/build/projects",
             data=req_data,
@@ -114,15 +147,22 @@ async def create_build_project_plan(title: str, specification: str) -> str:
             data = json.loads(resp.read().decode("utf-8"))
             pid = data.get("project_id")
             summary = data.get("plan_summary")
-            return f"Project created successfully with ID {pid}. Workspace: {draft_workspace}. Plan Summary: {summary}"
+            actual_workspace = data.get("workspace_path") or requested_workspace or "backend-managed workspace"
+            return (
+                f"Project created successfully with ID {pid}. "
+                f"Workspace: {actual_workspace}. Plan Summary: {summary}"
+            )
     except Exception as e:
         logger.warning(f"Error calling create_build_project_plan backend endpoint: {e}")
-        if get_backend_url():
+        if configured_backend_url and is_remote_backend_url(configured_backend_url):
             return (
-                f"I could not draft '{title}' through the configured backend, so I did not save anything locally. "
-                "Please verify the hosted backend deployment and Build Mode configuration."
+                f"I could not draft '{title}' through the configured backend. "
+                "No project workspace was created, so no files were saved. "
+                "Please verify the hosted backend deployment and Build Mode storage configuration."
             )
+
         fallback_pid = f"proj-{uuid.uuid4().hex[:8]}"
+        draft_workspace = requested_workspace or build_local_draft_workspace(title, project_id=fallback_pid)
         _offline_projects_store[fallback_pid] = {
             "title": title,
             "specification": specification,
@@ -137,8 +177,9 @@ async def create_build_project_plan(title: str, specification: str) -> str:
 @llm.function_tool
 async def approve_and_execute_build_project(project_id: str) -> str:
     """Explicitly approve and trigger execution for a drafted build project."""
+    configured_backend_url = get_backend_url()
+    backend_url = configured_backend_url or "http://127.0.0.1:8000"
     try:
-        backend_url = get_backend_url() or "http://127.0.0.1:8000"
         req = urllib.request.Request(
             f"{backend_url}/v1/build/projects/{project_id}/approve",
             data=b"{}",
@@ -147,14 +188,36 @@ async def approve_and_execute_build_project(project_id: str) -> str:
         )
         with urllib.request.urlopen(req, timeout=30) as resp:
             data = json.loads(resp.read().decode("utf-8"))
-            return f"Execution result summary: {data.get('result_summary')}"
+            summary = data.get("result_summary") or "Build execution completed."
+            workspace = data.get("workspace_path")
+            generated_files = data.get("generated_files") or []
+            download_path = data.get("download_path")
+            extras = []
+            if workspace:
+                extras.append(f"Workspace: {workspace}.")
+            if generated_files:
+                extras.append(f"Files: {', '.join(generated_files)}.")
+            if configured_backend_url and download_path:
+                extras.append(
+                    f"Download: {build_project_download_url(configured_backend_url, project_id)}."
+                )
+            extra_text = f" {' '.join(extras)}" if extras else ""
+            return f"Execution result summary: {summary}{extra_text}"
     except Exception as e:
         logger.warning(
-            f"Error calling approve_and_execute_build_project backend endpoint: {e}. Running local file drafting fallback."
+            f"Error calling approve_and_execute_build_project backend endpoint: {e}."
         )
+        if configured_backend_url and is_remote_backend_url(configured_backend_url):
+            return (
+                f"Build execution failed for project {project_id} through the configured backend. "
+                "No files were saved to your PC because this agent is running remotely. "
+                "Please verify the hosted backend deployment and retry."
+            )
+
         offline_data = _offline_projects_store.get(project_id, {})
-        workspace = offline_data.get("workspace_path") or os.path.abspath(
-            f"C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\project_{project_id}"
+        workspace = offline_data.get("workspace_path") or build_local_draft_workspace(
+            title=offline_data.get("title") or "Build Target",
+            project_id=project_id,
         )
         spec = offline_data.get("specification") or "Scaffold project"
         title = offline_data.get("title") or "Build Target"
@@ -172,8 +235,10 @@ async def approve_and_execute_build_project(project_id: str) -> str:
                 f"# Auto-generated by SaNa Build Engine\n# Project: {title}\n\ndef main():\n    print('Running {title}')\n\nif __name__ == '__main__':\n    main()\n"
             )
 
-        return f"Build execution completed for project {project_id}. Generated files 'project_spec.md' and 'main.py' in workspace '{workspace}'."
-
+        return (
+            f"Build execution completed for project {project_id}. "
+            f"Generated files 'project_spec.md' and 'main.py' in workspace '{workspace}'."
+        )
 
 def get_greeting_for_mode(mode: str) -> str:
     openings = {

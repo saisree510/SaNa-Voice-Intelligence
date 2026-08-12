@@ -1,8 +1,13 @@
+import io
 import logging
+import os
+import re
+import zipfile
 from datetime import datetime
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
 from app.adapters.deepcode_adapter import DeepCodeAdapter
@@ -51,6 +56,9 @@ class ApproveProjectResponse(BaseModel):
     session_id: str
     events: List[DeepCodeEvent]
     result_summary: str
+    workspace_path: str
+    generated_files: List[str]
+    download_path: str
 
 
 class BuildProjectsStatusResponse(BaseModel):
@@ -102,6 +110,47 @@ def _validate_or_default_workspace(request: CreateProjectRequest, project_id: st
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(exc),
         ) from exc
+
+
+def _list_workspace_files(workspace_path: str) -> List[str]:
+    collected: list[str] = []
+    normalized_workspace = os.path.abspath(os.path.normpath(workspace_path))
+    if not os.path.isdir(normalized_workspace):
+        return collected
+
+    for root, _, files in os.walk(normalized_workspace):
+        for file_name in files:
+            absolute_file = os.path.join(root, file_name)
+            relative_file = os.path.relpath(absolute_file, normalized_workspace)
+            collected.append(relative_file.replace("\\", "/"))
+    return sorted(collected)
+
+
+def _project_download_path(project_id: str) -> str:
+    return f"/v1/build/projects/{project_id}/download"
+
+
+def _build_archive_filename(project: BuildProjectModel) -> str:
+    safe_title = re.sub(r"[^a-zA-Z0-9_-]", "_", project.title.lower()).strip("_") or project.project_id
+    return f"{safe_title}_{project.project_id}.zip"
+
+
+def _build_workspace_zip_bytes(workspace_path: str, generated_files: List[str]) -> bytes:
+    buffer = io.BytesIO()
+    normalized_workspace = os.path.abspath(os.path.normpath(workspace_path))
+    with zipfile.ZipFile(buffer, mode="w", compression=zipfile.ZIP_DEFLATED) as archive:
+        for relative_file in generated_files:
+            normalized_relative = relative_file.replace("/", os.sep)
+            absolute_file = os.path.abspath(os.path.normpath(os.path.join(normalized_workspace, normalized_relative)))
+            if not os.path.isfile(absolute_file):
+                continue
+            try:
+                if os.path.commonpath([normalized_workspace, absolute_file]) != normalized_workspace:
+                    continue
+            except ValueError:
+                continue
+            archive.write(absolute_file, arcname=relative_file)
+    return buffer.getvalue()
 
 
 def _ensure_project_session(project: BuildProjectModel) -> DeepCodeSession:
@@ -283,6 +332,12 @@ async def approve_and_execute_project(
         ):
             events.append(event)
 
+        generated_files = _list_workspace_files(project.workspace_path)
+        if not generated_files:
+            raise RuntimeError(
+                f"Build execution completed for project '{project.title}' but produced no files in workspace '{project.workspace_path}'."
+            )
+
         project.status = 'completed'
         project.updated_at = datetime.utcnow().isoformat()
         run_turn = BuildRunTurnModel(
@@ -299,7 +354,7 @@ async def approve_and_execute_project(
 
         summary = (
             f"Build execution completed for project '{project.title}'. "
-            f"Generated project files and spec blueprint in workspace '{project.workspace_path}'."
+            f"Generated {len(generated_files)} file(s) in workspace '{project.workspace_path}'."
         )
         return ApproveProjectResponse(
             project_id=project_id,
@@ -307,6 +362,9 @@ async def approve_and_execute_project(
             session_id=session.session_id,
             events=events,
             result_summary=summary,
+            workspace_path=project.workspace_path,
+            generated_files=generated_files,
+            download_path=_project_download_path(project_id),
         )
 
     except Exception as exc:
@@ -318,6 +376,39 @@ async def approve_and_execute_project(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f'Project execution failed: {str(exc)}',
         ) from exc
+
+
+@router.get('/projects/{project_id}/download')
+async def download_project_files(
+    project_id: str,
+    current_user: AuthenticatedUser = Depends(get_current_user),
+):
+    _ensure_build_mode_enabled()
+    project = _load_project_or_404(project_id)
+    _authorize_project_access(project, current_user)
+
+    generated_files = _list_workspace_files(project.workspace_path)
+    if not generated_files:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail='No generated files found for this project',
+        )
+
+    archive_bytes = _build_workspace_zip_bytes(project.workspace_path, generated_files)
+    if not archive_bytes:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail='No downloadable files found for this project',
+        )
+
+    headers = {
+        'Content-Disposition': f'attachment; filename="{_build_archive_filename(project)}"'
+    }
+    return StreamingResponse(
+        io.BytesIO(archive_bytes),
+        media_type='application/zip',
+        headers=headers,
+    )
 
 
 @router.get('/projects', response_model=List[BuildProjectModel])

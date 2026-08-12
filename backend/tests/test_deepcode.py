@@ -1,4 +1,6 @@
+import io
 import shutil
+import zipfile
 from pathlib import Path
 
 from fastapi.testclient import TestClient
@@ -85,7 +87,39 @@ def test_create_project_and_approval_gate():
     approve_data = approve_res.json()
     assert approve_data["status"] == "completed"
     assert "Build execution completed" in approve_data["result_summary"]
+    assert approve_data["workspace_path"] == workspace_path
+    assert "project_spec.md" in approve_data["generated_files"]
+    assert "main.py" in approve_data["generated_files"]
+    assert (Path(workspace_path) / "project_spec.md").exists()
+    assert (Path(workspace_path) / "main.py").exists()
     assert len(approve_data["events"]) >= 2
+
+
+def test_download_project_archive():
+    workspace_path = _workspace("downloadable_build")
+    create_res = client.post(
+        "/v1/build/projects",
+        json={
+            "title": "Downloadable Build",
+            "specification": "Build a downloadable sample",
+            "workspace_path": workspace_path,
+        },
+    )
+    assert create_res.status_code == 200
+    project_id = create_res.json()["project_id"]
+
+    approve_res = client.post(f"/v1/build/projects/{project_id}/approve")
+    assert approve_res.status_code == 200
+    approve_data = approve_res.json()
+    assert approve_data["download_path"] == f"/v1/build/projects/{project_id}/download"
+
+    download_res = client.get(f"/v1/build/projects/{project_id}/download")
+    assert download_res.status_code == 200
+    assert download_res.headers["content-type"].startswith("application/zip")
+    assert f'{project_id}.zip' in download_res.headers["content-disposition"]
+
+    archive = zipfile.ZipFile(io.BytesIO(download_res.content))
+    assert sorted(archive.namelist()) == ["main.py", "project_spec.md"]
 
 
 def test_persistent_project_continuation_and_history():

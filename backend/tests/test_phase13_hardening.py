@@ -1,9 +1,12 @@
 import jwt
+from pathlib import Path
 import pytest
 from fastapi.testclient import TestClient
+from app.config import settings
 from app.main import app
 
 client = TestClient(app)
+TRUSTED_ROOT = Path(settings.BUILD_STORAGE_ROOT)
 
 # Standard valid PyJWT test tokens
 TOKEN_USER1 = jwt.encode({"sub": "user-1000", "email": "user1@sana.ai"}, "secret", algorithm="HS256")
@@ -19,7 +22,7 @@ def test_user_isolation_security():
         json={
             "title": "User 1 Confidential Project",
             "specification": "Secrets and sensitive data",
-            "workspace_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\mobile",
+            "workspace_path": str(TRUSTED_ROOT / "user1_confidential_project"),
         },
         headers=headers_user1,
     )
@@ -48,6 +51,10 @@ def test_user_isolation_security():
     resp2_history = client.get(f"/v1/build/projects/{proj1_id}/history", headers=headers_user2)
     assert resp2_history.status_code == 403
 
+    # User 2 attempts to download User 1's project files -> Expect 403 Forbidden
+    resp2_download = client.get(f"/v1/build/projects/{proj1_id}/download", headers=headers_user2)
+    assert resp2_download.status_code == 403
+
 
 def test_unauthenticated_access_denied():
     """Verify unauthenticated requests without bearer tokens are rejected."""
@@ -64,7 +71,7 @@ def test_project_approval_execution_flow():
         json={
             "title": "Phase 13 Test Calculator App",
             "specification": "Create a calculator module",
-            "workspace_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\mobile",
+            "workspace_path": str(TRUSTED_ROOT / "phase13_test_calculator_app"),
         },
         headers=headers,
     )
