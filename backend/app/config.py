@@ -28,6 +28,7 @@ class Settings(BaseSettings):
     CORS_ORIGINS: list[str] = ["*"]
     BUILD_MODE_ENABLED: bool = True
     BUILD_STORAGE_ROOT: str = os.getenv("BUILD_STORAGE_ROOT", DEFAULT_BUILD_STORAGE_ROOT)
+    BUILD_DOWNLOAD_SIGNING_SECRET: Optional[str] = None
 
     model_config = SettingsConfigDict(
         env_file=".env",

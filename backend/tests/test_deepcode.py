@@ -90,6 +90,9 @@ def test_create_project_and_approval_gate():
     assert approve_data["workspace_path"] == workspace_path
     assert "project_spec.md" in approve_data["generated_files"]
     assert "main.py" in approve_data["generated_files"]
+    assert approve_data["download_path"] == f"/v1/build/projects/{project_id}/download"
+    assert "/v1/build/projects/" in approve_data["download_url"]
+    assert "token=" in approve_data["download_url"]
     assert (Path(workspace_path) / "project_spec.md").exists()
     assert (Path(workspace_path) / "main.py").exists()
     assert len(approve_data["events"]) >= 2
@@ -120,6 +123,19 @@ def test_download_project_archive():
 
     archive = zipfile.ZipFile(io.BytesIO(download_res.content))
     assert sorted(archive.namelist()) == ["main.py", "project_spec.md"]
+
+    link_res = client.get(f"/v1/build/projects/{project_id}/download-link")
+    assert link_res.status_code == 200
+    link_data = link_res.json()
+    assert link_data["project_id"] == project_id
+    assert "/v1/build/projects/" in link_data["download_url"]
+    assert "token=" in link_data["download_url"]
+
+    signed_download_url = link_data["download_url"].replace("http://testserver", "")
+    signed_download_res = client.get(signed_download_url)
+    assert signed_download_res.status_code == 200
+    signed_archive = zipfile.ZipFile(io.BytesIO(signed_download_res.content))
+    assert sorted(signed_archive.namelist()) == ["main.py", "project_spec.md"]
 
 
 def test_persistent_project_continuation_and_history():

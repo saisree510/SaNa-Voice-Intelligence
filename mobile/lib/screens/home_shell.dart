@@ -9,6 +9,7 @@ import 'package:intl/intl.dart';
 import '../controllers/app_ctrl.dart';
 import '../models/sana_orb_state.dart';
 import '../services/auth_service.dart';
+import '../services/build_projects_service.dart';
 import '../services/conversation_service.dart';
 import '../ui/sana_theme.dart';
 import '../widgets/sana_orb_view.dart';
@@ -81,10 +82,7 @@ class _HomeTabBody extends StatelessWidget {
       case HomeTab.history:
         return const _HistoryPane();
       case HomeTab.projects:
-        return const _PlaceholderPane(
-          title: 'Projects',
-          body: 'Build projects will live here in a later phase.',
-        );
+        return const _ProjectsPane();
       case HomeTab.profile:
         return const _ProfilePane();
     }
@@ -275,22 +273,200 @@ class _ModeChip extends StatelessWidget {
   }
 }
 
-class _PlaceholderPane extends StatelessWidget {
-  const _PlaceholderPane({required this.title, required this.body});
+class _ProjectsPane extends StatefulWidget {
+  const _ProjectsPane();
 
-  final String title;
-  final String body;
+  @override
+  State<_ProjectsPane> createState() => _ProjectsPaneState();
+}
+
+class _ProjectsPaneState extends State<_ProjectsPane> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      unawaited(context.read<BuildProjectsService>().fetchProjects());
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
+    final projectsService = context.watch<BuildProjectsService>();
+    final textTheme = Theme.of(context).textTheme;
+    final projects = projectsService.projects;
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(28, 36, 28, 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: Theme.of(context).textTheme.headlineMedium),
-          const SizedBox(height: 12),
-          Text(body, style: Theme.of(context).textTheme.bodyMedium),
+          Text(
+            'Build Projects',
+            style: textTheme.headlineMedium?.copyWith(
+              color: SanaColors.lavender,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Download generated project files from your latest builds.',
+            style: textTheme.bodySmall?.copyWith(color: SanaColors.fgMuted),
+          ),
+          const SizedBox(height: 20),
+          if (projectsService.errorMessage != null) ...[
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: SanaColors.surface,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.redAccent.withValues(alpha: 0.35)),
+              ),
+              child: Text(
+                projectsService.errorMessage!,
+                style: textTheme.bodySmall?.copyWith(color: Colors.redAccent),
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
+          Expanded(
+            child: projectsService.isLoading && projects.isEmpty
+                ? const Center(
+                    child: CircularProgressIndicator(color: SanaColors.lavender),
+                  )
+                : !projectsService.hasBackend
+                    ? Center(
+                        child: Text(
+                          'Configure SANA_BACKEND_URL to load build projects.',
+                          textAlign: TextAlign.center,
+                          style: textTheme.bodyMedium?.copyWith(color: SanaColors.fgSecondary),
+                        ),
+                      )
+                    : projects.isEmpty
+                        ? Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(Icons.folder_copy_outlined,
+                                    size: 48, color: SanaColors.fgMuted),
+                                const SizedBox(height: 12),
+                                Text(
+                                  'No build projects yet',
+                                  style: textTheme.titleMedium
+                                      ?.copyWith(color: SanaColors.fgSecondary),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  'Start a build conversation and approve execution first.',
+                                  textAlign: TextAlign.center,
+                                  style: textTheme.bodySmall
+                                      ?.copyWith(color: SanaColors.fgMuted),
+                                ),
+                              ],
+                            ),
+                          )
+                        : RefreshIndicator(
+                            color: SanaColors.lavender,
+                            onRefresh: () => projectsService.fetchProjects(),
+                            child: ListView.separated(
+                              itemCount: projects.length,
+                              separatorBuilder: (_, __) => const SizedBox(height: 12),
+                              itemBuilder: (context, index) {
+                                final project = projects[index];
+                                final updatedAt = DateFormat('MMM d, h:mm a').format(project.updatedAt);
+                                final isDownloading =
+                                    projectsService.activeDownloadProjectId == project.projectId;
+
+                                return Container(
+                                  padding: const EdgeInsets.all(16),
+                                  decoration: BoxDecoration(
+                                    color: SanaColors.surface,
+                                    borderRadius: BorderRadius.circular(16),
+                                    border: Border.all(color: SanaColors.lavender.withValues(alpha: 0.12)),
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Expanded(
+                                            child: Text(
+                                              project.title,
+                                              style: textTheme.titleMedium?.copyWith(
+                                                color: SanaColors.fgPrimary,
+                                                fontWeight: FontWeight.w700,
+                                              ),
+                                            ),
+                                          ),
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                            decoration: BoxDecoration(
+                                              color: SanaColors.nearBlack,
+                                              borderRadius: BorderRadius.circular(999),
+                                            ),
+                                            child: Text(
+                                              project.status,
+                                              style: textTheme.labelSmall?.copyWith(
+                                                color: SanaColors.lavender,
+                                                fontWeight: FontWeight.w700,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 10),
+                                      Text(
+                                        'Updated $updatedAt',
+                                        style: textTheme.bodySmall?.copyWith(color: SanaColors.fgMuted),
+                                      ),
+                                      if (project.workspacePath.isNotEmpty) ...[
+                                        const SizedBox(height: 6),
+                                        Text(
+                                          project.workspacePath,
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: textTheme.bodySmall?.copyWith(color: SanaColors.fgSecondary),
+                                        ),
+                                      ],
+                                      const SizedBox(height: 14),
+                                      Align(
+                                        alignment: Alignment.centerRight,
+                                        child: FilledButton.icon(
+                                          onPressed: !project.canDownload || isDownloading
+                                              ? null
+                                              : () async {
+                                                  final ok = await context
+                                                      .read<BuildProjectsService>()
+                                                      .downloadProject(project);
+                                                  if (!context.mounted) return;
+                                                  ScaffoldMessenger.of(context).showSnackBar(
+                                                    SnackBar(
+                                                      content: Text(
+                                                        ok
+                                                            ? 'Download link opened for ${project.title}.'
+                                                            : (context.read<BuildProjectsService>().errorMessage ??
+                                                                'Failed to open download link.'),
+                                                      ),
+                                                    ),
+                                                  );
+                                                },
+                                          icon: isDownloading
+                                              ? const SizedBox(
+                                                  width: 16,
+                                                  height: 16,
+                                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                                )
+                                              : const Icon(Icons.download_rounded),
+                                          label: Text(project.canDownload ? 'Download files' : 'Await completion'),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+          ),
         ],
       ),
     );

@@ -90,6 +90,7 @@ async def test_voice_agent_approve_summary_includes_download_url(monkeypatch):
                     "workspace_path": "/data/sana-builds/remote_project",
                     "generated_files": ["main.py", "project_spec.md"],
                     "download_path": "/v1/build/projects/proj-remote01/download",
+                    "download_url": "https://example.up.railway.app/v1/build/projects/proj-remote01/download/signed?token=test-token",
                 }
             ).encode("utf-8")
 
@@ -100,5 +101,5 @@ async def test_voice_agent_approve_summary_includes_download_url(monkeypatch):
 
     result = await approve_and_execute_build_project("proj-remote01")
 
-    assert "Download: https://example.up.railway.app/v1/build/projects/proj-remote01/download." in result
+    assert "Download: https://example.up.railway.app/v1/build/projects/proj-remote01/download/signed?token=test-token." in result
     assert "Files: main.py, project_spec.md." in result

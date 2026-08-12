@@ -55,6 +55,10 @@ def test_user_isolation_security():
     resp2_download = client.get(f"/v1/build/projects/{proj1_id}/download", headers=headers_user2)
     assert resp2_download.status_code == 403
 
+    # User 2 attempts to request a signed download link for User 1's project -> Expect 403 Forbidden
+    resp2_download_link = client.get(f"/v1/build/projects/{proj1_id}/download-link", headers=headers_user2)
+    assert resp2_download_link.status_code == 403
+
 
 def test_unauthenticated_access_denied():
     """Verify unauthenticated requests without bearer tokens are rejected."""

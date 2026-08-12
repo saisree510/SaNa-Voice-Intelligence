@@ -3,11 +3,12 @@ import logging
 import os
 import re
 import zipfile
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from fastapi.responses import StreamingResponse
+import jwt
 from pydantic import BaseModel
 
 from app.adapters.deepcode_adapter import DeepCodeAdapter
@@ -59,6 +60,13 @@ class ApproveProjectResponse(BaseModel):
     workspace_path: str
     generated_files: List[str]
     download_path: str
+    download_url: str
+
+
+class DownloadLinkResponse(BaseModel):
+    project_id: str
+    download_url: str
+    expires_at: str
 
 
 class BuildProjectsStatusResponse(BaseModel):
@@ -130,6 +138,67 @@ def _project_download_path(project_id: str) -> str:
     return f"/v1/build/projects/{project_id}/download"
 
 
+def _project_signed_download_path(project_id: str) -> str:
+    return f"/v1/build/projects/{project_id}/download/signed"
+
+
+def _download_signing_secret() -> str:
+    return (
+        settings.BUILD_DOWNLOAD_SIGNING_SECRET
+        or settings.SUPABASE_JWT_SECRET
+        or settings.LIVEKIT_API_SECRET
+    )
+
+
+def _build_signed_download_token(project: BuildProjectModel, current_user: AuthenticatedUser) -> tuple[str, str]:
+    expires_at = datetime.now(timezone.utc) + timedelta(minutes=15)
+    payload = {
+        "sub": current_user.id,
+        "project_id": project.project_id,
+        "purpose": "build_download",
+        "exp": int(expires_at.timestamp()),
+    }
+    token = jwt.encode(payload, _download_signing_secret(), algorithm="HS256")
+    return token, expires_at.isoformat()
+
+
+def _build_signed_download_url(request: Request, project: BuildProjectModel, current_user: AuthenticatedUser) -> str:
+    token, _ = _build_signed_download_token(project, current_user)
+    base_url = str(request.base_url).rstrip("/")
+    return f"{base_url}{_project_signed_download_path(project.project_id)}?token={token}"
+
+
+def _validate_signed_download_token(project: BuildProjectModel, token: str) -> None:
+    try:
+        payload = jwt.decode(
+            token,
+            _download_signing_secret(),
+            algorithms=["HS256"],
+            options={"verify_aud": False},
+        )
+    except jwt.PyJWTError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=f"Invalid download token: {str(exc)}",
+        ) from exc
+
+    if payload.get("purpose") != "build_download":
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid download token purpose",
+        )
+    if payload.get("project_id") != project.project_id:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Download token does not match this project",
+        )
+    if payload.get("sub") != project.user_id and payload.get("sub") != "dev-user-0000":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Download token does not grant access to this project",
+        )
+
+
 def _build_archive_filename(project: BuildProjectModel) -> str:
     safe_title = re.sub(r"[^a-zA-Z0-9_-]", "_", project.title.lower()).strip("_") or project.project_id
     return f"{safe_title}_{project.project_id}.zip"
@@ -151,6 +220,31 @@ def _build_workspace_zip_bytes(workspace_path: str, generated_files: List[str]) 
                 continue
             archive.write(absolute_file, arcname=relative_file)
     return buffer.getvalue()
+
+
+def _build_project_archive_response(project: BuildProjectModel) -> StreamingResponse:
+    generated_files = _list_workspace_files(project.workspace_path)
+    if not generated_files:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail='No generated files found for this project',
+        )
+
+    archive_bytes = _build_workspace_zip_bytes(project.workspace_path, generated_files)
+    if not archive_bytes:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail='No downloadable files found for this project',
+        )
+
+    headers = {
+        'Content-Disposition': f'attachment; filename="{_build_archive_filename(project)}"'
+    }
+    return StreamingResponse(
+        io.BytesIO(archive_bytes),
+        media_type='application/zip',
+        headers=headers,
+    )
 
 
 def _ensure_project_session(project: BuildProjectModel) -> DeepCodeSession:
@@ -305,6 +399,7 @@ async def get_build_project(
 @router.post('/projects/{project_id}/approve', response_model=ApproveProjectResponse)
 async def approve_and_execute_project(
     project_id: str,
+    request: Request,
     current_user: AuthenticatedUser = Depends(get_current_user),
 ):
     _ensure_build_mode_enabled()
@@ -365,6 +460,7 @@ async def approve_and_execute_project(
             workspace_path=project.workspace_path,
             generated_files=generated_files,
             download_path=_project_download_path(project_id),
+            download_url=_build_signed_download_url(request, project, current_user),
         )
 
     except Exception as exc:
@@ -378,6 +474,23 @@ async def approve_and_execute_project(
         ) from exc
 
 
+@router.get('/projects/{project_id}/download-link', response_model=DownloadLinkResponse)
+async def get_project_download_link(
+    project_id: str,
+    request: Request,
+    current_user: AuthenticatedUser = Depends(get_current_user),
+):
+    _ensure_build_mode_enabled()
+    project = _load_project_or_404(project_id)
+    _authorize_project_access(project, current_user)
+    _, expires_at = _build_signed_download_token(project, current_user)
+    return DownloadLinkResponse(
+        project_id=project.project_id,
+        download_url=_build_signed_download_url(request, project, current_user),
+        expires_at=expires_at,
+    )
+
+
 @router.get('/projects/{project_id}/download')
 async def download_project_files(
     project_id: str,
@@ -386,29 +499,18 @@ async def download_project_files(
     _ensure_build_mode_enabled()
     project = _load_project_or_404(project_id)
     _authorize_project_access(project, current_user)
+    return _build_project_archive_response(project)
 
-    generated_files = _list_workspace_files(project.workspace_path)
-    if not generated_files:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail='No generated files found for this project',
-        )
 
-    archive_bytes = _build_workspace_zip_bytes(project.workspace_path, generated_files)
-    if not archive_bytes:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail='No downloadable files found for this project',
-        )
-
-    headers = {
-        'Content-Disposition': f'attachment; filename="{_build_archive_filename(project)}"'
-    }
-    return StreamingResponse(
-        io.BytesIO(archive_bytes),
-        media_type='application/zip',
-        headers=headers,
-    )
+@router.get('/projects/{project_id}/download/signed', name='download_project_files_signed')
+async def download_project_files_signed(
+    project_id: str,
+    token: str = Query(...),
+):
+    _ensure_build_mode_enabled()
+    project = _load_project_or_404(project_id)
+    _validate_signed_download_token(project, token)
+    return _build_project_archive_response(project)
 
 
 @router.get('/projects', response_model=List[BuildProjectModel])

@@ -23,6 +23,7 @@ class AuthService extends ChangeNotifier {
   String? get userEmail => _userEmail;
   String? get userName => _userName;
   String get assistantName => _assistantName;
+  String? get accessToken => _supabase?.auth.currentSession?.accessToken;
 
   bool get hasCompletedOnboarding =>
       _userName != null && _userName!.trim().isNotEmpty;

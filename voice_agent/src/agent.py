@@ -191,13 +191,16 @@ async def approve_and_execute_build_project(project_id: str) -> str:
             summary = data.get("result_summary") or "Build execution completed."
             workspace = data.get("workspace_path")
             generated_files = data.get("generated_files") or []
+            download_url = data.get("download_url")
             download_path = data.get("download_path")
             extras = []
             if workspace:
                 extras.append(f"Workspace: {workspace}.")
             if generated_files:
                 extras.append(f"Files: {', '.join(generated_files)}.")
-            if configured_backend_url and download_path:
+            if download_url:
+                extras.append(f"Download: {download_url}.")
+            elif configured_backend_url and download_path:
                 extras.append(
                     f"Download: {build_project_download_url(configured_backend_url, project_id)}."
                 )
