@@ -66,23 +66,54 @@ async def create_livekit_token(
         token = token_builder.to_jwt()
         logger.info(f"Minted LiveKit token for user {current_user.id} in room {room_name} (mode: {request.mode})")
 
-        # Explicitly dispatch the configured LiveKit agent worker into the room
+        # Explicitly dispatch a LiveKit agent worker into the room.
+        # Railway / LiveKit config has used both voice_agent and voice_agent_local;
+        # try the configured name first, then known fallbacks.
+        lk_api = None
         try:
             lk_api = api.LiveKitAPI(
                 url=settings.LIVEKIT_URL,
                 api_key=settings.LIVEKIT_API_KEY,
                 api_secret=settings.LIVEKIT_API_SECRET,
             )
-            await lk_api.agent_dispatch.create_dispatch(
-                api.CreateAgentDispatchRequest(
-                    room=room_name,
-                    agent_name=settings.LIVEKIT_AGENT_NAME,
+            candidate_names = []
+            for candidate in (
+                settings.LIVEKIT_AGENT_NAME,
+                "voice_agent",
+                "voice_agent_local",
+            ):
+                candidate = (candidate or "").strip()
+                if candidate and candidate not in candidate_names:
+                    candidate_names.append(candidate)
+
+            dispatched_name = None
+            last_dispatch_err = None
+            for candidate_name in candidate_names:
+                try:
+                    await lk_api.agent_dispatch.create_dispatch(
+                        api.CreateAgentDispatchRequest(
+                            room=room_name,
+                            agent_name=candidate_name,
+                        )
+                    )
+                    dispatched_name = candidate_name
+                    logger.info(
+                        f"Successfully dispatched agent '{candidate_name}' into room {room_name}"
+                    )
+                    break
+                except Exception as dispatch_err:
+                    last_dispatch_err = dispatch_err
+                    logger.warning(
+                        f"Agent dispatch attempt failed for '{candidate_name}' in room {room_name}: {dispatch_err}"
+                    )
+
+            if dispatched_name is None and last_dispatch_err is not None:
+                logger.warning(
+                    f"All agent dispatch attempts failed for room {room_name}: {last_dispatch_err}"
                 )
-            )
-            await lk_api.aclose()
-            logger.info(f"Successfully dispatched agent '{settings.LIVEKIT_AGENT_NAME}' into room {room_name}")
-        except Exception as dispatch_err:
-            logger.warning(f"Agent dispatch attempt info/warning: {dispatch_err}")
+        finally:
+            if lk_api is not None:
+                await lk_api.aclose()
 
         return TokenResponse(
             token=token,
