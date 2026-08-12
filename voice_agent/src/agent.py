@@ -25,6 +25,7 @@ from livekit.plugins import ai_coustics, groq, silero
 logger = logging.getLogger("agent")
 
 load_dotenv(".env.local")
+AGENT_NAME = os.getenv("AGENT_NAME", "voice_agent")
 
 
 import re
@@ -35,6 +36,10 @@ _room_chat_memory: Dict[str, list] = {}
 
 RESTORED_MEMORY_MAX_MESSAGES = 40
 RESTORED_MEMORY_MAX_CONTENT_CHARS = 4000
+
+
+def get_backend_url() -> str:
+    return os.getenv("BACKEND_URL", "").strip()
 
 
 def normalize_restored_messages(
@@ -91,7 +96,7 @@ async def create_build_project_plan(title: str, specification: str) -> str:
         f"C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\{slug}"
     )
     try:
-        backend_url = os.getenv("BACKEND_URL", "http://127.0.0.1:8000")
+        backend_url = get_backend_url() or "http://127.0.0.1:8000"
         req_data = json.dumps(
             {
                 "title": title,
@@ -112,6 +117,11 @@ async def create_build_project_plan(title: str, specification: str) -> str:
             return f"Project created successfully with ID {pid}. Workspace: {draft_workspace}. Plan Summary: {summary}"
     except Exception as e:
         logger.warning(f"Error calling create_build_project_plan backend endpoint: {e}")
+        if get_backend_url():
+            return (
+                f"I could not draft '{title}' through the configured backend, so I did not save anything locally. "
+                "Please verify the hosted backend deployment and Build Mode configuration."
+            )
         fallback_pid = f"proj-{uuid.uuid4().hex[:8]}"
         _offline_projects_store[fallback_pid] = {
             "title": title,
@@ -128,7 +138,7 @@ async def create_build_project_plan(title: str, specification: str) -> str:
 async def approve_and_execute_build_project(project_id: str) -> str:
     """Explicitly approve and trigger execution for a drafted build project."""
     try:
-        backend_url = os.getenv("BACKEND_URL", "http://127.0.0.1:8000")
+        backend_url = get_backend_url() or "http://127.0.0.1:8000"
         req = urllib.request.Request(
             f"{backend_url}/v1/build/projects/{project_id}/approve",
             data=b"{}",
@@ -312,11 +322,11 @@ class Assistant(Agent):
 server = AgentServer()
 
 
-@server.rtc_session(agent_name="voice_agent_local")
+@server.rtc_session(agent_name=AGENT_NAME)
 async def my_agent(ctx: JobContext):
     groq_key = os.getenv("GROQ_API_KEY")
     logger.info(
-        f"Connecting session in room '{ctx.room.name}'. GROQ_API_KEY present: {bool(groq_key)}. Using LiveKit Inference for Cartesia TTS."
+        f"Connecting session in room '{ctx.room.name}' as agent '{AGENT_NAME}'. GROQ_API_KEY present: {bool(groq_key)}. Using LiveKit Inference for Cartesia TTS."
     )
 
     assistant = Assistant(mode="general")

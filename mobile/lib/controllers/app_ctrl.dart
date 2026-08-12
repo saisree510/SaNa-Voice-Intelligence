@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:livekit_client/livekit_client.dart' as sdk;
@@ -209,6 +210,10 @@ class AppCtrl extends ChangeNotifier {
   }
 
   static sdk.Session _createSession({required sdk.Room room}) {
+    const configuredAgentName = String.fromEnvironment('SANA_AGENT_NAME');
+    final agentName = configuredAgentName.isNotEmpty
+        ? configuredAgentName
+        : (kReleaseMode ? 'voice_agent' : 'voice_agent_local');
     // Development-only hardcoded credentials (optional).
     const hardcodedServerUrl = null; // e.g. 'wss://your-host'
     const hardcodedToken = null; // e.g. 'eyJ...'
@@ -227,7 +232,7 @@ class AppCtrl extends ChangeNotifier {
     final tokenSource = AuthenticatedTokenSource();
 
     return sdk.Session.withAgent(
-      'voice_agent_local',
+      agentName,
       tokenSource: tokenSource,
       options: sdk.SessionOptions(
         room: room,

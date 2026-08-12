@@ -67,7 +67,7 @@ async def create_livekit_token(
         token = token_builder.to_jwt()
         logger.info(f"Minted LiveKit token for user {current_user.id} in room {room_name} (mode: {request.mode})")
 
-        # Explicitly dispatch the registered cloud agent worker 'voice_agent' into the room
+        # Explicitly dispatch the configured LiveKit agent worker into the room
         try:
             lk_api = api.LiveKitAPI(
                 url=settings.LIVEKIT_URL,
@@ -77,11 +77,11 @@ async def create_livekit_token(
             await lk_api.agent_dispatch.create_dispatch(
                 api.CreateAgentDispatchRequest(
                     room=room_name,
-                    agent_name="voice_agent_local",
+                    agent_name=settings.LIVEKIT_AGENT_NAME,
                 )
             )
             await lk_api.aclose()
-            logger.info(f"Successfully dispatched agent 'voice_agent_local' into room {room_name}")
+            logger.info(f"Successfully dispatched agent '{settings.LIVEKIT_AGENT_NAME}' into room {room_name}")
         except Exception as dispatch_err:
             logger.warning(f"Agent dispatch attempt info/warning: {dispatch_err}")
 

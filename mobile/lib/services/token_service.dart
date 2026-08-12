@@ -33,8 +33,19 @@ class TokenService {
   final String backendUrl;
 
   TokenService({
-    this.backendUrl = 'http://192.168.1.204:8000',
-  });
+    String? backendUrl,
+  }) : backendUrl = backendUrl ?? _resolveBackendUrl();
+
+  static String _resolveBackendUrl() {
+    const configuredBackendUrl = String.fromEnvironment('SANA_BACKEND_URL');
+    if (configuredBackendUrl.isNotEmpty) {
+      return configuredBackendUrl;
+    }
+    if (kReleaseMode) {
+      return '';
+    }
+    return 'http://192.168.1.204:8000';
+  }
 
   /// Fetches a user-scoped LiveKit token from the FastAPI backend endpoint `/v1/livekit/token`
   Future<LiveKitTokenResponse?> fetchToken({
@@ -42,6 +53,12 @@ class TokenService {
     String? roomName,
   }) async {
     try {
+      if (backendUrl.isEmpty) {
+        if (kDebugMode) {
+          print('TokenService: Backend URL is not configured. Pass --dart-define=SANA_BACKEND_URL=https://<your-backend>.vercel.app for release builds.');
+        }
+        return null;
+      }
       final session = Supabase.instance.client.auth.currentSession;
       final headers = <String, String>{
         'Content-Type': 'application/json',

@@ -24,10 +24,10 @@ class DeepCodeSession(BaseModel):
     model: str = "google/gemma-4-31b-it"
     connection_id: Optional[str] = None
     access_level: str = "full-access"
-    status: str = "idle" # idle, running, completed, failed
+    status: str = "idle"  # idle, running, completed, failed
     created_at: str = Field(default_factory=lambda: datetime.utcnow().isoformat())
     updated_at: str = Field(default_factory=lambda: datetime.utcnow().isoformat())
-    steps: List[DeepCodeStep] = []
+    steps: List[DeepCodeStep] = Field(default_factory=list)
 
 
 class BuildStatusEvent(BaseModel):
@@ -36,7 +36,7 @@ class BuildStatusEvent(BaseModel):
     status: str
     current_step: Optional[str] = None
     progress_percentage: int = 0
-    events: List[DeepCodeEvent] = []
+    events: List[DeepCodeEvent] = Field(default_factory=list)
 
 
 class BuildRunTurnModel(BaseModel):
@@ -45,7 +45,7 @@ class BuildRunTurnModel(BaseModel):
     session_id: str
     prompt: str
     status: str = "completed"
-    events: List[DeepCodeEvent] = []
+    events: List[DeepCodeEvent] = Field(default_factory=list)
     created_at: str = Field(default_factory=lambda: datetime.utcnow().isoformat())
 
 
@@ -58,8 +58,6 @@ class BuildProjectModel(BaseModel):
     status: str = "drafting"  # drafting, plan_generated, approved, executing, completed, failed
     plan_summary: Optional[str] = None
     session_id: Optional[str] = None
-    history: List[BuildRunTurnModel] = []
+    history: List[BuildRunTurnModel] = Field(default_factory=list)
     created_at: str = Field(default_factory=lambda: datetime.utcnow().isoformat())
     updated_at: str = Field(default_factory=lambda: datetime.utcnow().isoformat())
-
-

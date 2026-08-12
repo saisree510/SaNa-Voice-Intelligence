@@ -1,0 +1,6 @@
+.venv
+.pytest_cache
+tests
+*.log
+backend-local.err.log
+backend-local.log
