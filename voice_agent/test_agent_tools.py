@@ -29,9 +29,17 @@ async def test_voice_agent_build_tools_offline_file_drafting(monkeypatch):
     expected_draft_dir = os.path.abspath(r"C:\Users\saisr\Projects\SANA-LiveKit\drafts\test_voice_analytics_dashboard")
     if os.path.exists(expected_draft_dir):
         spec_file = os.path.join(expected_draft_dir, "project_spec.md")
+        readme_file = os.path.join(expected_draft_dir, "README.md")
         code_file = os.path.join(expected_draft_dir, "main.py")
+        pyproject_file = os.path.join(expected_draft_dir, "pyproject.toml")
+        src_dir = os.path.join(expected_draft_dir, "src")
+        tests_dir = os.path.join(expected_draft_dir, "tests")
         assert os.path.exists(spec_file), "project_spec.md missing from draft workspace"
+        assert os.path.exists(readme_file), "README.md missing from draft workspace"
         assert os.path.exists(code_file), "main.py missing from draft workspace"
+        assert os.path.exists(pyproject_file), "pyproject.toml missing from draft workspace"
+        assert os.path.isdir(src_dir), "src directory missing from draft workspace"
+        assert os.path.isdir(tests_dir), "tests directory missing from draft workspace"
 
         shutil.rmtree(expected_draft_dir, ignore_errors=True)
 
@@ -88,7 +96,7 @@ async def test_voice_agent_approve_summary_includes_download_url(monkeypatch):
                 {
                     "result_summary": "Build execution completed for remote project.",
                     "workspace_path": "/data/sana-builds/remote_project",
-                    "generated_files": ["main.py", "project_spec.md"],
+                    "generated_files": [".gitignore", "README.md", "main.py", "project_spec.md", "pyproject.toml", "src/remote_project/app.py", "tests/test_app.py"],
                     "download_path": "/v1/build/projects/proj-remote01/download",
                     "download_url": "https://example.up.railway.app/v1/build/projects/proj-remote01/download/signed?token=test-token",
                 }
@@ -102,4 +110,4 @@ async def test_voice_agent_approve_summary_includes_download_url(monkeypatch):
     result = await approve_and_execute_build_project("proj-remote01")
 
     assert "Download: https://example.up.railway.app/v1/build/projects/proj-remote01/download/signed?token=test-token." in result
-    assert "Files: main.py, project_spec.md." in result
+    assert "Files: .gitignore, README.md, main.py, project_spec.md, pyproject.toml, src/remote_project/app.py, tests/test_app.py." in result

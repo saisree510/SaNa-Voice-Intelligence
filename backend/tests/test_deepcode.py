@@ -1,4 +1,5 @@
 import io
+from uuid import uuid4
 import shutil
 import zipfile
 from pathlib import Path
@@ -88,13 +89,23 @@ def test_create_project_and_approval_gate():
     assert approve_data["status"] == "completed"
     assert "Build execution completed" in approve_data["result_summary"]
     assert approve_data["workspace_path"] == workspace_path
-    assert "project_spec.md" in approve_data["generated_files"]
-    assert "main.py" in approve_data["generated_files"]
+    generated_files = approve_data["generated_files"]
+    assert "project_spec.md" in generated_files
+    assert "README.md" in generated_files
+    assert "main.py" in generated_files
+    assert "pyproject.toml" in generated_files
+    assert ".gitignore" in generated_files
+    assert any(path.startswith("src/") for path in generated_files)
+    assert any(path.startswith("tests/") for path in generated_files)
     assert approve_data["download_path"] == f"/v1/build/projects/{project_id}/download"
     assert "/v1/build/projects/" in approve_data["download_url"]
     assert "token=" in approve_data["download_url"]
     assert (Path(workspace_path) / "project_spec.md").exists()
+    assert (Path(workspace_path) / "README.md").exists()
     assert (Path(workspace_path) / "main.py").exists()
+    assert (Path(workspace_path) / "pyproject.toml").exists()
+    assert any(p.is_dir() and p.name == "src" for p in Path(workspace_path).iterdir())
+    assert any(p.is_dir() and p.name == "tests" for p in Path(workspace_path).iterdir())
     assert len(approve_data["events"]) >= 2
 
 
@@ -122,7 +133,14 @@ def test_download_project_archive():
     assert f'{project_id}.zip' in download_res.headers["content-disposition"]
 
     archive = zipfile.ZipFile(io.BytesIO(download_res.content))
-    assert sorted(archive.namelist()) == ["main.py", "project_spec.md"]
+    archive_names = sorted(archive.namelist())
+    assert "project_spec.md" in archive_names
+    assert "README.md" in archive_names
+    assert "main.py" in archive_names
+    assert "pyproject.toml" in archive_names
+    assert ".gitignore" in archive_names
+    assert any(name.startswith("src/") for name in archive_names)
+    assert any(name.startswith("tests/") for name in archive_names)
 
     link_res = client.get(f"/v1/build/projects/{project_id}/download-link")
     assert link_res.status_code == 200
@@ -135,7 +153,12 @@ def test_download_project_archive():
     signed_download_res = client.get(signed_download_url)
     assert signed_download_res.status_code == 200
     signed_archive = zipfile.ZipFile(io.BytesIO(signed_download_res.content))
-    assert sorted(signed_archive.namelist()) == ["main.py", "project_spec.md"]
+    signed_archive_names = sorted(signed_archive.namelist())
+    assert "project_spec.md" in signed_archive_names
+    assert "README.md" in signed_archive_names
+    assert "main.py" in signed_archive_names
+    assert any(name.startswith("src/") for name in signed_archive_names)
+    assert any(name.startswith("tests/") for name in signed_archive_names)
 
 
 def test_persistent_project_continuation_and_history():
@@ -184,8 +207,9 @@ def test_authenticated_user_claims_legacy_dev_projects_in_development():
     project_id = create_res.json()["project_id"]
     client.post(f"/v1/build/projects/{project_id}/approve")
 
+    claimed_user_id = f"user-claimed-{uuid4().hex[:8]}"
     token = __import__('jwt').encode(
-        {"sub": "user-claimed-1000", "email": "claimed@example.com"},
+        {"sub": claimed_user_id, "email": "claimed@example.com"},
         "different-secret",
         algorithm="HS256",
     )
@@ -204,4 +228,4 @@ def test_authenticated_user_claims_legacy_dev_projects_in_development():
 
     get_res = client.get(f"/v1/build/projects/{project_id}", headers=headers)
     assert get_res.status_code == 200
-    assert get_res.json()["user_id"] == "user-claimed-1000"
+    assert get_res.json()["user_id"] == claimed_user_id
