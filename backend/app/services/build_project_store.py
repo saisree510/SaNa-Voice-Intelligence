@@ -2,7 +2,7 @@ import json
 import os
 import re
 from threading import Lock
-from typing import Optional
+from typing import Iterable, Optional
 
 from app.models.deepcode_models import BuildProjectModel
 
@@ -57,6 +57,19 @@ class BuildProjectStore:
         if not is_dev_user:
             projects = [project for project in projects if project.user_id == user_id]
         return sorted(projects, key=lambda project: project.updated_at, reverse=True)
+
+    def find_latest_project_for_user(
+        self,
+        user_id: str,
+        is_dev_user: bool,
+        *,
+        statuses: Optional[Iterable[str]] = None,
+    ) -> Optional[BuildProjectModel]:
+        projects = self.list_projects_for_user(user_id=user_id, is_dev_user=is_dev_user)
+        if statuses is not None:
+            allowed_statuses = {status for status in statuses}
+            projects = [project for project in projects if project.status in allowed_statuses]
+        return projects[0] if projects else None
 
     def claim_legacy_dev_projects_for_user(self, user_id: str) -> list[BuildProjectModel]:
         claimed: list[BuildProjectModel] = []

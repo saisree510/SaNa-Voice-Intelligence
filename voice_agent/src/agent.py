@@ -35,6 +35,18 @@ import uuid
 _offline_projects_store = {}
 _room_chat_memory: Dict[str, list] = {}
 
+
+def get_latest_pending_offline_project_id() -> Optional[str]:
+    pending_projects = [
+        (project_id, project_data.get("created_at", ""))
+        for project_id, project_data in _offline_projects_store.items()
+        if isinstance(project_data, dict) and project_data.get("status") == "plan_generated"
+    ]
+    if not pending_projects:
+        return None
+    pending_projects.sort(key=lambda item: item[1], reverse=True)
+    return pending_projects[0][0]
+
 RESTORED_MEMORY_MAX_MESSAGES = 40
 RESTORED_MEMORY_MAX_CONTENT_CHARS = 4000
 
@@ -167,6 +179,8 @@ async def create_build_project_plan(title: str, specification: str) -> str:
             "title": title,
             "specification": specification,
             "workspace_path": draft_workspace,
+            "status": "plan_generated",
+            "created_at": datetime.utcnow().isoformat(),
         }
         return (
             f"Project plan drafted for '{title}' with ID {fallback_pid}. "
@@ -175,19 +189,26 @@ async def create_build_project_plan(title: str, specification: str) -> str:
 
 
 @llm.function_tool
-async def approve_and_execute_build_project(project_id: str) -> str:
-    """Explicitly approve and trigger execution for a drafted build project."""
+async def approve_and_execute_build_project(project_id: Optional[str] = None) -> str:
+    """Explicitly approve and trigger execution for a drafted build project. Call this without a project ID when the user says yes to the latest pending build plan."""
     configured_backend_url = get_backend_url()
     backend_url = configured_backend_url or "http://127.0.0.1:8000"
+    approval_target = project_id or "latest pending build project"
+    approval_url = (
+        f"{backend_url}/v1/build/projects/{project_id}/approve"
+        if project_id
+        else f"{backend_url}/v1/build/projects/approve-latest"
+    )
     try:
         req = urllib.request.Request(
-            f"{backend_url}/v1/build/projects/{project_id}/approve",
+            approval_url,
             data=b"{}",
             headers={"Content-Type": "application/json"},
             method="POST",
         )
         with urllib.request.urlopen(req, timeout=30) as resp:
             data = json.loads(resp.read().decode("utf-8"))
+            resolved_project_id = data.get("project_id") or project_id
             summary = data.get("result_summary") or "Build execution completed."
             workspace = data.get("workspace_path")
             generated_files = data.get("generated_files") or []
@@ -200,9 +221,9 @@ async def approve_and_execute_build_project(project_id: str) -> str:
                 extras.append(f"Files: {', '.join(generated_files)}.")
             if download_url:
                 extras.append(f"Download: {download_url}.")
-            elif configured_backend_url and download_path:
+            elif configured_backend_url and download_path and resolved_project_id:
                 extras.append(
-                    f"Download: {build_project_download_url(configured_backend_url, project_id)}."
+                    f"Download: {build_project_download_url(configured_backend_url, resolved_project_id)}."
                 )
             extra_text = f" {' '.join(extras)}" if extras else ""
             return f"Execution result summary: {summary}{extra_text}"
@@ -212,15 +233,22 @@ async def approve_and_execute_build_project(project_id: str) -> str:
         )
         if configured_backend_url and is_remote_backend_url(configured_backend_url):
             return (
-                f"Build execution failed for project {project_id} through the configured backend. "
+                f"Build execution failed for {approval_target} through the configured backend. "
                 "No files were saved to your PC because this agent is running remotely. "
                 "Please verify the hosted backend deployment and retry."
             )
 
-        offline_data = _offline_projects_store.get(project_id, {})
+        resolved_project_id = project_id or get_latest_pending_offline_project_id()
+        if not resolved_project_id:
+            return (
+                "There is no pending build project to approve yet. "
+                "I need to draft a build plan before I can execute it."
+            )
+
+        offline_data = _offline_projects_store.get(resolved_project_id, {})
         workspace = offline_data.get("workspace_path") or build_local_draft_workspace(
             title=offline_data.get("title") or "Build Target",
-            project_id=project_id,
+            project_id=resolved_project_id,
         )
         spec = offline_data.get("specification") or "Scaffold project"
         title = offline_data.get("title") or "Build Target"
@@ -279,8 +307,12 @@ async def approve_and_execute_build_project(project_id: str) -> str:
             with open(absolute_path, "w", encoding="utf-8") as f:
                 f.write(content)
 
+        offline_data["status"] = "completed"
+        offline_data["completed_at"] = datetime.utcnow().isoformat()
+        _offline_projects_store[resolved_project_id] = offline_data
+
         return (
-            f"Build execution completed for project {project_id}. "
+            f"Build execution completed for project {resolved_project_id}. "
             f"Generated files {', '.join(sorted(files_to_write.keys()))} in workspace '{workspace}'."
         )
 

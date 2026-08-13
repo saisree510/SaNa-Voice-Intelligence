@@ -396,17 +396,12 @@ async def get_build_project(
     return project
 
 
-@router.post('/projects/{project_id}/approve', response_model=ApproveProjectResponse)
-async def approve_and_execute_project(
-    project_id: str,
+async def _approve_and_execute_project_model(
+    project: BuildProjectModel,
     request: Request,
-    current_user: AuthenticatedUser = Depends(get_current_user),
-):
-    _ensure_build_mode_enabled()
+    current_user: AuthenticatedUser,
+) -> ApproveProjectResponse:
     import uuid
-
-    project = _load_project_or_404(project_id)
-    _authorize_project_access(project, current_user)
 
     if project.status == 'executing':
         raise HTTPException(
@@ -437,7 +432,7 @@ async def approve_and_execute_project(
         project.updated_at = datetime.utcnow().isoformat()
         run_turn = BuildRunTurnModel(
             turn_id=f"turn-{uuid.uuid4().hex[:8]}",
-            project_id=project_id,
+            project_id=project.project_id,
             session_id=session.session_id,
             prompt=project.specification,
             status='completed',
@@ -452,14 +447,14 @@ async def approve_and_execute_project(
             f"Generated {len(generated_files)} file(s) in workspace '{project.workspace_path}'."
         )
         return ApproveProjectResponse(
-            project_id=project_id,
+            project_id=project.project_id,
             status=project.status,
             session_id=session.session_id,
             events=events,
             result_summary=summary,
             workspace_path=project.workspace_path,
             generated_files=generated_files,
-            download_path=_project_download_path(project_id),
+            download_path=_project_download_path(project.project_id),
             download_url=_build_signed_download_url(request, project, current_user),
         )
 
@@ -467,11 +462,43 @@ async def approve_and_execute_project(
         project.status = 'failed'
         project.updated_at = datetime.utcnow().isoformat()
         project_store.upsert_project(project)
-        logger.error('Execution failed for project %s: %s', project_id, exc)
+        logger.error('Execution failed for project %s: %s', project.project_id, exc)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f'Project execution failed: {str(exc)}',
         ) from exc
+
+
+@router.post('/projects/approve-latest', response_model=ApproveProjectResponse)
+async def approve_and_execute_latest_project(
+    request: Request,
+    current_user: AuthenticatedUser = Depends(get_current_user),
+):
+    _ensure_build_mode_enabled()
+    project = project_store.find_latest_project_for_user(
+        user_id=current_user.id,
+        is_dev_user=_is_dev_user(current_user),
+        statuses=('plan_generated',),
+    )
+    if project is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail='No pending build project found to approve',
+        )
+    _authorize_project_access(project, current_user)
+    return await _approve_and_execute_project_model(project, request, current_user)
+
+
+@router.post('/projects/{project_id}/approve', response_model=ApproveProjectResponse)
+async def approve_and_execute_project(
+    project_id: str,
+    request: Request,
+    current_user: AuthenticatedUser = Depends(get_current_user),
+):
+    _ensure_build_mode_enabled()
+    project = _load_project_or_404(project_id)
+    _authorize_project_access(project, current_user)
+    return await _approve_and_execute_project_model(project, request, current_user)
 
 
 @router.get('/projects/{project_id}/download-link', response_model=DownloadLinkResponse)

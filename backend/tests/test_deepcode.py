@@ -109,6 +109,40 @@ def test_create_project_and_approval_gate():
     assert len(approve_data["events"]) >= 2
 
 
+def test_approve_latest_pending_project():
+    first_workspace = _workspace("latest_pending_one")
+    second_workspace = _workspace("latest_pending_two")
+
+    first_res = client.post(
+        "/v1/build/projects",
+        json={
+            "title": "First Pending Build",
+            "specification": "Build the first draft",
+            "workspace_path": first_workspace,
+        },
+    )
+    assert first_res.status_code == 200
+
+    second_res = client.post(
+        "/v1/build/projects",
+        json={
+            "title": "Second Pending Build",
+            "specification": "Build the second draft",
+            "workspace_path": second_workspace,
+        },
+    )
+    assert second_res.status_code == 200
+    latest_project_id = second_res.json()["project_id"]
+
+    approve_res = client.post("/v1/build/projects/approve-latest")
+    assert approve_res.status_code == 200
+    approve_data = approve_res.json()
+    assert approve_data["project_id"] == latest_project_id
+    assert approve_data["workspace_path"] == second_workspace
+    assert "main.py" in approve_data["generated_files"]
+    assert (Path(second_workspace) / "main.py").exists()
+
+
 def test_download_project_archive():
     workspace_path = _workspace("downloadable_build")
     create_res = client.post(

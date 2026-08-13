@@ -18,12 +18,7 @@ async def test_voice_agent_build_tools_offline_file_drafting(monkeypatch):
     assert "plan drafted" in plan_result.lower() or "project created" in plan_result.lower()
     assert "ID proj-" in plan_result
 
-    import re
-    match = re.search(r"ID (proj-[a-zA-Z0-9-]+)", plan_result)
-    assert match is not None, f"Failed to extract project ID from result: {plan_result}"
-    project_id = match.group(1)
-
-    exec_result = await approve_and_execute_build_project(project_id)
+    exec_result = await approve_and_execute_build_project()
     assert "Build execution completed" in exec_result or "Execution result summary" in exec_result
 
     expected_draft_dir = os.path.abspath(r"C:\Users\saisr\Projects\SANA-LiveKit\drafts\test_voice_analytics_dashboard")
@@ -81,6 +76,43 @@ async def test_voice_agent_remote_backend_omits_local_workspace(monkeypatch):
 
 
 @pytest.mark.asyncio
+async def test_voice_agent_approve_without_project_id_uses_latest_endpoint(monkeypatch):
+    monkeypatch.setenv("BACKEND_URL", "https://example.up.railway.app")
+
+    captured = {}
+
+    class DummyResponse:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc, tb):
+            return False
+
+        def read(self):
+            return json.dumps(
+                {
+                    "project_id": "proj-remote01",
+                    "result_summary": "Build execution completed for remote project.",
+                    "workspace_path": "/data/sana-builds/remote_project",
+                    "generated_files": [".gitignore", "README.md", "main.py", "project_spec.md", "pyproject.toml", "src/remote_project/app.py", "tests/test_app.py"],
+                    "download_path": "/v1/build/projects/proj-remote01/download",
+                    "download_url": "https://example.up.railway.app/v1/build/projects/proj-remote01/download/signed?token=test-token",
+                }
+            ).encode("utf-8")
+
+    def fake_urlopen(request, timeout=0):
+        captured["url"] = request.full_url
+        return DummyResponse()
+
+    monkeypatch.setattr(urllib.request, "urlopen", fake_urlopen)
+
+    result = await approve_and_execute_build_project()
+
+    assert captured["url"].endswith("/v1/build/projects/approve-latest")
+    assert "Download: https://example.up.railway.app/v1/build/projects/proj-remote01/download/signed?token=test-token." in result
+    assert "Files: .gitignore, README.md, main.py, project_spec.md, pyproject.toml, src/remote_project/app.py, tests/test_app.py." in result
+
+
 async def test_voice_agent_approve_summary_includes_download_url(monkeypatch):
     monkeypatch.setenv("BACKEND_URL", "https://example.up.railway.app")
 
