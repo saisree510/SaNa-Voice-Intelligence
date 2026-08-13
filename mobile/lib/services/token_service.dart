@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class LiveKitTokenResponse {
   final String token;
@@ -46,6 +47,23 @@ class TokenService {
     return 'http://192.168.1.204:8000';
   }
 
+  Map<String, String> _headers() {
+    final headers = <String, String>{
+      'Content-Type': 'application/json',
+    };
+
+    try {
+      final accessToken = Supabase.instance.client.auth.currentSession?.accessToken;
+      if (accessToken != null && accessToken.isNotEmpty) {
+        headers['Authorization'] = 'Bearer $accessToken';
+      }
+    } catch (_) {
+      // Supabase may be unavailable in mock mode; omit auth header in that case.
+    }
+
+    return headers;
+  }
+
   /// Fetches a user-scoped LiveKit token from the FastAPI backend endpoint `/v1/livekit/token`
   Future<LiveKitTokenResponse?> fetchToken({
     String mode = 'general',
@@ -58,9 +76,7 @@ class TokenService {
         }
         return null;
       }
-      final headers = <String, String>{
-        'Content-Type': 'application/json',
-      };
+      final headers = _headers();
 
       final uri = Uri.parse('$backendUrl/v1/livekit/token');
       final response = await http.post(
