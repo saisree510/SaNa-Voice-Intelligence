@@ -4,6 +4,7 @@ import re
 from threading import Lock
 from typing import Iterable, Optional
 
+from app.auth.auth_bearer import user_id_aliases
 from app.models.deepcode_models import BuildProjectModel
 
 
@@ -55,7 +56,8 @@ class BuildProjectStore:
         data = self._read_data()
         projects = [BuildProjectModel.model_validate(item) for item in data.values()]
         if not is_dev_user:
-            projects = [project for project in projects if project.user_id == user_id]
+            aliases = user_id_aliases(user_id)
+            projects = [project for project in projects if project.user_id in aliases]
         return sorted(projects, key=lambda project: project.updated_at, reverse=True)
 
     def find_latest_project_for_user(

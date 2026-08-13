@@ -1,4 +1,5 @@
 import logging
+import uuid
 from typing import Optional, Dict, Any
 
 import jwt
@@ -18,8 +19,31 @@ class AuthenticatedUser:
         self.metadata = metadata or {}
 
 
+def normalize_user_id(user_id: Optional[str]) -> str:
+    candidate = (user_id or "").strip()
+    if candidate.startswith("user-"):
+        suffix = candidate[5:]
+        try:
+            uuid.UUID(suffix)
+            return suffix
+        except ValueError:
+            return candidate
+    return candidate
+
+
+def user_id_aliases(user_id: Optional[str]) -> set[str]:
+    normalized = normalize_user_id(user_id)
+    aliases = {normalized} if normalized else set()
+    try:
+        uuid.UUID(normalized)
+    except ValueError:
+        return aliases
+    aliases.add(f"user-{normalized}")
+    return aliases
+
+
 def _get_agent_authenticated_user(request: Request) -> Optional[AuthenticatedUser]:
-    shared_secret = (settings.AGENT_BACKEND_SHARED_SECRET or '').strip()
+    shared_secret = (settings.AGENT_BACKEND_SHARED_SECRET or settings.LIVEKIT_API_SECRET or '').strip()
     if not shared_secret:
         return None
 
@@ -27,7 +51,7 @@ def _get_agent_authenticated_user(request: Request) -> Optional[AuthenticatedUse
     if provided_secret != shared_secret:
         return None
 
-    user_id = request.headers.get('X-Sana-Agent-User-Id', '').strip()
+    user_id = normalize_user_id(request.headers.get('X-Sana-Agent-User-Id', ''))
     if not user_id:
         return None
 
@@ -85,7 +109,7 @@ async def get_current_user(
     try:
         payload = _decode_authenticated_claims(token)
 
-        user_id = payload.get("sub")
+        user_id = normalize_user_id(payload.get("sub"))
         email = payload.get("email")
         user_metadata = payload.get("user_metadata", {})
 

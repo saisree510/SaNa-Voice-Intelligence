@@ -12,7 +12,7 @@ import jwt
 from pydantic import BaseModel
 
 from app.adapters.deepcode_adapter import DeepCodeAdapter
-from app.auth.auth_bearer import AuthenticatedUser, get_current_user
+from app.auth.auth_bearer import AuthenticatedUser, get_current_user, user_id_aliases
 from app.config import settings
 from app.models.deepcode_models import (
     BuildProjectModel,
@@ -101,7 +101,7 @@ def _load_project_or_404(project_id: str) -> BuildProjectModel:
 
 
 def _authorize_project_access(project: BuildProjectModel, current_user: AuthenticatedUser) -> None:
-    if project.user_id != current_user.id and not _is_dev_user(current_user):
+    if project.user_id not in user_id_aliases(current_user.id) and not _is_dev_user(current_user):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Forbidden: You do not have access to this build project",
@@ -192,7 +192,8 @@ def _validate_signed_download_token(project: BuildProjectModel, token: str) -> N
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Download token does not match this project",
         )
-    if payload.get("sub") != project.user_id and payload.get("sub") != "dev-user-0000":
+    token_subject = payload.get("sub")
+    if project.user_id not in user_id_aliases(token_subject) and token_subject != "dev-user-0000":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Download token does not grant access to this project",

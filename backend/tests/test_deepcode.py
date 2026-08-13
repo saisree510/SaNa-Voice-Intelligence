@@ -82,6 +82,73 @@ def test_internal_agent_headers_attribute_project_to_supplied_user():
     assert create_res.json()["user_id"] == "user-from-agent-123"
 
 
+def test_internal_agent_headers_normalize_prefixed_uuid_user_id():
+    workspace_path = _workspace("agent_prefixed_uuid_project")
+    raw_user_id = "11111111-1111-1111-1111-111111111111"
+    headers = {
+        "X-Sana-Agent-User-Id": f"user-{raw_user_id}",
+        "X-Sana-Agent-Secret": settings.AGENT_BACKEND_SHARED_SECRET or settings.LIVEKIT_API_SECRET,
+    }
+    create_res = client.post(
+        "/v1/build/projects",
+        json={
+            "title": "Agent UUID Build",
+            "specification": "Build for a UUID-backed authenticated user",
+            "workspace_path": workspace_path,
+        },
+        headers=headers,
+    )
+    assert create_res.status_code == 200
+    assert create_res.json()["user_id"] == raw_user_id
+
+
+def test_raw_user_can_list_and_access_prefixed_legacy_projects():
+    from unittest.mock import patch
+
+    from app.models.deepcode_models import BuildProjectModel
+    from app.routers.build_router import project_store
+
+    raw_user_id = "22222222-2222-2222-2222-222222222222"
+    prefixed_user_id = f"user-{raw_user_id}"
+    workspace_path = Path(_workspace("prefixed_legacy_project"))
+    workspace_path.mkdir(parents=True, exist_ok=True)
+    (workspace_path / "main.py").write_text("print('legacy project')\n", encoding="utf-8")
+
+    project = BuildProjectModel(
+        project_id="proj-prefixed-legacy",
+        user_id=prefixed_user_id,
+        title="Prefixed Legacy Project",
+        specification="Legacy prefixed user id test",
+        workspace_path=str(workspace_path),
+        status="completed",
+        plan_summary="Ready",
+        session_id="dc-sess-prefixed-legacy",
+        created_at="2026-08-13T01:00:00",
+        updated_at="2026-08-13T01:00:01",
+    )
+    project_store.upsert_project(project)
+
+    token = __import__('jwt').encode(
+        {"sub": raw_user_id, "email": "aliased@example.com"},
+        "different-secret",
+        algorithm="HS256",
+    )
+    headers = {"Authorization": f"Bearer {token}"}
+
+    with patch("app.auth.auth_bearer.settings.SUPABASE_JWT_SECRET", "legacy-secret"), patch(
+        "app.auth.auth_bearer.settings.ENVIRONMENT", "development"
+    ):
+        list_res = client.get("/v1/build/projects", headers=headers)
+        get_res = client.get("/v1/build/projects/proj-prefixed-legacy", headers=headers)
+        link_res = client.get("/v1/build/projects/proj-prefixed-legacy/download-link", headers=headers)
+
+    assert list_res.status_code == 200
+    assert any(item["project_id"] == "proj-prefixed-legacy" for item in list_res.json())
+    assert get_res.status_code == 200
+    assert get_res.json()["user_id"] == prefixed_user_id
+    assert link_res.status_code == 200
+
+
 def test_create_project_and_approval_gate():
     workspace_path = _workspace("dashboard_app")
     create_res = client.post(

@@ -346,6 +346,7 @@ class AppCtrl extends ChangeNotifier {
     // Send mode switch data packet to live voice agent if connected
     if (room.connectionState == sdk.ConnectionState.connected && room.localParticipant != null) {
       try {
+        unawaited(_publishModeMetadata());
         final payload = json.encode({
           'type': 'mode_switch',
           'mode': mode.name,
@@ -367,12 +368,36 @@ class AppCtrl extends ChangeNotifier {
     }
   }
 
+  String? _currentSessionUserId() {
+    final identity = room.localParticipant?.identity;
+    if (identity == null || identity.isEmpty) return null;
+    if (identity.startsWith('user-') && identity.length > 5) {
+      return identity.substring(5);
+    }
+    return identity;
+  }
+
+  Future<void> _publishModeMetadata() async {
+    final participant = room.localParticipant;
+    if (participant == null) return;
+
+    final metadata = <String, String>{
+      'mode': conversationMode.name,
+    };
+    final userId = _currentSessionUserId();
+    if (userId != null && userId.isNotEmpty) {
+      metadata['user_id'] = userId;
+    }
+
+    await participant.setMetadata(json.encode(metadata));
+  }
+
   void _sendInitialModePacket({int attempt = 0}) {
     if (room.connectionState != sdk.ConnectionState.connected) return;
 
     if (room.localParticipant != null) {
       try {
-        unawaited(room.localParticipant!.setMetadata(json.encode({'mode': conversationMode.name})));
+        unawaited(_publishModeMetadata());
         final payload = json.encode({
           'type': 'mode_switch',
           'mode': conversationMode.name,
