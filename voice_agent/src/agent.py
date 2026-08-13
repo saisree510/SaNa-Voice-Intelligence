@@ -36,6 +36,43 @@ _offline_projects_store = {}
 _room_chat_memory: Dict[str, list] = {}
 
 
+def get_agent_backend_shared_secret() -> str:
+    return (os.getenv("AGENT_BACKEND_SHARED_SECRET") or os.getenv("LIVEKIT_API_SECRET") or "").strip()
+
+
+def build_backend_headers(*, request_user_id: Optional[str] = None, request_user_email: Optional[str] = None) -> dict[str, str]:
+    headers = {"Content-Type": "application/json"}
+    shared_secret = get_agent_backend_shared_secret()
+    if request_user_id and shared_secret:
+        headers["X-Sana-Agent-User-Id"] = request_user_id
+        headers["X-Sana-Agent-Secret"] = shared_secret
+        if request_user_email:
+            headers["X-Sana-Agent-User-Email"] = request_user_email
+    return headers
+
+
+def extract_participant_user_context(participant: Any) -> dict[str, Optional[str]]:
+    metadata_user_id = None
+    mode = None
+    if getattr(participant, "metadata", None):
+        try:
+            meta = json.loads(participant.metadata)
+            if isinstance(meta, dict):
+                metadata_user_id = meta.get("user_id")
+                mode = meta.get("mode")
+        except Exception:
+            pass
+
+    identity = getattr(participant, "identity", "") or ""
+    identity_user_id = identity[5:] if identity.startswith("user-") else None
+    user_id = metadata_user_id or identity_user_id
+    return {
+        "user_id": user_id,
+        "mode": mode,
+        "identity": identity or None,
+    }
+
+
 def get_latest_pending_offline_project_id() -> Optional[str]:
     pending_projects = [
         (project_id, project_data.get("created_at", ""))
@@ -132,7 +169,7 @@ def build_restored_chat_context(
 
 
 @llm.function_tool
-async def create_build_project_plan(title: str, specification: str) -> str:
+async def create_build_project_plan(title: str, specification: str, *, request_user_id: Optional[str] = None, request_user_email: Optional[str] = None) -> str:
     """Draft a new build project plan and return the project ID and generated plan summary."""
     configured_backend_url = get_backend_url()
     backend_url = configured_backend_url or "http://127.0.0.1:8000"
@@ -152,7 +189,7 @@ async def create_build_project_plan(title: str, specification: str) -> str:
         req = urllib.request.Request(
             f"{backend_url}/v1/build/projects",
             data=req_data,
-            headers={"Content-Type": "application/json"},
+            headers=build_backend_headers(request_user_id=request_user_id, request_user_email=request_user_email),
             method="POST",
         )
         with urllib.request.urlopen(req, timeout=5) as resp:
@@ -189,7 +226,7 @@ async def create_build_project_plan(title: str, specification: str) -> str:
 
 
 @llm.function_tool
-async def approve_and_execute_build_project(project_id: Optional[str] = None) -> str:
+async def approve_and_execute_build_project(project_id: Optional[str] = None, *, request_user_id: Optional[str] = None, request_user_email: Optional[str] = None) -> str:
     """Explicitly approve and trigger execution for a drafted build project. Call this without a project ID when the user says yes to the latest pending build plan."""
     configured_backend_url = get_backend_url()
     backend_url = configured_backend_url or "http://127.0.0.1:8000"
@@ -203,7 +240,7 @@ async def approve_and_execute_build_project(project_id: Optional[str] = None) ->
         req = urllib.request.Request(
             approval_url,
             data=b"{}",
-            headers={"Content-Type": "application/json"},
+            headers=build_backend_headers(request_user_id=request_user_id, request_user_email=request_user_email),
             method="POST",
         )
         with urllib.request.urlopen(req, timeout=30) as resp:
@@ -472,6 +509,25 @@ async def my_agent(ctx: JobContext):
 
     assistant = Assistant(mode="general")
     greeting_spoken = False
+    current_build_user_id: Optional[str] = None
+    current_build_user_email: Optional[str] = None
+
+    @llm.function_tool
+    async def create_build_project_plan_tool(title: str, specification: str) -> str:
+        return await create_build_project_plan(
+            title,
+            specification,
+            request_user_id=current_build_user_id,
+            request_user_email=current_build_user_email,
+        )
+
+    @llm.function_tool
+    async def approve_and_execute_build_project_tool(project_id: Optional[str] = None) -> str:
+        return await approve_and_execute_build_project(
+            project_id,
+            request_user_id=current_build_user_id,
+            request_user_email=current_build_user_email,
+        )
 
     session = AgentSession(
         stt=groq.STT(model="whisper-large-v3-turbo", api_key=groq_key),
@@ -482,7 +538,7 @@ async def my_agent(ctx: JobContext):
             language="en",
         ),
         vad=silero.VAD.load(),
-        tools=[create_build_project_plan, approve_and_execute_build_project],
+        tools=[create_build_project_plan_tool, approve_and_execute_build_project_tool],
         preemptive_generation=False,
     )
 
@@ -587,7 +643,13 @@ async def my_agent(ctx: JobContext):
 
     @ctx.room.on("participant_metadata_changed")
     def on_metadata_changed(participant, old_metadata, new_metadata):
+        nonlocal current_build_user_id, current_build_user_email
         logger.info(f"Participant metadata changed: {new_metadata}")
+        participant_ctx = extract_participant_user_context(participant)
+        if participant_ctx.get("user_id"):
+            current_build_user_id = participant_ctx["user_id"]
+            current_build_user_email = None
+            logger.info(f"Updated build user context from metadata: {current_build_user_id}")
         if new_metadata:
             try:
                 meta = json.loads(new_metadata)
@@ -598,8 +660,14 @@ async def my_agent(ctx: JobContext):
 
     @ctx.room.on("participant_connected")
     def on_participant_connected(participant):
+        nonlocal current_build_user_id, current_build_user_email
         logger.info(f"Participant connected: {participant.identity}")
         mode = "general"
+        participant_ctx = extract_participant_user_context(participant)
+        if participant_ctx.get("user_id"):
+            current_build_user_id = participant_ctx["user_id"]
+            current_build_user_email = None
+            logger.info(f"Initialized build user context from participant: {current_build_user_id}")
         if participant.metadata:
             try:
                 meta = json.loads(participant.metadata)
@@ -611,6 +679,11 @@ async def my_agent(ctx: JobContext):
 
     # Fallback greeting if participant is already connected upon agent join
     for p in ctx.room.remote_participants.values():
+        participant_ctx = extract_participant_user_context(p)
+        if participant_ctx.get("user_id"):
+            current_build_user_id = participant_ctx["user_id"]
+            current_build_user_email = None
+            logger.info(f"Recovered build user context from existing participant: {current_build_user_id}")
         mode = "general"
         if p.metadata:
             try:

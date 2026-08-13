@@ -63,6 +63,25 @@ def test_run_build_turn():
     assert turn_data["events"][0]["event_type"] == "step_start"
 
 
+def test_internal_agent_headers_attribute_project_to_supplied_user():
+    workspace_path = _workspace("agent_scoped_project")
+    headers = {
+        "X-Sana-Agent-User-Id": "user-from-agent-123",
+        "X-Sana-Agent-Secret": settings.AGENT_BACKEND_SHARED_SECRET or settings.LIVEKIT_API_SECRET,
+    }
+    create_res = client.post(
+        "/v1/build/projects",
+        json={
+            "title": "Agent Scoped Build",
+            "specification": "Build for the connected authenticated user",
+            "workspace_path": workspace_path,
+        },
+        headers=headers,
+    )
+    assert create_res.status_code == 200
+    assert create_res.json()["user_id"] == "user-from-agent-123"
+
+
 def test_create_project_and_approval_gate():
     workspace_path = _workspace("dashboard_app")
     create_res = client.post(

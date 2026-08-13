@@ -4,7 +4,19 @@ import shutil
 import urllib.request
 
 import pytest
-from src.agent import create_build_project_plan, approve_and_execute_build_project
+from src.agent import build_backend_headers, create_build_project_plan, approve_and_execute_build_project
+
+
+@pytest.mark.asyncio
+async def test_build_backend_headers_include_agent_user_context(monkeypatch):
+    monkeypatch.setenv("AGENT_BACKEND_SHARED_SECRET", "shared-secret")
+
+    headers = build_backend_headers(request_user_id="user-123", request_user_email="user@example.com")
+
+    assert headers["Content-Type"] == "application/json"
+    assert headers["X-Sana-Agent-User-Id"] == "user-123"
+    assert headers["X-Sana-Agent-User-Email"] == "user@example.com"
+    assert headers["X-Sana-Agent-Secret"] == "shared-secret"
 
 
 @pytest.mark.asyncio

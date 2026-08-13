@@ -29,6 +29,7 @@ class Settings(BaseSettings):
     BUILD_MODE_ENABLED: bool = True
     BUILD_STORAGE_ROOT: str = os.getenv("BUILD_STORAGE_ROOT", DEFAULT_BUILD_STORAGE_ROOT)
     BUILD_DOWNLOAD_SIGNING_SECRET: Optional[str] = None
+    AGENT_BACKEND_SHARED_SECRET: Optional[str] = os.getenv("AGENT_BACKEND_SHARED_SECRET") or os.getenv("LIVEKIT_API_SECRET")
 
     model_config = SettingsConfigDict(
         env_file=".env",

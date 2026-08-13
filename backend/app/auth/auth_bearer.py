@@ -2,7 +2,7 @@ import logging
 from typing import Optional, Dict, Any
 
 import jwt
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from app.config import settings
@@ -16,6 +16,27 @@ class AuthenticatedUser:
         self.id = user_id
         self.email = email
         self.metadata = metadata or {}
+
+
+def _get_agent_authenticated_user(request: Request) -> Optional[AuthenticatedUser]:
+    shared_secret = (settings.AGENT_BACKEND_SHARED_SECRET or '').strip()
+    if not shared_secret:
+        return None
+
+    provided_secret = request.headers.get('X-Sana-Agent-Secret', '').strip()
+    if provided_secret != shared_secret:
+        return None
+
+    user_id = request.headers.get('X-Sana-Agent-User-Id', '').strip()
+    if not user_id:
+        return None
+
+    email = request.headers.get('X-Sana-Agent-User-Email')
+    if isinstance(email, str):
+        email = email.strip() or None
+
+    logger.info('Authenticated internal agent request for user %s', user_id)
+    return AuthenticatedUser(user_id=user_id, email=email, metadata={'source': 'internal-agent'})
 
 
 def _decode_unverified_claims(token: str) -> Dict[str, Any]:
@@ -45,6 +66,7 @@ def _decode_authenticated_claims(token: str) -> Dict[str, Any]:
 
 
 async def get_current_user(
+    request: Request,
     credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
 ) -> AuthenticatedUser:
     """
@@ -52,6 +74,9 @@ async def get_current_user(
     In development mode without JWT secret configured, decodes payload claims directly.
     """
     if not credentials:
+        agent_user = _get_agent_authenticated_user(request)
+        if agent_user is not None:
+            return agent_user
         # Fallback for local development or unauthenticated sandbox access
         logger.warning("No Authorization header provided. Using anonymous dev user.")
         return AuthenticatedUser(user_id="dev-user-0000", email="dev@sana.ai")
