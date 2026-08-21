@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
@@ -8,16 +9,54 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 
 import '../models/conversation_model.dart';
+import 'auth_service.dart';
 
 class ConversationService extends ChangeNotifier {
+  ConversationService({required AuthService authService})
+      : _authService = authService,
+        _activeOwnerId = authService.userId {
+    _authService.addListener(_handleAuthChanged);
+  }
+
   static final _logger = Logger('ConversationService');
   static const uuid = Uuid();
 
   List<ConversationSession> _conversations = [];
   bool _isLoading = false;
+  final AuthService _authService;
+  String? _activeOwnerId;
 
   List<ConversationSession> get conversations => _conversations;
   bool get isLoading => _isLoading;
+
+  String _conversationStorageKey(String ownerId) => 'soul_${ownerId}_conversations';
+  String _messageStorageKey(String ownerId, String conversationId) => 'soul_${ownerId}_messages_$conversationId';
+
+  void _handleAuthChanged() {
+    final nextOwnerId = _authService.userId;
+    if (nextOwnerId == _activeOwnerId) return;
+    _activeOwnerId = nextOwnerId;
+    _conversations = [];
+    _isLoading = false;
+    unawaited(_removeLegacySharedCache());
+    notifyListeners();
+  }
+
+  Future<void> _removeLegacySharedCache() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('local_conversations');
+    for (final key in prefs.getKeys().where((key) => key.startsWith('messages_'))) {
+      await prefs.remove(key);
+    }
+  }
+
+  bool _ownsConversation(String conversationId) {
+    final ownerId = _activeOwnerId;
+    return ownerId != null &&
+        _conversations.any(
+          (conversation) => conversation.id == conversationId && conversation.userId == ownerId,
+        );
+  }
 
   SupabaseClient? get _supabase {
     final url = dotenv.env['SUPABASE_URL']?.trim() ?? '';
@@ -35,22 +74,26 @@ class ConversationService extends ChangeNotifier {
   bool get _isLiveSupabase => _supabase != null && _supabase!.auth.currentSession != null;
 
   Future<List<ConversationSession>> fetchUserConversations() async {
+    final ownerId = _activeOwnerId;
+    if (ownerId == null) {
+      _conversations = [];
+      notifyListeners();
+      return _conversations;
+    }
     _isLoading = true;
     notifyListeners();
 
     try {
       if (_isLiveSupabase) {
         try {
-          final userId = _supabase!.auth.currentUser!.id;
           final response = await _supabase!
               .from('conversations')
               .select()
-              .eq('user_id', userId)
+              .eq('user_id', ownerId)
               .order('updated_at', ascending: false);
 
-          _conversations = (response as List)
-              .map((item) => ConversationSession.fromMap(item as Map<String, dynamic>))
-              .toList();
+          _conversations =
+              (response as List).map((item) => ConversationSession.fromMap(item as Map<String, dynamic>)).toList();
         } on PostgrestException catch (pe) {
           _logger.warning('Supabase table error ($pe). Falling back to local storage.');
           await _fetchLocalConversations();
@@ -70,13 +113,16 @@ class ConversationService extends ChangeNotifier {
   }
 
   Future<void> _fetchLocalConversations() async {
+    final ownerId = _activeOwnerId;
+    if (ownerId == null) {
+      _conversations = [];
+      return;
+    }
     final prefs = await SharedPreferences.getInstance();
-    final rawJson = prefs.getString('local_conversations');
+    final rawJson = prefs.getString(_conversationStorageKey(ownerId));
     if (rawJson != null && rawJson.isNotEmpty) {
       final List decoded = json.decode(rawJson) as List;
-      _conversations = decoded
-          .map((item) => ConversationSession.fromMap(item as Map<String, dynamic>))
-          .toList();
+      _conversations = decoded.map((item) => ConversationSession.fromMap(item as Map<String, dynamic>)).toList();
       _conversations.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
     } else {
       _conversations = [];
@@ -87,9 +133,13 @@ class ConversationService extends ChangeNotifier {
     String title = 'New Conversation',
     String mode = 'general',
   }) async {
+    final ownerId = _activeOwnerId;
+    if (ownerId == null) {
+      throw StateError('An authenticated user is required to create a conversation');
+    }
     final session = ConversationSession(
       id: uuid.v4(),
-      userId: _isLiveSupabase ? _supabase!.auth.currentUser!.id : 'local_user',
+      userId: ownerId,
       title: title,
       mode: mode,
       createdAt: DateTime.now(),
@@ -117,11 +167,13 @@ class ConversationService extends ChangeNotifier {
   }
 
   Future<void> _saveLocalSession(ConversationSession session) async {
+    final ownerId = _activeOwnerId;
+    if (ownerId == null || session.userId != ownerId) return;
     final prefs = await SharedPreferences.getInstance();
     _conversations.removeWhere((c) => c.id == session.id);
     _conversations.insert(0, session);
     await prefs.setString(
-      'local_conversations',
+      _conversationStorageKey(ownerId),
       json.encode(_conversations.map((c) => c.toMap()).toList()),
     );
   }
@@ -133,6 +185,7 @@ class ConversationService extends ChangeNotifier {
     required String source,
     String? idempotencyKey,
   }) async {
+    if (!_ownsConversation(conversationId)) return;
     final cleanContent = content.trim();
     if (cleanContent.isEmpty) return;
 
@@ -148,9 +201,7 @@ class ConversationService extends ChangeNotifier {
     );
 
     // Update preview title and timestamp locally immediately
-    final previewTitle = cleanContent.length > 35
-        ? '${cleanContent.substring(0, 35)}...'
-        : cleanContent;
+    final previewTitle = cleanContent.length > 35 ? '${cleanContent.substring(0, 35)}...' : cleanContent;
 
     final sessionIdx = _conversations.indexWhere((c) => c.id == conversationId);
     if (sessionIdx >= 0) {
@@ -158,9 +209,7 @@ class ConversationService extends ChangeNotifier {
       final updated = ConversationSession(
         id: existing.id,
         userId: existing.userId,
-        title: existing.title == 'New Conversation' && sender == 'user'
-            ? previewTitle
-            : existing.title,
+        title: existing.title == 'New Conversation' && sender == 'user' ? previewTitle : existing.title,
         mode: existing.mode,
         createdAt: existing.createdAt,
         updatedAt: DateTime.now(),
@@ -177,15 +226,22 @@ class ConversationService extends ChangeNotifier {
     if (_isLiveSupabase) {
       try {
         await _supabase!.from('messages').upsert(
-          message.toMap(),
+          {
+            ...message.toMap(),
+            'user_id': _activeOwnerId!,
+          },
           onConflict: 'conversation_id,idempotency_key',
         );
 
-        await _supabase!.from('conversations').update({
-          'preview_text': cleanContent,
-          'title': previewTitle,
-          'updated_at': DateTime.now().toIso8601String(),
-        }).eq('id', conversationId);
+        await _supabase!
+            .from('conversations')
+            .update({
+              'preview_text': cleanContent,
+              'title': previewTitle,
+              'updated_at': DateTime.now().toIso8601String(),
+            })
+            .eq('id', conversationId)
+            .eq('user_id', _activeOwnerId!);
       } catch (e) {
         _logger.fine('Supabase remote message save failed ($e). Saved locally.');
       }
@@ -197,8 +253,11 @@ class ConversationService extends ChangeNotifier {
     PersistedMessage message,
     String key,
   ) async {
+    final ownerId = _activeOwnerId;
+    if (ownerId == null || !_ownsConversation(conversationId)) return;
     final prefs = await SharedPreferences.getInstance();
-    final rawMessages = prefs.getString('messages_$conversationId');
+    final messageKey = _messageStorageKey(ownerId, conversationId);
+    final rawMessages = prefs.getString(messageKey);
     List<Map<String, dynamic>> messages = [];
     if (rawMessages != null && rawMessages.isNotEmpty) {
       messages = (json.decode(rawMessages) as List).cast<Map<String, dynamic>>();
@@ -210,16 +269,18 @@ class ConversationService extends ChangeNotifier {
     } else {
       messages.add(message.toMap());
     }
-    await prefs.setString('messages_$conversationId', json.encode(messages));
+    await prefs.setString(messageKey, json.encode(messages));
 
     // Save local sessions
     await prefs.setString(
-      'local_conversations',
+      _conversationStorageKey(ownerId),
       json.encode(_conversations.map((c) => c.toMap()).toList()),
     );
   }
 
   Future<List<PersistedMessage>> fetchMessages(String conversationId) async {
+    final ownerId = _activeOwnerId;
+    if (ownerId == null || !_ownsConversation(conversationId)) return [];
     if (_isLiveSupabase) {
       try {
         final response = await _supabase!
@@ -228,20 +289,16 @@ class ConversationService extends ChangeNotifier {
             .eq('conversation_id', conversationId)
             .order('created_at', ascending: true);
 
-        final list = (response as List)
-            .map((item) => PersistedMessage.fromMap(item as Map<String, dynamic>))
-            .toList();
+        final list = (response as List).map((item) => PersistedMessage.fromMap(item as Map<String, dynamic>)).toList();
         if (list.isNotEmpty) return list;
       } catch (_) {}
     }
 
     final prefs = await SharedPreferences.getInstance();
-    final rawMessages = prefs.getString('messages_$conversationId');
+    final rawMessages = prefs.getString(_messageStorageKey(ownerId, conversationId));
     if (rawMessages != null && rawMessages.isNotEmpty) {
       final List decoded = json.decode(rawMessages) as List;
-      return decoded
-          .map((item) => PersistedMessage.fromMap(item as Map<String, dynamic>))
-          .toList();
+      return decoded.map((item) => PersistedMessage.fromMap(item as Map<String, dynamic>)).toList();
     }
     return [];
   }
@@ -251,6 +308,7 @@ class ConversationService extends ChangeNotifier {
     required String mode,
     String? fromMode,
   }) async {
+    if (!_ownsConversation(conversationId)) return;
     final idx = _conversations.indexWhere((c) => c.id == conversationId);
     if (idx >= 0) {
       final existing = _conversations[idx];
@@ -275,10 +333,14 @@ class ConversationService extends ChangeNotifier {
 
     if (_isLiveSupabase) {
       try {
-        await _supabase!.from('conversations').update({
-          'mode': mode,
-          'updated_at': DateTime.now().toIso8601String(),
-        }).eq('id', conversationId);
+        await _supabase!
+            .from('conversations')
+            .update({
+              'mode': mode,
+              'updated_at': DateTime.now().toIso8601String(),
+            })
+            .eq('id', conversationId)
+            .eq('user_id', _activeOwnerId!);
       } catch (e) {
         _logger.fine('Supabase mode update failed: $e');
       }
@@ -292,9 +354,11 @@ class ConversationService extends ChangeNotifier {
     String? toMode,
     Map<String, dynamic>? payload,
   }) async {
+    if (!_ownsConversation(conversationId)) return;
     final eventMap = {
       'id': uuid.v4(),
       'conversation_id': conversationId,
+      'user_id': _activeOwnerId,
       'event_type': eventType,
       'from_mode': fromMode,
       'to_mode': toMode,
@@ -312,12 +376,14 @@ class ConversationService extends ChangeNotifier {
   }
 
   Future<void> deleteConversation(String conversationId) async {
+    final ownerId = _activeOwnerId;
+    if (ownerId == null || !_ownsConversation(conversationId)) return;
     try {
       final prefs = await SharedPreferences.getInstance();
-      await prefs.remove('messages_$conversationId');
+      await prefs.remove(_messageStorageKey(ownerId, conversationId));
       _conversations.removeWhere((c) => c.id == conversationId);
       await prefs.setString(
-        'local_conversations',
+        _conversationStorageKey(ownerId),
         json.encode(_conversations.map((c) => c.toMap()).toList()),
       );
 
@@ -325,12 +391,18 @@ class ConversationService extends ChangeNotifier {
         try {
           await _supabase!.from('messages').delete().eq('conversation_id', conversationId);
           await _supabase!.from('conversation_events').delete().eq('conversation_id', conversationId);
-          await _supabase!.from('conversations').delete().eq('id', conversationId);
+          await _supabase!.from('conversations').delete().eq('id', conversationId).eq('user_id', ownerId);
         } catch (_) {}
       }
       notifyListeners();
     } catch (e, st) {
       _logger.warning('Error deleting conversation $conversationId: $e', e, st);
     }
+  }
+
+  @override
+  void dispose() {
+    _authService.removeListener(_handleAuthChanged);
+    super.dispose();
   }
 }

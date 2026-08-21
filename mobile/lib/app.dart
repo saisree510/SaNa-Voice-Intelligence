@@ -18,7 +18,7 @@ import 'services/conversation_service.dart';
 
 final appCtrl = AppCtrl();
 final authService = AuthService();
-final conversationService = ConversationService();
+final conversationService = ConversationService(authService: authService);
 final buildProjectsService = BuildProjectsService(authService: authService);
 
 class VoiceAssistantApp extends StatelessWidget {
@@ -56,13 +56,33 @@ class AuthGate extends StatefulWidget {
 }
 
 class _AuthGateState extends State<AuthGate> {
+  AuthService? _boundAuthService;
+  String? _lastUserId;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<AppCtrl>().bindConversationService(context.read<ConversationService>());
-      unawaited(context.read<AuthService>().initialize());
+      final service = context.read<AuthService>();
+      _boundAuthService = service;
+      _lastUserId = service.userId;
+      service.addListener(_handleAuthenticatedUserChanged);
+      unawaited(service.initialize());
     });
+  }
+
+  void _handleAuthenticatedUserChanged() {
+    final nextUserId = _boundAuthService?.userId;
+    if (nextUserId == _lastUserId) return;
+    _lastUserId = nextUserId;
+    unawaited(appCtrl.disconnect());
+  }
+
+  @override
+  void dispose() {
+    _boundAuthService?.removeListener(_handleAuthenticatedUserChanged);
+    super.dispose();
   }
 
   @override

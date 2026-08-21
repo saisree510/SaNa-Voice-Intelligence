@@ -1,10 +1,12 @@
 import logging
+import hmac
 import uuid
 from typing import Optional, Dict, Any
 
 import jwt
 from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from supabase import create_client
 
 from app.config import settings
 
@@ -20,7 +22,7 @@ class AuthenticatedUser:
 
 
 def normalize_user_id(user_id: Optional[str]) -> str:
-    candidate = (user_id or "").strip()
+    candidate = user_id.strip() if isinstance(user_id, str) else ""
     if candidate.startswith("user-"):
         suffix = candidate[5:]
         try:
@@ -48,7 +50,7 @@ def _get_agent_authenticated_user(request: Request) -> Optional[AuthenticatedUse
         return None
 
     provided_secret = request.headers.get('X-Sana-Agent-Secret', '').strip()
-    if provided_secret != shared_secret:
+    if not hmac.compare_digest(provided_secret, shared_secret):
         return None
 
     user_id = normalize_user_id(request.headers.get('X-Sana-Agent-User-Id', ''))
@@ -63,30 +65,37 @@ def _get_agent_authenticated_user(request: Request) -> Optional[AuthenticatedUse
     return AuthenticatedUser(user_id=user_id, email=email, metadata={'source': 'internal-agent'})
 
 
-def _decode_unverified_claims(token: str) -> Dict[str, Any]:
-    return jwt.decode(token, options={"verify_signature": False, "verify_aud": False})
-
-
 def _decode_authenticated_claims(token: str) -> Dict[str, Any]:
-    if not settings.SUPABASE_JWT_SECRET:
-        return _decode_unverified_claims(token)
-
-    try:
+    if settings.SUPABASE_JWT_SECRET:
         return jwt.decode(
             token,
             settings.SUPABASE_JWT_SECRET,
             algorithms=["HS256"],
-            options={"verify_aud": False},
+            options={"verify_aud": False, "require": ["sub", "exp"]},
         )
-    except jwt.PyJWTError as exc:
-        if settings.ENVIRONMENT.lower() == "production":
-            raise
-        logger.warning(
-            "JWT verification failed in %s environment; falling back to unverified decode for development compatibility: %s",
-            settings.ENVIRONMENT,
-            exc,
+
+    if not settings.SUPABASE_URL or not settings.SUPABASE_ANON_KEY:
+        raise jwt.InvalidTokenError(
+            "Backend authentication is not configured. Set SUPABASE_JWT_SECRET or SUPABASE_URL and SUPABASE_ANON_KEY."
         )
-        return _decode_unverified_claims(token)
+
+    try:
+        response = create_client(
+            settings.SUPABASE_URL,
+            settings.SUPABASE_ANON_KEY,
+        ).auth.get_user(token)
+    except Exception as exc:
+        raise jwt.InvalidTokenError("Supabase rejected the access token") from exc
+
+    user = getattr(response, "user", None)
+    if user is None or not getattr(user, "id", None):
+        raise jwt.InvalidTokenError("Supabase session has no authenticated user")
+
+    return {
+        "sub": user.id,
+        "email": getattr(user, "email", None),
+        "user_metadata": getattr(user, "user_metadata", None) or {},
+    }
 
 
 async def get_current_user(
@@ -94,16 +103,20 @@ async def get_current_user(
     credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
 ) -> AuthenticatedUser:
     """
-    Extracts and validates Supabase JWT token from HTTP Authorization header.
-    In development mode without JWT secret configured, decodes payload claims directly.
+    Extracts and cryptographically validates a Supabase access token.
+
+    Internal LiveKit-agent calls may authenticate with the dedicated shared-secret
+    headers, but public callers never receive a development-user fallback.
     """
     if not credentials:
         agent_user = _get_agent_authenticated_user(request)
         if agent_user is not None:
             return agent_user
-        # Fallback for local development or unauthenticated sandbox access
-        logger.warning("No Authorization header provided. Using anonymous dev user.")
-        return AuthenticatedUser(user_id="dev-user-0000", email="dev@sana.ai")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="A valid Supabase session is required",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
 
     token = credentials.credentials
     try:
@@ -122,8 +135,9 @@ async def get_current_user(
         return AuthenticatedUser(user_id=user_id, email=email, metadata=user_metadata)
 
     except jwt.PyJWTError as e:
-        logger.error(f"JWT Verification failed: {e}")
+        logger.warning("JWT verification failed: %s", e)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=f"Invalid authentication token: {str(e)}",
+            detail="Invalid or expired authentication token",
+            headers={"WWW-Authenticate": "Bearer"},
         )

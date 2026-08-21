@@ -13,13 +13,13 @@ class Settings(BaseSettings):
     PORT: int = 8000
     
     # LiveKit configuration
-    LIVEKIT_URL: str = "wss://sana-jjdz0xfv.livekit.cloud"
-    LIVEKIT_API_KEY: str = "APIQnhXyFWJBjJW"
-    LIVEKIT_API_SECRET: str = "XLh2uGFGCF1S3xJ6VeS0IlqFm2IdoaZ7lfR9w7o7YQH"
+    LIVEKIT_URL: str = ""
+    LIVEKIT_API_KEY: str = ""
+    LIVEKIT_API_SECRET: str = ""
     LIVEKIT_AGENT_NAME: str = "voice_agent"
     
     # Supabase configuration
-    SUPABASE_URL: str = "https://hpexmttbykelgkggjdvi.supabase.co"
+    SUPABASE_URL: str = ""
     SUPABASE_ANON_KEY: str = ""
     SUPABASE_SERVICE_ROLE_KEY: str = ""
     SUPABASE_JWT_SECRET: Optional[str] = None

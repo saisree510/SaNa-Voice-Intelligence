@@ -8,6 +8,9 @@ class DeepCodeEvent(BaseModel):
     timestamp: str = Field(default_factory=lambda: datetime.utcnow().isoformat())
     message: str
     details: Optional[Dict[str, Any]] = None
+    user_id: Optional[str] = None
+    project_id: Optional[str] = None
+    session_id: Optional[str] = None
 
 
 class DeepCodeStep(BaseModel):
@@ -21,6 +24,8 @@ class DeepCodeStep(BaseModel):
 class DeepCodeSession(BaseModel):
     session_id: str
     workspace_path: str
+    user_id: Optional[str] = None
+    project_id: Optional[str] = None
     model: str = "google/gemma-4-31b-it"
     connection_id: Optional[str] = None
     access_level: str = "full-access"
@@ -43,10 +48,18 @@ class BuildRunTurnModel(BaseModel):
     turn_id: str
     project_id: str
     session_id: str
+    user_id: Optional[str] = None
     prompt: str
     status: str = "completed"
     events: List[DeepCodeEvent] = Field(default_factory=list)
     created_at: str = Field(default_factory=lambda: datetime.utcnow().isoformat())
+
+
+class BuildFileModel(BaseModel):
+    path: str
+    user_id: str
+    project_id: str
+    run_id: str
 
 
 class BuildProjectModel(BaseModel):
@@ -59,5 +72,6 @@ class BuildProjectModel(BaseModel):
     plan_summary: Optional[str] = None
     session_id: Optional[str] = None
     history: List[BuildRunTurnModel] = Field(default_factory=list)
+    generated_files: List[BuildFileModel] = Field(default_factory=list)
     created_at: str = Field(default_factory=lambda: datetime.utcnow().isoformat())
     updated_at: str = Field(default_factory=lambda: datetime.utcnow().isoformat())

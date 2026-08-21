@@ -1,4 +1,6 @@
 import logging
+import json
+import uuid
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -38,7 +40,13 @@ async def create_livekit_token(
     Mints a short-lived, user-scoped LiveKit access token for real-time voice sessions.
     """
     try:
-        room_name = request.room_name or f"sbx-{current_user.id[:8]}-{request.mode}"
+        room_prefix = f"soul-{current_user.id}-"
+        requested_room = (request.room_name or "").strip()
+        room_name = (
+            requested_room
+            if requested_room.startswith(room_prefix)
+            else f"{room_prefix}{uuid.uuid4().hex[:12]}"
+        )
         participant_identity = f"user-{current_user.id}"
 
         # Initialize AccessToken with server credentials
@@ -61,7 +69,10 @@ async def create_livekit_token(
         token_builder.with_grants(grant)
 
         # Embed mode metadata in token
-        token_builder.with_metadata(f'{{"mode":"{request.mode}","user_id":"{current_user.id}"}}')
+        token_builder.with_metadata(json.dumps({
+            "mode": request.mode or "general",
+            "user_id": current_user.id,
+        }))
 
         token = token_builder.to_jwt()
         logger.info(f"Minted LiveKit token for user {current_user.id} in room {room_name} (mode: {request.mode})")

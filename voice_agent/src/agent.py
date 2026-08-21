@@ -65,7 +65,9 @@ def extract_participant_user_context(participant: Any) -> dict[str, Optional[str
 
     identity = getattr(participant, "identity", "") or ""
     identity_user_id = identity[5:] if identity.startswith("user-") else None
-    user_id = metadata_user_id or identity_user_id
+    # The backend signs participant identity. Participant metadata can be changed
+    # by the client, so it must never override identity for authorization.
+    user_id = identity_user_id or metadata_user_id
     return {
         "user_id": user_id,
         "mode": mode,

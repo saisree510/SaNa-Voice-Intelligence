@@ -4,7 +4,7 @@ import re
 from threading import Lock
 from typing import Iterable, Optional
 
-from app.auth.auth_bearer import user_id_aliases
+from app.auth.auth_bearer import normalize_user_id, user_id_aliases
 from app.models.deepcode_models import BuildProjectModel
 
 
@@ -26,16 +26,32 @@ class BuildProjectStore:
     def db_path(self) -> str:
         return self._db_path
 
-    def default_workspace_path(self, title: str, project_id: str) -> str:
+    def user_workspace_root(self, user_id: str) -> str:
+        normalized_user = normalize_user_id(user_id)
+        safe_user = re.sub(r'[^a-zA-Z0-9_-]', '_', normalized_user).strip('_')
+        if not safe_user:
+            raise ValueError('Authenticated user id is required for build storage')
+        root = os.path.join(self.trusted_folder(), 'users', safe_user)
+        os.makedirs(root, exist_ok=True)
+        return root
+
+    def default_workspace_path(self, title: str, project_id: str, user_id: str) -> str:
         slug = re.sub(r'[^a-zA-Z0-9_-]', '_', title.lower()).strip('_') or project_id
-        candidate = os.path.join(self.trusted_folder(), f'{slug}_{project_id}')
-        return self.validate_workspace_path(candidate)
+        candidate = os.path.join(self.user_workspace_root(user_id), f'{slug}_{project_id}')
+        return self.validate_user_workspace_path(user_id, candidate)
 
     def validate_workspace_path(self, candidate_path: str) -> str:
         normalized = os.path.abspath(os.path.normpath(candidate_path))
         trusted = self.trusted_folder()
         if not self._is_within(trusted, normalized):
             raise ValueError(f'Workspace path must stay inside trusted build root: {trusted}')
+        return normalized
+
+    def validate_user_workspace_path(self, user_id: str, candidate_path: str) -> str:
+        normalized = self.validate_workspace_path(candidate_path)
+        user_root = self.user_workspace_root(user_id)
+        if not self._is_within(user_root, normalized):
+            raise ValueError('Workspace path must stay inside the authenticated user build folder')
         return normalized
 
     def get_project(self, project_id: str) -> Optional[BuildProjectModel]:
@@ -52,22 +68,20 @@ class BuildProjectStore:
                 return BuildProjectModel.model_validate(project)
         return None
 
-    def list_projects_for_user(self, user_id: str, is_dev_user: bool) -> list[BuildProjectModel]:
+    def list_projects_for_user(self, user_id: str) -> list[BuildProjectModel]:
         data = self._read_data()
         projects = [BuildProjectModel.model_validate(item) for item in data.values()]
-        if not is_dev_user:
-            aliases = user_id_aliases(user_id)
-            projects = [project for project in projects if project.user_id in aliases]
+        aliases = user_id_aliases(user_id)
+        projects = [project for project in projects if project.user_id in aliases]
         return sorted(projects, key=lambda project: project.updated_at, reverse=True)
 
     def find_latest_project_for_user(
         self,
         user_id: str,
-        is_dev_user: bool,
         *,
         statuses: Optional[Iterable[str]] = None,
     ) -> Optional[BuildProjectModel]:
-        projects = self.list_projects_for_user(user_id=user_id, is_dev_user=is_dev_user)
+        projects = self.list_projects_for_user(user_id=user_id)
         if statuses is not None:
             allowed_statuses = {status for status in statuses}
             projects = [project for project in projects if project.status in allowed_statuses]

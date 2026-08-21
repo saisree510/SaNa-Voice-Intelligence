@@ -1,6 +1,5 @@
 import io
 from uuid import uuid4
-import shutil
 import zipfile
 from pathlib import Path
 
@@ -8,15 +7,15 @@ from fastapi.testclient import TestClient
 
 from app.config import settings
 from app.main import app
+from app.routers import build_router
+from conftest import DEFAULT_USER_ID, auth_headers
 
 client = TestClient(app)
-TRUSTED_ROOT = Path(settings.BUILD_STORAGE_ROOT)
+client.headers.update(auth_headers())
 
 
-def _workspace(name: str) -> str:
-    target = TRUSTED_ROOT / name
-    if target.exists():
-        shutil.rmtree(target, ignore_errors=True)
+def _workspace(name: str, user_id: str = DEFAULT_USER_ID) -> str:
+    target = Path(build_router.project_store.user_workspace_root(user_id)) / name
     return str(target)
 
 
@@ -64,12 +63,13 @@ def test_run_build_turn():
 
 
 def test_internal_agent_headers_attribute_project_to_supplied_user():
-    workspace_path = _workspace("agent_scoped_project")
+    agent_user_id = "user-from-agent-123"
+    workspace_path = _workspace("agent_scoped_project", agent_user_id)
     headers = {
-        "X-Sana-Agent-User-Id": "user-from-agent-123",
+        "X-Sana-Agent-User-Id": agent_user_id,
         "X-Sana-Agent-Secret": settings.AGENT_BACKEND_SHARED_SECRET or settings.LIVEKIT_API_SECRET,
     }
-    create_res = client.post(
+    create_res = TestClient(app).post(
         "/v1/build/projects",
         json={
             "title": "Agent Scoped Build",
@@ -83,13 +83,13 @@ def test_internal_agent_headers_attribute_project_to_supplied_user():
 
 
 def test_internal_agent_headers_normalize_prefixed_uuid_user_id():
-    workspace_path = _workspace("agent_prefixed_uuid_project")
     raw_user_id = "11111111-1111-1111-1111-111111111111"
+    workspace_path = _workspace("agent_prefixed_uuid_project", raw_user_id)
     headers = {
         "X-Sana-Agent-User-Id": f"user-{raw_user_id}",
         "X-Sana-Agent-Secret": settings.AGENT_BACKEND_SHARED_SECRET or settings.LIVEKIT_API_SECRET,
     }
-    create_res = client.post(
+    create_res = TestClient(app).post(
         "/v1/build/projects",
         json={
             "title": "Agent UUID Build",
@@ -103,14 +103,12 @@ def test_internal_agent_headers_normalize_prefixed_uuid_user_id():
 
 
 def test_raw_user_can_list_and_access_prefixed_legacy_projects():
-    from unittest.mock import patch
-
     from app.models.deepcode_models import BuildProjectModel
     from app.routers.build_router import project_store
 
     raw_user_id = "22222222-2222-2222-2222-222222222222"
     prefixed_user_id = f"user-{raw_user_id}"
-    workspace_path = Path(_workspace("prefixed_legacy_project"))
+    workspace_path = Path(_workspace("prefixed_legacy_project", raw_user_id))
     workspace_path.mkdir(parents=True, exist_ok=True)
     (workspace_path / "main.py").write_text("print('legacy project')\n", encoding="utf-8")
 
@@ -128,19 +126,10 @@ def test_raw_user_can_list_and_access_prefixed_legacy_projects():
     )
     project_store.upsert_project(project)
 
-    token = __import__('jwt').encode(
-        {"sub": raw_user_id, "email": "aliased@example.com"},
-        "different-secret",
-        algorithm="HS256",
-    )
-    headers = {"Authorization": f"Bearer {token}"}
-
-    with patch("app.auth.auth_bearer.settings.SUPABASE_JWT_SECRET", "legacy-secret"), patch(
-        "app.auth.auth_bearer.settings.ENVIRONMENT", "development"
-    ):
-        list_res = client.get("/v1/build/projects", headers=headers)
-        get_res = client.get("/v1/build/projects/proj-prefixed-legacy", headers=headers)
-        link_res = client.get("/v1/build/projects/proj-prefixed-legacy/download-link", headers=headers)
+    headers = auth_headers(raw_user_id)
+    list_res = client.get("/v1/build/projects", headers=headers)
+    get_res = client.get("/v1/build/projects/proj-prefixed-legacy", headers=headers)
+    link_res = client.get("/v1/build/projects/proj-prefixed-legacy/download-link", headers=headers)
 
     assert list_res.status_code == 200
     assert any(item["project_id"] == "proj-prefixed-legacy" for item in list_res.json())
@@ -313,7 +302,7 @@ def test_persistent_project_continuation_and_history():
     assert history[-1]["prompt"] == "Add voice logging module to CLI assistant"
 
 
-def test_authenticated_user_claims_legacy_dev_projects_in_development():
+def test_authenticated_user_cannot_claim_another_users_projects():
     workspace_path = _workspace("legacy_claim_project")
     create_res = client.post(
         "/v1/build/projects",
@@ -328,24 +317,12 @@ def test_authenticated_user_claims_legacy_dev_projects_in_development():
     client.post(f"/v1/build/projects/{project_id}/approve")
 
     claimed_user_id = f"user-claimed-{uuid4().hex[:8]}"
-    token = __import__('jwt').encode(
-        {"sub": claimed_user_id, "email": "claimed@example.com"},
-        "different-secret",
-        algorithm="HS256",
-    )
-    headers = {"Authorization": f"Bearer {token}"}
-
-    from unittest.mock import patch
-
-    with patch("app.auth.auth_bearer.settings.SUPABASE_JWT_SECRET", "legacy-secret"), patch(
-        "app.auth.auth_bearer.settings.ENVIRONMENT", "development"
-    ), patch("app.routers.build_router.settings.ENVIRONMENT", "development"):
-        list_res = client.get("/v1/build/projects", headers=headers)
+    headers = auth_headers(claimed_user_id)
+    list_res = client.get("/v1/build/projects", headers=headers)
 
     assert list_res.status_code == 200
     projects = list_res.json()
-    assert any(p["project_id"] == project_id for p in projects)
+    assert all(p["project_id"] != project_id for p in projects)
 
     get_res = client.get(f"/v1/build/projects/{project_id}", headers=headers)
-    assert get_res.status_code == 200
-    assert get_res.json()["user_id"] == claimed_user_id
+    assert get_res.status_code == 403

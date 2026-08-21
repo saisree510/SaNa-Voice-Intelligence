@@ -91,7 +91,20 @@ async def update_conversation_mode(
         return {"status": "ok", "mode": request.mode}
 
     try:
-        # Update conversations table
+        ownership = (
+            client.table("conversations")
+            .select("id")
+            .eq("id", conversation_id)
+            .eq("user_id", current_user.id)
+            .limit(1)
+            .execute()
+        )
+        if not ownership.data:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Conversation not found",
+            )
+
         client.table("conversations").update({
             "mode": request.mode,
             "updated_at": datetime.utcnow().isoformat(),
@@ -100,14 +113,17 @@ async def update_conversation_mode(
         # Log conversation_events table
         client.table("conversation_events").insert({
             "conversation_id": conversation_id,
+            "user_id": current_user.id,
             "event_type": "mode_changed",
             "payload": {"mode": request.mode},
         }).execute()
 
         return {"status": "ok", "conversation_id": conversation_id, "mode": request.mode}
+    except HTTPException:
+        raise
     except Exception as e:
-        logger.error(f"Failed to update conversation mode: {e}")
+        logger.error("Failed to update conversation mode: %s", e)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to update mode: {str(e)}",
+            detail="Failed to update conversation mode",
         )

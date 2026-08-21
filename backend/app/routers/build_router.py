@@ -15,6 +15,7 @@ from app.adapters.deepcode_adapter import DeepCodeAdapter
 from app.auth.auth_bearer import AuthenticatedUser, get_current_user, user_id_aliases
 from app.config import settings
 from app.models.deepcode_models import (
+    BuildFileModel,
     BuildProjectModel,
     BuildRunTurnModel,
     DeepCodeEvent,
@@ -86,10 +87,6 @@ def _ensure_build_mode_enabled() -> None:
     )
 
 
-def _is_dev_user(current_user: AuthenticatedUser) -> bool:
-    return current_user.id == "dev-user-0000"
-
-
 def _load_project_or_404(project_id: str) -> BuildProjectModel:
     project = project_store.get_project(project_id)
     if not project:
@@ -101,18 +98,34 @@ def _load_project_or_404(project_id: str) -> BuildProjectModel:
 
 
 def _authorize_project_access(project: BuildProjectModel, current_user: AuthenticatedUser) -> None:
-    if project.user_id not in user_id_aliases(current_user.id) and not _is_dev_user(current_user):
+    if project.user_id not in user_id_aliases(current_user.id):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Forbidden: You do not have access to this build project",
         )
 
 
-def _validate_or_default_workspace(request: CreateProjectRequest, project_id: str) -> str:
+def _authorize_session_access(session: DeepCodeSession, current_user: AuthenticatedUser) -> None:
+    if not session.user_id or session.user_id not in user_id_aliases(current_user.id):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Forbidden: You do not have access to this build session",
+        )
+
+
+def _validate_or_default_workspace(
+    request: CreateProjectRequest,
+    project_id: str,
+    current_user: AuthenticatedUser,
+) -> str:
     raw_workspace = (request.workspace_path or '').strip()
-    candidate_path = raw_workspace or project_store.default_workspace_path(request.title, project_id)
+    candidate_path = raw_workspace or project_store.default_workspace_path(
+        request.title,
+        project_id,
+        current_user.id,
+    )
     try:
-        return project_store.validate_workspace_path(candidate_path)
+        return project_store.validate_user_workspace_path(current_user.id, candidate_path)
     except ValueError as exc:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -143,11 +156,17 @@ def _project_signed_download_path(project_id: str) -> str:
 
 
 def _download_signing_secret() -> str:
-    return (
+    secret = (
         settings.BUILD_DOWNLOAD_SIGNING_SECRET
         or settings.SUPABASE_JWT_SECRET
         or settings.LIVEKIT_API_SECRET
     )
+    if not secret:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail='Secure build downloads are not configured',
+        )
+    return secret
 
 
 def _build_signed_download_token(project: BuildProjectModel, current_user: AuthenticatedUser) -> tuple[str, str]:
@@ -193,7 +212,7 @@ def _validate_signed_download_token(project: BuildProjectModel, token: str) -> N
             detail="Download token does not match this project",
         )
     token_subject = payload.get("sub")
-    if project.user_id not in user_id_aliases(token_subject) and token_subject != "dev-user-0000":
+    if project.user_id not in user_id_aliases(token_subject):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Download token does not grant access to this project",
@@ -224,7 +243,9 @@ def _build_workspace_zip_bytes(workspace_path: str, generated_files: List[str]) 
 
 
 def _build_project_archive_response(project: BuildProjectModel) -> StreamingResponse:
-    generated_files = _list_workspace_files(project.workspace_path)
+    generated_files = [item.path for item in project.generated_files]
+    if not generated_files:
+        generated_files = _list_workspace_files(project.workspace_path)
     if not generated_files:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -250,7 +271,11 @@ def _build_project_archive_response(project: BuildProjectModel) -> StreamingResp
 
 def _ensure_project_session(project: BuildProjectModel) -> DeepCodeSession:
     if not project.session_id:
-        session = deepcode_adapter.create_session(workspace_path=project.workspace_path)
+        session = deepcode_adapter.create_session(
+            workspace_path=project.workspace_path,
+            user_id=project.user_id,
+            project_id=project.project_id,
+        )
         project.session_id = session.session_id
         project.updated_at = datetime.utcnow().isoformat()
         project_store.upsert_project(project)
@@ -258,11 +283,17 @@ def _ensure_project_session(project: BuildProjectModel) -> DeepCodeSession:
 
     session = deepcode_adapter.get_session(project.session_id)
     if session:
+        if session.user_id and session.user_id not in user_id_aliases(project.user_id):
+            raise ValueError('Persisted project session owner does not match project owner')
+        session.user_id = project.user_id
+        session.project_id = project.project_id
         return session
 
     return deepcode_adapter.ensure_session(
         session_id=project.session_id,
         workspace_path=project.workspace_path,
+        user_id=project.user_id,
+        project_id=project.project_id,
     )
 
 
@@ -273,11 +304,15 @@ async def create_build_session(
 ):
     _ensure_build_mode_enabled()
     try:
-        workspace_path = project_store.validate_workspace_path(request.workspace_path)
+        workspace_path = project_store.validate_user_workspace_path(
+            current_user.id,
+            request.workspace_path,
+        )
         session = deepcode_adapter.create_session(
             workspace_path=workspace_path,
             model=request.model or 'google/gemma-4-31b-it',
             access_level=request.access_level or 'full-access',
+            user_id=current_user.id,
         )
         return session
     except ValueError as exc:
@@ -297,7 +332,9 @@ async def get_build_session(
 ):
     _ensure_build_mode_enabled()
     session = deepcode_adapter.get_session(session_id)
-    if session is None:
+    if session is not None:
+        _authorize_session_access(session, current_user)
+    else:
         linked_project = project_store.find_project_by_session_id(session_id)
         if linked_project is not None:
             _authorize_project_access(linked_project, current_user)
@@ -322,7 +359,15 @@ async def run_build_turn(
         linked_project = project_store.find_project_by_session_id(session_id)
         if linked_project is not None:
             _authorize_project_access(linked_project, current_user)
-            _ensure_project_session(linked_project)
+            session = _ensure_project_session(linked_project)
+        else:
+            session = deepcode_adapter.get_session(session_id)
+            if session is None:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=f'Build session {session_id} not found',
+                )
+            _authorize_session_access(session, current_user)
 
         events = []
         async for event in deepcode_adapter.run_turn(session_id, request.prompt):
@@ -336,6 +381,8 @@ async def run_build_turn(
         )
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
+    except HTTPException:
+        raise
     except Exception as exc:
         logger.error('Build turn failed: %s', exc)
         raise HTTPException(
@@ -354,10 +401,14 @@ async def create_build_project(
     import uuid
 
     project_id = f'proj-{uuid.uuid4().hex[:8]}'
-    workspace_path = _validate_or_default_workspace(request, project_id)
+    workspace_path = _validate_or_default_workspace(request, project_id, current_user)
     os.makedirs(workspace_path, exist_ok=True)
 
-    session = deepcode_adapter.create_session(workspace_path=workspace_path)
+    session = deepcode_adapter.create_session(
+        workspace_path=workspace_path,
+        user_id=current_user.id,
+        project_id=project_id,
+    )
     timestamp = datetime.utcnow().isoformat()
 
     project = BuildProjectModel(
@@ -431,16 +482,27 @@ async def _approve_and_execute_project_model(
 
         project.status = 'completed'
         project.updated_at = datetime.utcnow().isoformat()
+        run_id = f"turn-{uuid.uuid4().hex[:8]}"
         run_turn = BuildRunTurnModel(
-            turn_id=f"turn-{uuid.uuid4().hex[:8]}",
+            turn_id=run_id,
             project_id=project.project_id,
             session_id=session.session_id,
+            user_id=project.user_id,
             prompt=project.specification,
             status='completed',
             events=events,
             created_at=datetime.utcnow().isoformat(),
         )
         project.history.append(run_turn)
+        project.generated_files = [
+            BuildFileModel(
+                path=file_path,
+                user_id=project.user_id,
+                project_id=project.project_id,
+                run_id=run_id,
+            )
+            for file_path in generated_files
+        ]
         project_store.upsert_project(project)
 
         summary = (
@@ -478,7 +540,6 @@ async def approve_and_execute_latest_project(
     _ensure_build_mode_enabled()
     project = project_store.find_latest_project_for_user(
         user_id=current_user.id,
-        is_dev_user=_is_dev_user(current_user),
         statuses=('plan_generated',),
     )
     if project is None:
@@ -548,20 +609,7 @@ async def list_build_projects(
     _ensure_build_mode_enabled()
     projects = project_store.list_projects_for_user(
         user_id=current_user.id,
-        is_dev_user=_is_dev_user(current_user),
     )
-    if projects or _is_dev_user(current_user) or settings.ENVIRONMENT.lower() == 'production':
-        return projects
-
-    claimed_projects = project_store.claim_legacy_dev_projects_for_user(current_user.id)
-    if claimed_projects:
-        logger.info(
-            'Claimed %s legacy dev-user build project(s) for authenticated user %s.',
-            len(claimed_projects),
-            current_user.id,
-        )
-        return claimed_projects
-
     return projects
 
 
@@ -593,16 +641,28 @@ async def run_project_incremental_turn(
 
         project.status = 'completed'
         project.updated_at = datetime.utcnow().isoformat()
+        run_id = f"turn-{uuid.uuid4().hex[:8]}"
+        generated_files = _list_workspace_files(project.workspace_path)
         run_turn = BuildRunTurnModel(
-            turn_id=f"turn-{uuid.uuid4().hex[:8]}",
+            turn_id=run_id,
             project_id=project_id,
             session_id=session.session_id,
+            user_id=project.user_id,
             prompt=request.prompt,
             status='completed',
             events=events,
             created_at=datetime.utcnow().isoformat(),
         )
         project.history.append(run_turn)
+        project.generated_files = [
+            BuildFileModel(
+                path=file_path,
+                user_id=project.user_id,
+                project_id=project.project_id,
+                run_id=run_id,
+            )
+            for file_path in generated_files
+        ]
         project_store.upsert_project(project)
 
         return TurnResponse(

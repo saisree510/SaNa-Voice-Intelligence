@@ -28,11 +28,17 @@ class DeepCodeAdapter:
         connection_id: Optional[str] = None,
         access_level: str = "full-access",
         session_id: Optional[str] = None,
+        user_id: Optional[str] = None,
+        project_id: Optional[str] = None,
     ) -> DeepCodeSession:
         resolved_session_id = session_id or f"dc-sess-{uuid.uuid4().hex[:8]}"
         existing = self._sessions.get(resolved_session_id)
         if existing:
+            if existing.user_id and user_id and existing.user_id != user_id:
+                raise ValueError("Build session belongs to another user")
             existing.workspace_path = workspace_path
+            existing.user_id = existing.user_id or user_id
+            existing.project_id = existing.project_id or project_id
             existing.model = model
             existing.connection_id = connection_id
             existing.access_level = access_level
@@ -42,6 +48,8 @@ class DeepCodeAdapter:
         session = DeepCodeSession(
             session_id=resolved_session_id,
             workspace_path=workspace_path,
+            user_id=user_id,
+            project_id=project_id,
             model=model,
             connection_id=connection_id,
             access_level=access_level,
@@ -61,6 +69,8 @@ class DeepCodeAdapter:
         model: str = "google/gemma-4-31b-it",
         connection_id: Optional[str] = None,
         access_level: str = "full-access",
+        user_id: Optional[str] = None,
+        project_id: Optional[str] = None,
     ) -> DeepCodeSession:
         return self.create_session(
             workspace_path=workspace_path,
@@ -68,6 +78,8 @@ class DeepCodeAdapter:
             connection_id=connection_id,
             access_level=access_level,
             session_id=session_id,
+            user_id=user_id,
+            project_id=project_id,
         )
 
     async def run_turn(
@@ -86,6 +98,9 @@ class DeepCodeAdapter:
             event_type="step_start",
             message=f"Starting DeepCode turn for session {session_id}",
             details={"prompt": prompt, "workspace": session.workspace_path},
+            user_id=session.user_id,
+            project_id=session.project_id,
+            session_id=session.session_id,
         )
         await asyncio.sleep(0.1)
 
@@ -177,6 +192,9 @@ class DeepCodeAdapter:
             event_type="file_edit",
             message=f"Created specification file '{spec_file_path}'",
             details={"step": step1.model_dump(), "file_path": spec_file_path},
+            user_id=session.user_id,
+            project_id=session.project_id,
+            session_id=session.session_id,
         )
         await asyncio.sleep(0.1)
 
@@ -197,6 +215,9 @@ class DeepCodeAdapter:
                 "file_path": main_file_path,
                 "generated_files": sorted(files_to_write.keys()),
             },
+            user_id=session.user_id,
+            project_id=session.project_id,
+            session_id=session.session_id,
         )
 
         session.status = "completed"

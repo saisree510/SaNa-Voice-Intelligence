@@ -37,11 +37,16 @@ class BuildProjectSummary {
 }
 
 class BuildProjectsService extends ChangeNotifier {
-  BuildProjectsService({required AuthService authService}) : _authService = authService;
+  BuildProjectsService({required AuthService authService})
+      : _authService = authService,
+        _activeOwnerId = authService.userId {
+    _authService.addListener(_handleAuthChanged);
+  }
 
   static final _logger = Logger('BuildProjectsService');
 
   final AuthService _authService;
+  String? _activeOwnerId;
 
   List<BuildProjectSummary> _projects = const [];
   bool _isLoading = false;
@@ -53,6 +58,17 @@ class BuildProjectsService extends ChangeNotifier {
   String? get activeDownloadProjectId => _activeDownloadProjectId;
   String? get errorMessage => _errorMessage;
   bool get hasBackend => TokenService().backendUrl.isNotEmpty;
+
+  void _handleAuthChanged() {
+    final nextOwnerId = _authService.userId;
+    if (nextOwnerId == _activeOwnerId) return;
+    _activeOwnerId = nextOwnerId;
+    _projects = const [];
+    _isLoading = false;
+    _activeDownloadProjectId = null;
+    _errorMessage = null;
+    notifyListeners();
+  }
 
   Map<String, String> _headers() {
     final headers = <String, String>{
@@ -66,6 +82,12 @@ class BuildProjectsService extends ChangeNotifier {
   }
 
   Future<void> fetchProjects() async {
+    if (_activeOwnerId == null || _authService.accessToken == null) {
+      _projects = const [];
+      _errorMessage = 'A valid Supabase session is required to load projects.';
+      notifyListeners();
+      return;
+    }
     final backendUrl = TokenService().backendUrl;
     if (backendUrl.isEmpty) {
       _projects = const [];
@@ -91,10 +113,7 @@ class BuildProjectsService extends ChangeNotifier {
       }
 
       final decoded = jsonDecode(response.body) as List<dynamic>;
-      _projects = decoded
-          .whereType<Map<String, dynamic>>()
-          .map(BuildProjectSummary.fromJson)
-          .toList()
+      _projects = decoded.whereType<Map<String, dynamic>>().map(BuildProjectSummary.fromJson).toList()
         ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
     } catch (error, stackTrace) {
       _logger.warning('Failed to fetch build projects: $error', error, stackTrace);
@@ -107,6 +126,11 @@ class BuildProjectsService extends ChangeNotifier {
   }
 
   Future<bool> downloadProject(BuildProjectSummary project) async {
+    if (_activeOwnerId == null || _authService.accessToken == null) {
+      _errorMessage = 'A valid Supabase session is required to download projects.';
+      notifyListeners();
+      return false;
+    }
     final backendUrl = TokenService().backendUrl;
     if (backendUrl.isEmpty) {
       _errorMessage = 'Backend URL is not configured for downloads.';
@@ -153,5 +177,11 @@ class BuildProjectsService extends ChangeNotifier {
       _activeDownloadProjectId = null;
       notifyListeners();
     }
+  }
+
+  @override
+  void dispose() {
+    _authService.removeListener(_handleAuthChanged);
+    super.dispose();
   }
 }

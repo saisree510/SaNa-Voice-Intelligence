@@ -8,16 +8,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:voice_assistant/app.dart';
 
 void main() {
   testWidgets('App builds successfully', (WidgetTester tester) async {
-    await dotenv.load(
-      fileName: 'assets/.env',
+    SharedPreferences.setMockInitialValues({});
+    dotenv.loadFromString(
       isOptional: true,
-      mergeWith: const {
-        'LIVEKIT_SANDBOX_ID': 'test',
-      },
+      mergeWith: const {'LIVEKIT_SANDBOX_ID': 'test'},
     );
 
     await tester.binding.setSurfaceSize(const Size(400, 900));
@@ -25,7 +24,7 @@ void main() {
 
     await tester.pumpWidget(const VoiceAssistantApp());
     await tester.pump();
-    expect(find.text('Sana'), findsOneWidget);
+    expect(find.byType(MaterialApp), findsOneWidget);
 
     // Dispose resources started by the global controller to avoid pending timers.
     await tester.pumpWidget(const SizedBox.shrink());

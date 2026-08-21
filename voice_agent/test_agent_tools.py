@@ -4,7 +4,12 @@ import shutil
 import urllib.request
 
 import pytest
-from src.agent import build_backend_headers, create_build_project_plan, approve_and_execute_build_project
+from src.agent import (
+    approve_and_execute_build_project,
+    build_backend_headers,
+    create_build_project_plan,
+    extract_participant_user_context,
+)
 
 
 @pytest.mark.asyncio
@@ -17,6 +22,17 @@ async def test_build_backend_headers_include_agent_user_context(monkeypatch):
     assert headers["X-Sana-Agent-User-Id"] == "user-123"
     assert headers["X-Sana-Agent-User-Email"] == "user@example.com"
     assert headers["X-Sana-Agent-Secret"] == "shared-secret"
+
+
+def test_signed_participant_identity_overrides_editable_metadata():
+    class Participant:
+        identity = "user-real-user-id"
+        metadata = json.dumps({"user_id": "another-users-id", "mode": "build"})
+
+    context = extract_participant_user_context(Participant())
+
+    assert context["user_id"] == "real-user-id"
+    assert context["mode"] == "build"
 
 
 @pytest.mark.asyncio

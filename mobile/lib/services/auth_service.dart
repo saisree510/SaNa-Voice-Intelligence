@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:logging/logging.dart';
@@ -24,9 +25,16 @@ class AuthService extends ChangeNotifier {
   String? get userName => _userName;
   String get assistantName => _assistantName;
   String? get accessToken => _supabase?.auth.currentSession?.accessToken;
+  String? get userId {
+    if (!_isAuthenticated) return null;
+    if (!_isMock) return _supabase?.auth.currentUser?.id;
+    final email = _userEmail?.trim().toLowerCase();
+    if (email == null || email.isEmpty) return null;
+    final encoded = base64Url.encode(utf8.encode(email)).replaceAll('=', '');
+    return 'mock-$encoded';
+  }
 
-  bool get hasCompletedOnboarding =>
-      _userName != null && _userName!.trim().isNotEmpty;
+  bool get hasCompletedOnboarding => _userName != null && _userName!.trim().isNotEmpty;
 
   SupabaseClient? get _supabase {
     if (_isMock) return null;
@@ -35,6 +43,12 @@ class AuthService extends ChangeNotifier {
     } catch (_) {
       return null;
     }
+  }
+
+  String _mockProfileKey(String field, [String? email]) {
+    final account = (email ?? _userEmail ?? '').trim().toLowerCase();
+    final encoded = base64Url.encode(utf8.encode(account)).replaceAll('=', '');
+    return 'mock_${encoded}_$field';
   }
 
   /// Initialize Supabase or fall back to SharedPreferences local auth state
@@ -77,8 +91,8 @@ class AuthService extends ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     _isAuthenticated = prefs.getBool('mock_is_logged_in') ?? false;
     _userEmail = prefs.getString('mock_user_email');
-    _userName = prefs.getString('mock_user_name');
-    _assistantName = prefs.getString('mock_assistant_name') ?? 'Sana';
+    _userName = prefs.getString(_mockProfileKey('user_name'));
+    _assistantName = prefs.getString(_mockProfileKey('assistant_name')) ?? 'Sana';
   }
 
   void _handleSupabaseAuthState(Session? session) {
@@ -102,8 +116,8 @@ class AuthService extends ChangeNotifier {
       final prefs = await SharedPreferences.getInstance();
       _isAuthenticated = true;
       _userEmail = email;
-      _userName = prefs.getString('mock_user_name');
-      _assistantName = prefs.getString('mock_assistant_name') ?? 'Sana';
+      _userName = prefs.getString(_mockProfileKey('user_name', email));
+      _assistantName = prefs.getString(_mockProfileKey('assistant_name', email)) ?? 'Sana';
 
       await prefs.setBool('mock_is_logged_in', true);
       await prefs.setString('mock_user_email', email);
@@ -131,8 +145,8 @@ class AuthService extends ChangeNotifier {
 
       await prefs.setBool('mock_is_logged_in', true);
       await prefs.setString('mock_user_email', email);
-      await prefs.remove('mock_user_name');
-      await prefs.setString('mock_assistant_name', 'Sana');
+      await prefs.remove(_mockProfileKey('user_name', email));
+      await prefs.setString(_mockProfileKey('assistant_name', email), 'Sana');
       notifyListeners();
       return;
     }
@@ -197,8 +211,8 @@ class AuthService extends ChangeNotifier {
       _userName = cleanUserName;
       _assistantName = cleanAssistantName;
 
-      await prefs.setString('mock_user_name', cleanUserName);
-      await prefs.setString('mock_assistant_name', cleanAssistantName);
+      await prefs.setString(_mockProfileKey('user_name'), cleanUserName);
+      await prefs.setString(_mockProfileKey('assistant_name'), cleanAssistantName);
       notifyListeners();
       return;
     }
