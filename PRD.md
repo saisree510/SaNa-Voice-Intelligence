@@ -65,7 +65,7 @@ This is not a restart. The verified Flutter, FastAPI, Supabase and LiveKit imple
 | B2 - Normalize project and build data | In verification | Migration `09_persistent_build_projects.sql` is applied and Railway reports the Supabase store active. A first live project was created and reopened from durable metadata. A build-run persistence mapping defect was fixed with a regression test; completion and artifact verification remain. Legacy JSON records remain quarantined rather than being automatically claimed. |
 | B3 - Project list experience | Implemented; deployment pending | Projects now show lifecycle phase, last update, plan summary, empty/error/retry states and a project-detail entry point without exposing local workspace paths. |
 | B4 - Project detail experience | Implemented; deployment pending | The Flutter detail view includes specification, approved plan, Phase C architecture placeholder, build history, generated-file metadata, Resume and secure Download controls. |
-| B5 - Resume and download verification | Pending | Requires the migration, Railway durable-store activation, and public two-account verification after a browser refresh and re-login. |
+| B5 - Resume and download verification | In verification | A completed project, its history and generated-file metadata persisted through browser refresh and re-login. The web download flow was adjusted to avoid browser popup blocking; public download and two-account access verification remain. |
 
 ### Version history
 

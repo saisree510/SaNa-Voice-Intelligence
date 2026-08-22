@@ -246,7 +246,11 @@ class BuildProjectsService extends ChangeNotifier {
 
       final launched = await launchUrl(
         Uri.parse(downloadUrl),
-        mode: LaunchMode.externalApplication,
+        // A new tab can be blocked after the authenticated link request has
+        // completed. Reusing the current web tab lets the attachment response
+        // trigger the browser download reliably.
+        mode: kIsWeb ? LaunchMode.platformDefault : LaunchMode.externalApplication,
+        webOnlyWindowName: kIsWeb ? '_self' : null,
       );
       if (!launched) {
         _errorMessage = 'Could not open the download link.';
