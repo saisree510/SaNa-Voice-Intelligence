@@ -52,20 +52,20 @@ This is not a restart. The verified Flutter, FastAPI, Supabase and LiveKit imple
 
 **A6 hosting note:** GitHub Pages provides HTTPS and SPA fallback but does not apply the deployed `_headers` file. Browser microphone permission therefore uses the standard same-origin HTTPS permission flow; if an explicit `Permissions-Policy` header becomes mandatory, move the static site to a host with configurable response headers.
 
-**Remaining Phase A work:** Phase A is complete. Phase B can begin with the persistent architecture canvas and project workspace expansion described in the PRD.
+**Remaining Phase A work:** Phase A is complete. Phase B is also complete; Phase C can begin with the persistent architecture canvas and project workspace expansion described in the PRD.
 
 ### Implementation status update: Phase B
 
 **Updated:** 2026-08-22
-**Overall Phase B status:** In progress. B1 is complete; B2 through B4 are implemented locally and await the controlled Supabase migration and Railway configuration; B5 remains pending end-to-end deployment verification.
+**Overall Phase B status:** Complete. Durable project metadata and archives are deployed and verified end to end.
 
 | Subphase | Status | Verified outcome |
 |---|---|---|
 | B1 - Audit the existing project data path | Complete | The authoritative-path audit is recorded in `docs/phase-b1-project-data-path.md`. Project metadata currently lives in a Railway-local JSON file and generated files in the same local filesystem, which is not durable across service replacement or redeploy. |
-| B2 - Normalize project and build data | In verification | Migration `09_persistent_build_projects.sql` is applied and Railway reports the Supabase store active. A first live project was created and reopened from durable metadata. Build-run persistence is verified, and durable ZIP artifact support is implemented locally pending migration `10_build_artifact_storage.sql`. Legacy JSON records remain quarantined rather than being automatically claimed. |
-| B3 - Project list experience | Implemented; deployment pending | Projects now show lifecycle phase, last update, plan summary, empty/error/retry states and a project-detail entry point without exposing local workspace paths. |
-| B4 - Project detail experience | Implemented; deployment pending | The Flutter detail view includes specification, approved plan, Phase C architecture placeholder, build history, generated-file metadata, Resume and secure Download controls. |
-| B5 - Resume and download verification | In verification | A completed project, its history and generated-file metadata persisted through browser refresh and re-login. Resuming the existing project completed without a duplicate entry, and the web client successfully downloaded its signed ZIP through the first-party browser download flow. Two-account access verification remains. |
+| B2 - Normalize project and build data | Complete | Migrations `09_persistent_build_projects.sql` and `10_build_artifact_storage.sql` are applied. Railway uses Supabase for durable project/build metadata and private Supabase Storage for completed ZIP archives. Legacy JSON records remain quarantined rather than being automatically claimed. |
+| B3 - Project list experience | Complete | The deployed Projects list shows lifecycle phase, last update, plan summary, empty/error/retry states and a project-detail entry point without exposing local workspace paths. |
+| B4 - Project detail experience | Complete | The deployed Flutter detail view includes specification, approved plan, Phase C architecture placeholder, build history, generated-file metadata, Resume and secure Download controls. |
+| B5 - Resume and download verification | Complete | A project and build history persisted through browser refresh and re-login; Resume completed without a duplicate entry; cross-user isolation was verified with two accounts; the browser ZIP download worked before and after a Railway redeploy, proving the artifact is durable. |
 
 ### Version history
 
