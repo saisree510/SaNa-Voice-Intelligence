@@ -7,6 +7,18 @@ import "./styles.css";
 
 window.EXCALIDRAW_ASSET_PATH = "/excalidraw-assets/";
 
+const PROTOCOL_VERSION = 1;
+const CANVAS_SOURCE = "soul-canvas";
+const FLUTTER_SOURCE = "soul-flutter";
+
+function postToParent(type, payload = {}) {
+  if (window.parent === window) return;
+  window.parent.postMessage(
+    JSON.stringify({ protocolVersion: PROTOCOL_VERSION, source: CANVAS_SOURCE, type, payload }),
+    window.location.origin,
+  );
+}
+
 function CanvasProof() {
   const [step, setStep] = useState(0);
   const [playing, setPlaying] = useState(true);
@@ -14,6 +26,46 @@ function CanvasProof() {
   const [reducedMotion, setReducedMotion] = useState(false);
   const apiRef = useRef(null);
   const isEmbedded = new URLSearchParams(window.location.search).get("embed") === "1";
+
+  useEffect(() => {
+    if (!isEmbedded) return undefined;
+    postToParent("soul.canvas.ready", {
+      blueprintId: overviewBlueprint.id,
+      operationCount: mockOperations.length,
+    });
+
+    const handleMessage = (event) => {
+      if (typeof event.data !== "string") return;
+      let message;
+      try {
+        message = JSON.parse(event.data);
+      } catch {
+        return;
+      }
+      if (event.origin !== window.location.origin || message?.source !== FLUTTER_SOURCE) return;
+      if (message.protocolVersion !== PROTOCOL_VERSION) return;
+
+      switch (message.type) {
+        case "soul.canvas.parent_ready":
+          postToParent("soul.canvas.ack", { received: message.type });
+          break;
+        case "soul.canvas.command":
+          if (message.payload?.command === "fit") fitToContent();
+          if (message.payload?.command === "replay") reset();
+          if (message.payload?.command === "pause") setPlaying(false);
+          if (message.payload?.command === "play" && !reducedMotion && step < mockOperations.length) {
+            setPlaying(true);
+          }
+          postToParent("soul.canvas.ack", { received: message.payload?.command ?? "unknown" });
+          break;
+        default:
+          postToParent("soul.canvas.rejected", { reason: "unsupported_type", type: message.type });
+      }
+    };
+
+    window.addEventListener("message", handleMessage);
+    return () => window.removeEventListener("message", handleMessage);
+  }, [isEmbedded, reducedMotion, step]);
 
   useEffect(() => {
     const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -41,6 +93,15 @@ function CanvasProof() {
   useEffect(() => {
     apiRef.current?.updateScene({ elements });
   }, [elements]);
+
+  useEffect(() => {
+    if (!isEmbedded) return;
+    postToParent("soul.canvas.state", {
+      status: step < mockOperations.length ? "drawing" : "complete",
+      appliedOperations: step,
+      totalOperations: mockOperations.length,
+    });
+  }, [isEmbedded, step]);
 
   const reset = () => {
     setStep(0);
