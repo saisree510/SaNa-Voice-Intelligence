@@ -67,6 +67,15 @@ This is not a restart. The verified Flutter, FastAPI, Supabase and LiveKit imple
 | B4 - Project detail experience | Complete | The deployed Flutter detail view includes specification, approved plan, Phase C architecture placeholder, build history, generated-file metadata, Resume and secure Download controls. |
 | B5 - Resume and download verification | Complete | A project and build history persisted through browser refresh and re-login; Resume completed without a duplicate entry; cross-user isolation was verified with two accounts; the browser ZIP download worked before and after a Railway redeploy, proving the artifact is durable. |
 
+### Implementation status update: Phase C
+
+**Updated:** 2026-08-22
+**Overall Phase C status:** In progress. C1 is complete; the renderer, embedding, persistence, real-time transport and approval handoff remain separate checkpoints.
+
+| Subphase | Status | Verified outcome |
+|---|---|---|
+| C1 - Architecture Blueprint contract | Complete | Versioned, provider-neutral `ArchitectureSpec` and strictly allowlisted canvas-operation contracts are implemented in the backend. They separate architectural meaning from renderer coordinates/style, validate graph references and lifecycle timestamps, and return structured rejection errors. Contract examples and six regression tests are included. |
+
 ### Version history
 
 | Version | Date | Purpose |
