@@ -64,6 +64,7 @@ class AppCtrl extends ChangeNotifier {
   AgentScreenState agentScreenState = AgentScreenState.visualizer;
   HomeTab homeTab = HomeTab.home;
   ConversationMode conversationMode = ConversationMode.general;
+  bool isCanvasFocusVisible = false;
 
   //Test
   bool isUserCameEnabled = false;
@@ -211,9 +212,8 @@ class AppCtrl extends ChangeNotifier {
 
   static sdk.Session _createSession({required sdk.Room room}) {
     const configuredAgentName = String.fromEnvironment('SANA_AGENT_NAME');
-    final agentName = configuredAgentName.isNotEmpty
-        ? configuredAgentName
-        : (kReleaseMode ? 'voice_agent' : 'voice_agent_local');
+    final agentName =
+        configuredAgentName.isNotEmpty ? configuredAgentName : (kReleaseMode ? 'voice_agent' : 'voice_agent_local');
     // Development-only hardcoded credentials (optional).
     const hardcodedServerUrl = null; // e.g. 'wss://your-host'
     const hardcodedToken = null; // e.g. 'eyJ...'
@@ -329,6 +329,12 @@ class AppCtrl extends ChangeNotifier {
   void toggleAgentScreenMode() {
     agentScreenState =
         agentScreenState == AgentScreenState.visualizer ? AgentScreenState.transcription : AgentScreenState.visualizer;
+    notifyListeners();
+  }
+
+  void setCanvasFocusVisible(bool isVisible) {
+    if (isCanvasFocusVisible == isVisible) return;
+    isCanvasFocusVisible = isVisible;
     notifyListeners();
   }
 
@@ -508,6 +514,7 @@ class AppCtrl extends ChangeNotifier {
     conversationTimeline.clear();
     appScreenState = AppScreenState.welcome;
     agentScreenState = AgentScreenState.visualizer;
+    isCanvasFocusVisible = false;
     notifyListeners();
   }
 

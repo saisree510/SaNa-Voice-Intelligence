@@ -10,11 +10,13 @@ class AgentLayoutState {
   final bool isTranscriptionVisible;
   final bool isCameraVisible;
   final bool isScreenshareVisible;
+  final bool isImmersiveWorkspaceVisible;
 
   const AgentLayoutState({
     this.isTranscriptionVisible = false,
     this.isCameraVisible = false,
     this.isScreenshareVisible = false,
+    this.isImmersiveWorkspaceVisible = false,
   });
 }
 
@@ -23,11 +25,13 @@ extension AgentLayoutStateCopyExt on AgentLayoutState {
     bool? isTranscriptionVisible,
     bool? isCameraVisible,
     bool? isScreenshareVisible,
+    bool? isImmersiveWorkspaceVisible,
   }) {
     return AgentLayoutState(
       isTranscriptionVisible: isTranscriptionVisible ?? this.isTranscriptionVisible,
       isCameraVisible: isCameraVisible ?? this.isCameraVisible,
       isScreenshareVisible: isScreenshareVisible ?? this.isScreenshareVisible,
+      isImmersiveWorkspaceVisible: isImmersiveWorkspaceVisible ?? this.isImmersiveWorkspaceVisible,
     );
   }
 }
@@ -97,13 +101,14 @@ class AgentLayoutSwitcher extends StatelessWidget {
         int cellCountCam = 0;
         if (layoutState.isCameraVisible) cellCountCam += 1;
 
+        final shrinkAgentView = layoutState.isTranscriptionVisible && !layoutState.isImmersiveWorkspaceVisible;
         final agentViewPosition = LayoutPosition(
-          left: layoutState.isTranscriptionVisible ? horizontalPadding : 0.0,
-          top: layoutState.isTranscriptionVisible ? topPadding : 0.0,
-          right: layoutState.isTranscriptionVisible
+          left: shrinkAgentView ? horizontalPadding : 0.0,
+          top: shrinkAgentView ? topPadding : 0.0,
+          right: shrinkAgentView
               ? (singleCellWidth * cellCountCamAndScreen) + (cellSpacing * cellCountCamAndScreen) + horizontalPadding
               : 0.0,
-          bottom: layoutState.isTranscriptionVisible ? cellBottom : 0.0,
+          bottom: shrinkAgentView ? cellBottom : 0.0,
         );
 
         final cameraViewPosition = LayoutPosition(
@@ -136,7 +141,7 @@ class AgentLayoutSwitcher extends StatelessWidget {
               Positioned.fill(
                 child: Padding(
                   padding: EdgeInsets.only(
-                    top: singleCellHeight + topPadding,
+                    top: layoutState.isImmersiveWorkspaceVisible ? topPadding + 10 : singleCellHeight + topPadding,
                     bottom: 110,
                   ),
                   child: transcriptionsBuilder(context),
@@ -156,15 +161,16 @@ class AgentLayoutSwitcher extends StatelessWidget {
               ),
             ),
             // AgentView
-            AnimatedPositioned(
-              duration: animationDuration,
-              curve: animationCurve,
-              left: agentViewPosition.left,
-              top: agentViewPosition.top,
-              right: agentViewPosition.right,
-              bottom: agentViewPosition.bottom,
-              child: buildAgentView(ctx),
-            ),
+            if (!layoutState.isImmersiveWorkspaceVisible)
+              AnimatedPositioned(
+                duration: animationDuration,
+                curve: animationCurve,
+                left: agentViewPosition.left,
+                top: agentViewPosition.top,
+                right: agentViewPosition.right,
+                bottom: agentViewPosition.bottom,
+                child: buildAgentView(ctx),
+              ),
             // CameraView
             AnimatedPositioned(
               duration: animationDuration,

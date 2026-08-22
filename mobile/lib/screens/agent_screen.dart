@@ -114,6 +114,7 @@ class AgentScreen extends StatelessWidget {
             isTranscriptionVisible: appCtrl.agentScreenState == AgentScreenState.transcription,
             isCameraVisible: appCtrl.isUserCameEnabled,
             isScreenshareVisible: appCtrl.isScreenshareEnabled,
+            isImmersiveWorkspaceVisible: appCtrl.isCanvasFocusVisible,
           ),
           builder: (ctx, agentLayoutState, child) => Stack(
             children: [
@@ -254,11 +255,13 @@ class _ConversationCanvasWorkspaceState extends State<_ConversationCanvasWorkspa
   bool _isChatDrawerOpen = false;
 
   void _showCanvas({TabController? tabController}) {
+    final opensDesktopFocus = tabController == null;
     setState(() {
       _isCanvasCollapsed = false;
-      _isCanvasFullscreen = tabController == null;
+      _isCanvasFullscreen = opensDesktopFocus;
       _isChatDrawerOpen = false;
     });
+    context.read<AppCtrl>().setCanvasFocusVisible(opensDesktopFocus);
     tabController?.animateTo(1);
   }
 
@@ -268,6 +271,7 @@ class _ConversationCanvasWorkspaceState extends State<_ConversationCanvasWorkspa
       _isCanvasFullscreen = false;
       _isChatDrawerOpen = false;
     });
+    context.read<AppCtrl>().setCanvasFocusVisible(false);
   }
 
   void _toggleChatDrawer() {
@@ -282,6 +286,7 @@ class _ConversationCanvasWorkspaceState extends State<_ConversationCanvasWorkspa
       if (_isCanvasCollapsed) _isCanvasFullscreen = false;
       if (_isCanvasCollapsed) _isChatDrawerOpen = false;
     });
+    context.read<AppCtrl>().setCanvasFocusVisible(false);
   }
 
   void _toggleCanvasFullscreen() {
@@ -290,6 +295,7 @@ class _ConversationCanvasWorkspaceState extends State<_ConversationCanvasWorkspa
       if (_isCanvasFullscreen) _isCanvasCollapsed = false;
       if (!_isCanvasFullscreen) _isChatDrawerOpen = false;
     });
+    context.read<AppCtrl>().setCanvasFocusVisible(_isCanvasFullscreen);
   }
 
   @override
@@ -299,6 +305,11 @@ class _ConversationCanvasWorkspaceState extends State<_ConversationCanvasWorkspa
           if (!isWide) {
             _isCanvasCollapsed = false;
             _isCanvasFullscreen = false;
+            if (context.read<AppCtrl>().isCanvasFocusVisible) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (mounted) context.read<AppCtrl>().setCanvasFocusVisible(false);
+              });
+            }
             return DefaultTabController(
               length: 2,
               child: Column(
