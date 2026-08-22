@@ -78,7 +78,7 @@ class ConversationTurnBubble extends StatelessWidget {
     final labelColor = isUser ? foreground.withValues(alpha: 0.8) : colorScheme.outline;
     final displayText = turn.isFinal ? text : '$text …';
     final sourceLabel = turn.source == ConversationSource.text ? 'Typed' : 'Voice';
-    final roleLabel = isUser ? 'You' : 'Sana';
+    final roleLabel = isUser ? 'You' : 'Soul';
 
     return Align(
       alignment: alignment,

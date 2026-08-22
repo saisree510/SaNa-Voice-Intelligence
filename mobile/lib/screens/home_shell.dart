@@ -14,7 +14,7 @@ import '../services/conversation_service.dart';
 import '../ui/sana_theme.dart';
 import '../widgets/sana_orb_view.dart';
 
-/// SaNa home: brand, greeting, orb, mode shells, minimal bottom nav.
+/// Soul home: brand, greeting, orb, mode shells, minimal bottom nav.
 class HomeShell extends StatelessWidget {
   const HomeShell({super.key});
 
@@ -112,7 +112,7 @@ class _SaNaHome extends StatelessWidget {
                 children: [
                   const SizedBox(height: 12),
                   Text(
-                    'Sana',
+                    'Soul',
                     textAlign: TextAlign.center,
                     style: textTheme.displaySmall?.copyWith(
                       color: SanaColors.lavender,
@@ -178,7 +178,7 @@ class _SaNaHome extends StatelessWidget {
                         label = 'Continue';
                         onPressed = () => unawaited(ctrl.connect());
                       } else {
-                        label = 'Talk with Sana';
+                        label = 'Talk with Soul';
                         onPressed = () => unawaited(ctrl.connect());
                       }
 
@@ -351,7 +351,7 @@ class _ProjectsPaneState extends State<_ProjectsPane> {
                 : !projectsService.hasBackend
                     ? Center(
                         child: Text(
-                          'Configure SANA_BACKEND_URL to load build projects.',
+                          'The Build service is not configured. Please try again later.',
                           textAlign: TextAlign.center,
                           style: textTheme.bodyMedium?.copyWith(color: SanaColors.fgSecondary),
                         ),
@@ -635,7 +635,7 @@ class _HistoryPaneState extends State<_HistoryPane> {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              'Start talking with Sana on the Home tab!',
+                              'Start talking with Soul on the Home tab!',
                               style: textTheme.bodySmall
                                   ?.copyWith(color: SanaColors.fgMuted),
                             ),

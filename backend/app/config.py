@@ -8,7 +8,7 @@ DEFAULT_BUILD_STORAGE_ROOT = str((Path(__file__).resolve().parents[2] / "drafts"
 
 
 class Settings(BaseSettings):
-    APP_NAME: str = "SaNa Backend"
+    APP_NAME: str = "Soul Backend"
     ENVIRONMENT: str = "development"
     PORT: int = 8000
     

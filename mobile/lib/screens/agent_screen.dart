@@ -243,7 +243,7 @@ class _AgentStatusPlaceholder extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24),
         child: Text(
-          'Speak with Sana, or type below. Conversation appears here.',
+          'Speak with Soul, or type below. Conversation appears here.',
           style: textTheme.bodyMedium,
           textAlign: TextAlign.center,
         ),

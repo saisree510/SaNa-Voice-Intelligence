@@ -15,7 +15,7 @@ logger = logging.getLogger("backend")
 app = FastAPI(
     title=settings.APP_NAME,
     version="0.8.0",
-    description="SaNa Developer Conversational Intelligence Backend",
+    description="Soul Developer Conversational Intelligence Backend",
 )
 
 # Configure CORS

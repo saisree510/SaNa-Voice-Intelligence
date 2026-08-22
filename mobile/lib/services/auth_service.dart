@@ -16,7 +16,7 @@ class AuthService extends ChangeNotifier {
   bool _isAuthenticated = false;
   String? _userEmail;
   String? _userName;
-  String _assistantName = 'Sana';
+  String _assistantName = 'Soul';
 
   bool get isInitialized => _isInitialized;
   bool get isMock => _isMock;
@@ -92,7 +92,7 @@ class AuthService extends ChangeNotifier {
     _isAuthenticated = prefs.getBool('mock_is_logged_in') ?? false;
     _userEmail = prefs.getString('mock_user_email');
     _userName = prefs.getString(_mockProfileKey('user_name'));
-    _assistantName = prefs.getString(_mockProfileKey('assistant_name')) ?? 'Sana';
+    _assistantName = _brandAssistantName(prefs.getString(_mockProfileKey('assistant_name')));
   }
 
   void _handleSupabaseAuthState(Session? session) {
@@ -100,13 +100,13 @@ class AuthService extends ChangeNotifier {
       _isAuthenticated = false;
       _userEmail = null;
       _userName = null;
-      _assistantName = 'Sana';
+      _assistantName = 'Soul';
     } else {
       _isAuthenticated = true;
       _userEmail = session.user.email;
       final metadata = session.user.userMetadata ?? {};
       _userName = metadata['display_name'] as String? ?? metadata['user_name'] as String?;
-      _assistantName = metadata['assistant_name'] as String? ?? 'Sana';
+      _assistantName = _brandAssistantName(metadata['assistant_name'] as String?);
     }
     notifyListeners();
   }
@@ -117,7 +117,7 @@ class AuthService extends ChangeNotifier {
       _isAuthenticated = true;
       _userEmail = email;
       _userName = prefs.getString(_mockProfileKey('user_name', email));
-      _assistantName = prefs.getString(_mockProfileKey('assistant_name', email)) ?? 'Sana';
+      _assistantName = _brandAssistantName(prefs.getString(_mockProfileKey('assistant_name', email)));
 
       await prefs.setBool('mock_is_logged_in', true);
       await prefs.setString('mock_user_email', email);
@@ -141,12 +141,12 @@ class AuthService extends ChangeNotifier {
       _isAuthenticated = true;
       _userEmail = email;
       _userName = null; // Forces onboarding on new sign up
-      _assistantName = 'Sana';
+      _assistantName = 'Soul';
 
       await prefs.setBool('mock_is_logged_in', true);
       await prefs.setString('mock_user_email', email);
       await prefs.remove(_mockProfileKey('user_name', email));
-      await prefs.setString(_mockProfileKey('assistant_name', email), 'Sana');
+      await prefs.setString(_mockProfileKey('assistant_name', email), 'Soul');
       notifyListeners();
       return;
     }
@@ -155,7 +155,7 @@ class AuthService extends ChangeNotifier {
       email: email,
       password: password,
       data: {
-        'assistant_name': 'Sana',
+        'assistant_name': 'Soul',
       },
     );
 
@@ -184,7 +184,7 @@ class AuthService extends ChangeNotifier {
       _isAuthenticated = false;
       _userEmail = null;
       _userName = null;
-      _assistantName = 'Sana';
+      _assistantName = 'Soul';
 
       await prefs.setBool('mock_is_logged_in', false);
       notifyListeners();
@@ -195,16 +195,16 @@ class AuthService extends ChangeNotifier {
     _isAuthenticated = false;
     _userEmail = null;
     _userName = null;
-    _assistantName = 'Sana';
+    _assistantName = 'Soul';
     notifyListeners();
   }
 
   Future<void> saveProfile({
     required String userName,
-    String assistantName = 'Sana',
+    String assistantName = 'Soul',
   }) async {
     final cleanUserName = userName.trim();
-    final cleanAssistantName = assistantName.trim().isEmpty ? 'Sana' : assistantName.trim();
+    final cleanAssistantName = assistantName.trim().isEmpty ? 'Soul' : assistantName.trim();
 
     if (_isMock) {
       final prefs = await SharedPreferences.getInstance();
@@ -230,5 +230,10 @@ class AuthService extends ChangeNotifier {
     _userName = cleanUserName;
     _assistantName = cleanAssistantName;
     notifyListeners();
+  }
+
+  String _brandAssistantName(String? value) {
+    final name = value?.trim();
+    return name == null || name.isEmpty || name.toLowerCase() == 'sana' ? 'Soul' : name;
   }
 }

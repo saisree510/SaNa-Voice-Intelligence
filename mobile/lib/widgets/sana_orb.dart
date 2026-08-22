@@ -88,7 +88,7 @@ class _SanaOrbState extends State<SanaOrb> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     final orb = Semantics(
       button: widget.onTap != null,
-      label: 'Sana voice orb, ${widget.state.statusLabel}',
+      label: 'Soul voice orb, ${widget.state.statusLabel}',
       child: SizedBox(
         width: widget.size,
         height: widget.size,

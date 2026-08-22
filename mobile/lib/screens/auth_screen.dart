@@ -141,7 +141,7 @@ class _AuthScreenState extends State<AuthScreen> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Text(
-                      'Sana',
+                      'Soul',
                       textAlign: TextAlign.center,
                       style: textTheme.displaySmall?.copyWith(
                         color: SanaColors.lavender,

@@ -21,7 +21,7 @@ class OnboardingScreen extends StatefulWidget {
 class _OnboardingScreenState extends State<OnboardingScreen> {
   final _formKey = GlobalKey<FormState>();
   final _userNameCtrl = TextEditingController();
-  final _assistantNameCtrl = TextEditingController(text: 'Sana');
+  final _assistantNameCtrl = TextEditingController(text: 'Soul');
 
   bool _isSaving = false;
   StreamSubscription? _timelineSub;
@@ -88,7 +88,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     final appCtrl = context.read<AppCtrl>();
     final userName = _userNameCtrl.text.trim();
     final assistantName =
-        _assistantNameCtrl.text.trim().isEmpty ? 'Sana' : _assistantNameCtrl.text.trim();
+        _assistantNameCtrl.text.trim().isEmpty ? 'Soul' : _assistantNameCtrl.text.trim();
 
     try {
       // Disconnect voice session if still connected from onboarding
@@ -134,7 +134,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Text(
-                      'Sana',
+                      'Soul',
                       textAlign: TextAlign.center,
                       style: textTheme.displaySmall?.copyWith(
                         color: SanaColors.lavender,
@@ -189,7 +189,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                               const SizedBox(height: 8),
                               Text(
                                 connecting
-                                    ? 'Connecting to Sana...'
+                                    ? 'Connecting to Soul...'
                                     : live
                                         ? 'Listening... say your name!'
                                         : 'Tap orb to speak your name',
@@ -243,7 +243,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       textCapitalization: TextCapitalization.words,
                       decoration: const InputDecoration(
                         labelText: 'Assistant Name',
-                        hintText: 'Default: Sana',
+                        hintText: 'Default: Soul',
                         prefixIcon: Icon(Icons.psychology_outlined, color: SanaColors.lavender),
                       ),
                     ),
@@ -270,7 +270,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                               ),
                             )
                           : const Text(
-                              'Continue to Sana',
+                              'Continue to Soul',
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 16,
