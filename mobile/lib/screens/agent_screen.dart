@@ -251,19 +251,36 @@ class _ConversationCanvasWorkspaceState extends State<_ConversationCanvasWorkspa
   double _conversationFraction = 0.42;
   bool _isCanvasCollapsed = true;
   bool _isCanvasFullscreen = false;
+  bool _isChatDrawerOpen = false;
 
   void _showCanvas({TabController? tabController}) {
     setState(() {
       _isCanvasCollapsed = false;
-      _isCanvasFullscreen = false;
+      _isCanvasFullscreen = tabController == null;
+      _isChatDrawerOpen = false;
     });
     tabController?.animateTo(1);
+  }
+
+  void _showConversation() {
+    setState(() {
+      _isCanvasCollapsed = true;
+      _isCanvasFullscreen = false;
+      _isChatDrawerOpen = false;
+    });
+  }
+
+  void _toggleChatDrawer() {
+    setState(() {
+      _isChatDrawerOpen = !_isChatDrawerOpen;
+    });
   }
 
   void _toggleCanvasCollapsed() {
     setState(() {
       _isCanvasCollapsed = !_isCanvasCollapsed;
       if (_isCanvasCollapsed) _isCanvasFullscreen = false;
+      if (_isCanvasCollapsed) _isChatDrawerOpen = false;
     });
   }
 
@@ -271,6 +288,7 @@ class _ConversationCanvasWorkspaceState extends State<_ConversationCanvasWorkspa
     setState(() {
       _isCanvasFullscreen = !_isCanvasFullscreen;
       if (_isCanvasFullscreen) _isCanvasCollapsed = false;
+      if (!_isCanvasFullscreen) _isChatDrawerOpen = false;
     });
   }
 
@@ -336,9 +354,15 @@ class _ConversationCanvasWorkspaceState extends State<_ConversationCanvasWorkspa
             child: LayoutBuilder(
               builder: (context, innerConstraints) {
                 if (_isCanvasFullscreen) {
-                  return ArchitectureCanvasPanel(
-                    isFullscreen: true,
-                    onFullscreen: _toggleCanvasFullscreen,
+                  return _CanvasFocusMode(
+                    isChatDrawerOpen: _isChatDrawerOpen,
+                    onBackToConversation: _showConversation,
+                    onToggleChat: _toggleChatDrawer,
+                    conversation: widget.conversationBuilder(context, _showCanvas),
+                    canvas: ArchitectureCanvasPanel(
+                      isFullscreen: true,
+                      onFullscreen: _showConversation,
+                    ),
                   );
                 }
 
@@ -356,7 +380,7 @@ class _ConversationCanvasWorkspaceState extends State<_ConversationCanvasWorkspa
                     ),
                     if (_isCanvasCollapsed) ...[
                       const SizedBox(width: 12),
-                      _CollapsedCanvasRail(onTap: _toggleCanvasCollapsed),
+                      _CollapsedCanvasRail(onTap: _showCanvas),
                     ] else ...[
                       _CanvasResizeHandle(
                         onDrag: (delta) {
@@ -379,6 +403,132 @@ class _ConversationCanvasWorkspaceState extends State<_ConversationCanvasWorkspa
             ),
           );
         },
+      );
+}
+
+class _CanvasFocusMode extends StatelessWidget {
+  const _CanvasFocusMode({
+    required this.isChatDrawerOpen,
+    required this.onBackToConversation,
+    required this.onToggleChat,
+    required this.conversation,
+    required this.canvas,
+  });
+
+  final bool isChatDrawerOpen;
+  final VoidCallback onBackToConversation;
+  final VoidCallback onToggleChat;
+  final Widget conversation;
+  final Widget canvas;
+
+  @override
+  Widget build(BuildContext context) => Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _CanvasFocusHeader(
+            isChatDrawerOpen: isChatDrawerOpen,
+            onBackToConversation: onBackToConversation,
+            onToggleChat: onToggleChat,
+          ),
+          const SizedBox(height: 12),
+          Expanded(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(child: canvas),
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 220),
+                  curve: Curves.easeOutCubic,
+                  width: isChatDrawerOpen ? 390 : 0,
+                  margin: EdgeInsets.only(left: isChatDrawerOpen ? 14 : 0),
+                  child: ClipRect(
+                    child: OverflowBox(
+                      alignment: Alignment.centerLeft,
+                      maxWidth: 390,
+                      child: SizedBox(
+                        width: 390,
+                        child: _CanvasChatDrawer(child: conversation),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      );
+}
+
+class _CanvasFocusHeader extends StatelessWidget {
+  const _CanvasFocusHeader({
+    required this.isChatDrawerOpen,
+    required this.onBackToConversation,
+    required this.onToggleChat,
+  });
+
+  final bool isChatDrawerOpen;
+  final VoidCallback onBackToConversation;
+  final VoidCallback onToggleChat;
+
+  @override
+  Widget build(BuildContext context) => DecoratedBox(
+        decoration: BoxDecoration(
+          color: SanaColors.surface.withValues(alpha: 0.92),
+          border: Border.all(color: SanaColors.outline),
+          borderRadius: BorderRadius.circular(999),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+          child: Row(
+            children: [
+              TextButton.icon(
+                onPressed: onBackToConversation,
+                icon: const Icon(Icons.arrow_back_rounded, size: 18),
+                label: const Text('Back to conversation'),
+              ),
+              const Spacer(),
+              Text(
+                'Canvas Focus',
+                style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                      color: SanaColors.fgSecondary,
+                      fontWeight: FontWeight.w800,
+                    ),
+              ),
+              const Spacer(),
+              FilledButton.tonalIcon(
+                onPressed: onToggleChat,
+                icon: Icon(isChatDrawerOpen ? Icons.chat_bubble_rounded : Icons.chat_bubble_outline_rounded, size: 18),
+                label: Text(isChatDrawerOpen ? 'Hide chat' : 'Ask Soul'),
+              ),
+            ],
+          ),
+        ),
+      );
+}
+
+class _CanvasChatDrawer extends StatelessWidget {
+  const _CanvasChatDrawer({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => DecoratedBox(
+        decoration: BoxDecoration(
+          color: SanaColors.pureWhite,
+          border: Border.all(color: SanaColors.outline),
+          borderRadius: BorderRadius.circular(22),
+          boxShadow: [
+            BoxShadow(
+              color: SanaColors.lavenderDeep.withValues(alpha: 0.10),
+              blurRadius: 28,
+              offset: const Offset(0, 14),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(22),
+          child: child,
+        ),
       );
 }
 
