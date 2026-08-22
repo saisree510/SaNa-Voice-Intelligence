@@ -27,10 +27,10 @@ This is not a restart. The verified Flutter, FastAPI, Supabase and LiveKit imple
 - Validated, progressive WebSocket drawing operations and replayable canvas history
 - Immutable architecture approval linked to DeepCode BuildRuns
 
-### Implementation status update: Phase A through A3
+### Implementation status update: Phase A through A4
 
 **Updated:** 2026-08-21  
-**Overall Phase A status:** In progress. A0-A3 are complete, A4 is in progress, A5 is pending, and A6 is implemented pending public-browser verification.
+**Overall Phase A status:** In progress. A0-A4 are complete, A5 is pending, and A6 is implemented pending public-browser verification.
 
 | Subphase | Status | Verified outcome |
 |---|---|---|
@@ -38,7 +38,7 @@ This is not a restart. The verified Flutter, FastAPI, Supabase and LiveKit imple
 | A1 - Authenticated ownership hardening | Complete | Backend and Flutter ownership controls were committed and pushed in `4280603`; the production-safe Supabase migration was prepared and backend tests passed. |
 | A2 - Production RLS migration | Complete | Supabase migration was applied. RLS and authenticated policies for conversations, messages and conversation events were verified; invalid ownership rows were zero. |
 | A3 - Two-account browser and voice verification | Complete | User A and User B were verified to see only their own data. Railway validates Supabase sessions, mints Soul LiveKit tokens, dispatches `voice_agent`, and the hosted agent joins and responds in the browser room. |
-| A4 - Authenticated voice and Build Mode browser test | In progress | Authenticated voice works. Railway's Build API passed an isolated create-and-list persistence check; the hosted agent backend configuration was synchronized. A real user-created Build Project still requires repeat verification from the public site. |
+| A4 - Authenticated voice and Build Mode browser test | Complete | On the public web app, authenticated voice worked and a real Build Mode conversation created a project that User A could see in their Projects tab. Railway's isolated create-and-list persistence check also passed. |
 | A5 - Soul rebrand pass | Pending | Public metadata is Soul-branded; remaining visible Sana strings and accessible labels require a focused UI pass. |
 | A6 - Public Flutter Web deployment | Implemented; manual verification pending | GitHub Pages serves the production Flutter Web build over HTTPS at `https://saisree510.github.io/SaNa-Voice-Intelligence/`, with repository-base routing and an SPA fallback. |
 
@@ -52,7 +52,7 @@ This is not a restart. The verified Flutter, FastAPI, Supabase and LiveKit imple
 
 **A6 hosting note:** GitHub Pages provides HTTPS and SPA fallback but does not apply the deployed `_headers` file. Browser microphone permission therefore uses the standard same-origin HTTPS permission flow; if an explicit `Permissions-Policy` header becomes mandatory, move the static site to a host with configurable response headers.
 
-**Remaining Phase A work:** complete the A4 real-user Build Mode test, complete the A5 Soul rebrand and responsive visual verification, then verify sign-up, sign-in, refresh, deep links, microphone permission and sign-out on the public URL.
+**Remaining Phase A work:** complete the A5 Soul rebrand and responsive visual verification, then verify sign-up, sign-in, refresh, deep links, microphone permission and sign-out on the public URL.
 
 ### Version history
 
