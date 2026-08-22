@@ -38,6 +38,10 @@ project_store = (
 )
 
 
+def build_project_store_name() -> str:
+    return 'supabase' if isinstance(project_store, SupabaseBuildProjectStore) else 'local_json_fallback'
+
+
 class CreateSessionRequest(BaseModel):
     workspace_path: str
     model: Optional[str] = "google/gemma-4-31b-it"

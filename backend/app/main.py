@@ -54,6 +54,7 @@ async def system_status():
         "status": "online",
         "livekit_url": settings.LIVEKIT_URL,
         "supabase_url": settings.SUPABASE_URL,
+        "build_project_store": build_router.build_project_store_name(),
         "version": "0.7.0",
     }
 
