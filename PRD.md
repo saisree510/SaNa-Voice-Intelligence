@@ -75,6 +75,7 @@ This is not a restart. The verified Flutter, FastAPI, Supabase and LiveKit imple
 | Subphase | Status | Verified outcome |
 |---|---|---|
 | C1 - Architecture Blueprint contract | Complete | Versioned, provider-neutral `ArchitectureSpec` and strictly allowlisted canvas-operation contracts are implemented in the backend. They separate architectural meaning from renderer coordinates/style, validate graph references and lifecycle timestamps, and return structured rejection errors. Contract examples and six regression tests are included. |
+| C2 - Standalone Excalidraw canvas proof | Complete | A bounded `canvas/` React/Vite module uses the MIT-licensed, audit-clean Excalidraw package to render an Overview Blueprint through progressive local mock operations. It self-hosts required Excalidraw assets, provides native zoom/pan/selection/fullscreen plus Replay, Pause, 1x/2x, Fit and accessible/reduced-motion behavior. A production build and a real Chrome rendering check passed. The isolated proof bundle is approximately 751 KB gzipped and must be lazy-loaded in C3. |
 
 ### Version history
 

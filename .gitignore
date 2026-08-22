@@ -81,3 +81,5 @@ desktop.ini
 **/macos/Flutter/ephemeral/
 **/linux/flutter/ephemeral/
 **/windows/flutter/ephemeral/
+canvas/node_modules/
+canvas/dist/
