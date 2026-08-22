@@ -1,12 +1,12 @@
 {
-    "name": "voice_assistant",
-    "short_name": "voice_assistant",
+    "name": "Soul Voice AI Builder",
+    "short_name": "Soul",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "An AI voice assistant built with LiveKit",
-    "orientation": "portrait-primary",
+    "background_color": "#09070D",
+    "theme_color": "#09070D",
+    "description": "A voice-first AI assistant that can plan and build software projects.",
+    "orientation": "any",
     "prefer_related_applications": false,
     "icons": [
         {

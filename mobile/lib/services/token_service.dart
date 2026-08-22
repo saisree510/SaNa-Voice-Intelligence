@@ -29,7 +29,18 @@ class LiveKitTokenResponse {
   }
 }
 
+class LiveKitTokenException implements Exception {
+  const LiveKitTokenException(this.message);
+
+  final String message;
+
+  @override
+  String toString() => message;
+}
+
 class TokenService {
+  static const productionBackendUrl = 'https://sana-voice-intelligence-production.up.railway.app';
+
   final String backendUrl;
 
   TokenService({
@@ -39,10 +50,10 @@ class TokenService {
   static String _resolveBackendUrl() {
     const configuredBackendUrl = String.fromEnvironment('SANA_BACKEND_URL');
     if (configuredBackendUrl.isNotEmpty) {
-      return configuredBackendUrl;
+      return configuredBackendUrl.replaceFirst(RegExp(r'/+$'), '');
     }
-    if (kReleaseMode) {
-      return '';
+    if (kIsWeb || kReleaseMode) {
+      return productionBackendUrl;
     }
     return 'http://192.168.1.204:8000';
   }
@@ -71,10 +82,7 @@ class TokenService {
   }) async {
     try {
       if (backendUrl.isEmpty) {
-        if (kDebugMode) {
-          print('TokenService: Backend URL is not configured. Pass --dart-define=SANA_BACKEND_URL=https://<your-backend>.vercel.app for release builds.');
-        }
-        return null;
+        throw const LiveKitTokenException('Voice backend URL is not configured.');
       }
       final headers = _headers();
 
@@ -88,21 +96,23 @@ class TokenService {
         }),
       );
 
-
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
         return LiveKitTokenResponse.fromJson(data);
       } else {
-        if (kDebugMode) {
-          print('TokenService: HTTP ${response.statusCode} - ${response.body}');
-        }
-        return null;
+        throw LiveKitTokenException(
+          'LiveKit token request failed (${response.statusCode}).',
+        );
       }
+    } on LiveKitTokenException {
+      rethrow;
     } catch (e) {
       if (kDebugMode) {
         print('TokenService: Failed to fetch LiveKit token: $e');
       }
-      return null;
+      throw const LiveKitTokenException(
+        'Unable to reach the voice backend. Please try again.',
+      );
     }
   }
 }

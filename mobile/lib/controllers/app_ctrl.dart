@@ -242,6 +242,7 @@ class AppCtrl extends ChangeNotifier {
 
   bool isSendButtonEnabled = false;
   bool isSessionStarting = false;
+  String? connectionError;
   bool _hasCleanedUp = false;
 
   /// True while a connect attempt is in-flight or LiveKit reports connecting.
@@ -428,8 +429,6 @@ class AppCtrl extends ChangeNotifier {
       return;
     }
 
-    await ensureActiveConversation();
-
     // Resume UI if media session is already live.
     if (session.connectionState == sdk.ConnectionState.connected ||
         session.connectionState == sdk.ConnectionState.reconnecting) {
@@ -441,6 +440,7 @@ class AppCtrl extends ChangeNotifier {
 
     _logger.info('Starting session connection…');
     isSessionStarting = true;
+    connectionError = null;
     notifyListeners();
 
     try {
@@ -449,6 +449,8 @@ class AppCtrl extends ChangeNotifier {
       if (room.connectionState == sdk.ConnectionState.connected ||
           session.connectionState == sdk.ConnectionState.connected ||
           session.connectionState == sdk.ConnectionState.reconnecting) {
+        // Persist a new record only after LiveKit has accepted the session.
+        await ensureActiveConversation();
         appScreenState = AppScreenState.agent;
         notifyListeners();
       } else {
@@ -456,13 +458,18 @@ class AppCtrl extends ChangeNotifier {
           'Session start finished without a ready connection '
           '(state=${session.connectionState}). Resetting.',
         );
+        connectionError = session.error?.message ??
+            session.agent.error?.message ??
+            'LiveKit did not establish a voice session. Please try again.';
         await _resetToWelcome();
       }
     } on TimeoutException catch (error, stackTrace) {
       _logger.severe('Connection timed out after $connectTimeout', error, stackTrace);
+      connectionError = 'Connection timed out. Please try again.';
       await _resetToWelcome();
     } catch (error, stackTrace) {
       _logger.severe('Connection error: $error', error, stackTrace);
+      connectionError = _connectionErrorMessage(error);
       await _resetToWelcome();
     } finally {
       if (isSessionStarting) {
@@ -502,6 +509,14 @@ class AppCtrl extends ChangeNotifier {
     appScreenState = AppScreenState.welcome;
     agentScreenState = AgentScreenState.visualizer;
     notifyListeners();
+  }
+
+  String _connectionErrorMessage(Object error) {
+    final message = error.toString().replaceFirst(RegExp(r'^Exception:\s*'), '').trim();
+    if (message.isEmpty || message.length > 180) {
+      return 'Unable to start the conversation. Please try again.';
+    }
+    return message;
   }
 
   bool _initialModePacketSent = false;

@@ -188,6 +188,20 @@ class _SaNaHome extends StatelessWidget {
                       );
                     },
                   ),
+                  Consumer<AppCtrl>(
+                    builder: (context, ctrl, _) {
+                      final error = ctrl.connectionError;
+                      if (error == null) return const SizedBox.shrink();
+                      return Padding(
+                        padding: const EdgeInsets.only(top: 12),
+                        child: Text(
+                          error,
+                          textAlign: TextAlign.center,
+                          style: textTheme.bodySmall?.copyWith(color: Colors.redAccent),
+                        ),
+                      );
+                    },
+                  ),
                   const SizedBox(height: 16),
                 ],
               ),
