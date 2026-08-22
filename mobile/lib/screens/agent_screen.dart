@@ -249,7 +249,7 @@ class _ConversationCanvasWorkspace extends StatefulWidget {
 
 class _ConversationCanvasWorkspaceState extends State<_ConversationCanvasWorkspace> {
   double _conversationFraction = 0.42;
-  bool _isCanvasCollapsed = false;
+  bool _isCanvasCollapsed = true;
   bool _isCanvasFullscreen = false;
 
   void _showCanvas({TabController? tabController}) {
