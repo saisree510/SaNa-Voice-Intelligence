@@ -74,9 +74,8 @@ class _ArchitectureCanvasViewState extends State<ArchitectureCanvasView> {
   }
 
   void _handleCanvasMessage(html.MessageEvent event) {
-    final frameWindow = _iframe?.contentWindow;
     final rawData = event.data;
-    if (frameWindow == null || event.source != frameWindow) return;
+    if (_iframe == null) return;
     if (event.origin != html.window.location.origin) return;
     if (rawData is! String) return;
 

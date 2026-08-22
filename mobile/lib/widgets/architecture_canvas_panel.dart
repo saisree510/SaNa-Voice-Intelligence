@@ -45,25 +45,55 @@ class _ArchitectureCanvasPanelState extends State<ArchitectureCanvasPanel> {
         ),
         child: ClipRRect(
           borderRadius: const BorderRadius.all(Radius.circular(22)),
-          child: Stack(
+          child: Column(
             children: [
-              Positioned.fill(
+              _CanvasHeader(
+                controller: _controller,
+                onCollapse: widget.onCollapse,
+                onFullscreen: widget.onFullscreen,
+                isFullscreen: widget.isFullscreen,
+              ),
+              Expanded(
                 child: ArchitectureCanvasView(controller: _controller),
               ),
-              Positioned(
-                top: 12,
-                left: 12,
-                child: _CanvasStatusChip(controller: _controller),
-              ),
-              Positioned(
-                top: 12,
-                right: 12,
-                child: _CanvasCommandBar(
-                  controller: _controller,
-                  onCollapse: widget.onCollapse,
-                  onFullscreen: widget.onFullscreen,
-                  isFullscreen: widget.isFullscreen,
+            ],
+          ),
+        ),
+      );
+}
+
+class _CanvasHeader extends StatelessWidget {
+  const _CanvasHeader({
+    required this.controller,
+    required this.isFullscreen,
+    this.onCollapse,
+    this.onFullscreen,
+  });
+
+  final ArchitectureCanvasController controller;
+  final VoidCallback? onCollapse;
+  final VoidCallback? onFullscreen;
+  final bool isFullscreen;
+
+  @override
+  Widget build(BuildContext context) => ColoredBox(
+        color: SanaColors.pureWhite,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(12, 10, 12, 8),
+          child: Row(
+            children: [
+              Flexible(
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: _CanvasStatusChip(controller: controller),
                 ),
+              ),
+              const SizedBox(width: 10),
+              _CanvasCommandBar(
+                controller: controller,
+                onCollapse: onCollapse,
+                onFullscreen: onFullscreen,
+                isFullscreen: isFullscreen,
               ),
             ],
           ),
@@ -91,21 +121,16 @@ class _CanvasStatusChip extends StatelessWidget {
 
           return DecoratedBox(
             decoration: BoxDecoration(
-              color: SanaColors.pureWhite.withValues(alpha: 0.92),
+              color: SanaColors.surface.withValues(alpha: 0.84),
               border: Border.all(color: SanaColors.outline),
               borderRadius: BorderRadius.circular(999),
-              boxShadow: [
-                BoxShadow(
-                  color: SanaColors.lavenderDeep.withValues(alpha: 0.08),
-                  blurRadius: 18,
-                  offset: const Offset(0, 8),
-                ),
-              ],
             ),
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               child: Text(
                 label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
                 style: Theme.of(context).textTheme.labelSmall?.copyWith(
                       color: controller.lastError != null ? SanaColors.danger : SanaColors.fgSecondary,
                       fontWeight: FontWeight.w700,
@@ -133,16 +158,9 @@ class _CanvasCommandBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) => DecoratedBox(
         decoration: BoxDecoration(
-          color: SanaColors.pureWhite.withValues(alpha: 0.94),
+          color: SanaColors.surface.withValues(alpha: 0.88),
           border: Border.all(color: SanaColors.outline),
           borderRadius: BorderRadius.circular(999),
-          boxShadow: [
-            BoxShadow(
-              color: SanaColors.lavenderDeep.withValues(alpha: 0.10),
-              blurRadius: 22,
-              offset: const Offset(0, 10),
-            ),
-          ],
         ),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 5),
