@@ -115,21 +115,24 @@ class _AuthGateState extends State<AuthGate> {
     return Scaffold(
       backgroundColor: SanaColors.nearBlack,
       body: Center(
-        child: Container(
-          constraints: const BoxConstraints(maxWidth: 620),
-          child: Stack(
-            children: [
-              Selector<AppCtrl, AppScreenState>(
-                selector: (ctx, appCtx) => appCtx.appScreenState,
-                builder: (ctx, screen, _) => AppLayoutSwitcher(
-                  frontBuilder: (ctx) => const HomeShell(),
-                  backBuilder: (ctx) => const AgentScreen(),
-                  isFront: screen == AppScreenState.welcome,
-                ),
+        child: Selector<AppCtrl, AppScreenState>(
+          selector: (ctx, appCtx) => appCtx.appScreenState,
+          builder: (ctx, screen, _) {
+            final isHome = screen == AppScreenState.welcome;
+            return Container(
+              constraints: BoxConstraints(maxWidth: isHome ? 620 : double.infinity),
+              child: Stack(
+                children: [
+                  AppLayoutSwitcher(
+                    frontBuilder: (ctx) => const HomeShell(),
+                    backBuilder: (ctx) => const AgentScreen(),
+                    isFront: isHome,
+                  ),
+                  const SessionErrorBanner(),
+                ],
               ),
-              const SessionErrorBanner(),
-            ],
-          ),
+            );
+          },
         ),
       ),
     );

@@ -13,6 +13,7 @@ function CanvasProof() {
   const [speed, setSpeed] = useState(1);
   const [reducedMotion, setReducedMotion] = useState(false);
   const apiRef = useRef(null);
+  const isEmbedded = new URLSearchParams(window.location.search).get("embed") === "1";
 
   useEffect(() => {
     const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -49,8 +50,8 @@ function CanvasProof() {
   const fitToContent = () => apiRef.current?.scrollToContent(elements, { fitToContent: true, animate: !reducedMotion });
 
   return (
-    <main className="canvas-proof">
-      <header className="canvas-header">
+    <main className={`canvas-proof${isEmbedded ? " is-embedded" : ""}`}>
+      {!isEmbedded && <header className="canvas-header">
         <div>
           <p className="eyebrow">Soul / Overview Architecture</p>
           <h1>Architecture Blueprint</h1>
@@ -70,7 +71,7 @@ function CanvasProof() {
             </select>
           </label>
         </div>
-      </header>
+      </header>}
       <section className="canvas-stage" aria-label="Interactive Overview Architecture canvas">
         <Excalidraw
           excalidrawAPI={(api) => { apiRef.current = api; }}
@@ -84,11 +85,11 @@ function CanvasProof() {
           UIOptions={{ canvasActions: { loadScene: false, saveToActiveFile: false, export: false } }}
         />
       </section>
-      <section className="accessible-summary" aria-label="Architecture Blueprint text summary">
+      {!isEmbedded && <section className="accessible-summary" aria-label="Architecture Blueprint text summary">
         <h2>Blueprint summary</h2>
         <p>Flutter Web connects to FastAPI over HTTPS. FastAPI connects to Supabase over SQL.</p>
         {reducedMotion && <p>Reduced motion is enabled, so the full diagram is shown without animation.</p>}
-      </section>
+      </section>}
     </main>
   );
 }

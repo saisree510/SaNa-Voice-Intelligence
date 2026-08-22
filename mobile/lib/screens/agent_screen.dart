@@ -10,6 +10,7 @@ import '../controllers/conversation_timeline.dart';
 import '../support/agent_selector.dart';
 import '../ui/sana_theme.dart';
 import '../widgets/agent_layout_switcher.dart';
+import '../widgets/architecture_canvas_panel.dart';
 import '../widgets/camera_toggle_button.dart';
 import '../widgets/conversation_sheet.dart';
 import '../widgets/message_bar.dart';
@@ -43,9 +44,7 @@ class AgentTrackView extends StatelessWidget {
                   }
 
                   final maxSide = constraints.biggest.shortestSide;
-                  final orbSize = compact
-                      ? (maxSide * 0.7).clamp(64.0, 120.0)
-                      : (maxSide * 0.55).clamp(160.0, 280.0);
+                  final orbSize = compact ? (maxSide * 0.7).clamp(64.0, 120.0) : (maxSide * 0.55).clamp(160.0, 280.0);
 
                   return Center(
                     child: SanaOrbView(
@@ -197,34 +196,111 @@ class AgentScreen extends StatelessWidget {
           final keyboardInset = MediaQuery.viewInsetsOf(ctx).bottom;
           return Padding(
             padding: EdgeInsets.only(bottom: keyboardInset > 0 ? max(0, keyboardInset - 90) : 0),
-            child: Column(
-              mainAxisSize: MainAxisSize.max,
+            child: _ConversationCanvasWorkspace(
+              conversationBuilder: (context) => Column(
+                mainAxisSize: MainAxisSize.max,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () => ctx.read<AppCtrl>().messageFocusNode.unfocus(),
+                      child: Consumer<ConversationTimeline>(
+                        builder: (context, timeline, _) {
+                          if (!timeline.hasTurns) {
+                            return const _AgentStatusPlaceholder();
+                          }
+                          return ConversationSheet(turns: timeline.turns);
+                        },
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                    child: Selector<AppCtrl, bool>(
+                      selector: (ctx, appCtx) => appCtx.isSendButtonEnabled,
+                      builder: (ctx, isSendEnabled, child) => MessageBar(
+                        focusNode: ctx.read<AppCtrl>().messageFocusNode,
+                        isSendEnabled: isSendEnabled,
+                        controller: ctx.read<AppCtrl>().messageCtrl,
+                        onSendTap: () => ctx.read<AppCtrl>().sendMessage(),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      );
+}
+
+class _ConversationCanvasWorkspace extends StatelessWidget {
+  const _ConversationCanvasWorkspace({required this.conversationBuilder});
+
+  final WidgetBuilder conversationBuilder;
+
+  @override
+  Widget build(BuildContext context) => LayoutBuilder(
+        builder: (context, constraints) {
+          final isWide = constraints.maxWidth >= 980;
+          if (!isWide) {
+            return DefaultTabController(
+              length: 2,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: SanaColors.surface,
+                        borderRadius: BorderRadius.circular(999),
+                        border: Border.all(color: SanaColors.outline),
+                      ),
+                      child: const TabBar(
+                        indicatorSize: TabBarIndicatorSize.tab,
+                        dividerColor: Colors.transparent,
+                        indicator: BoxDecoration(
+                          color: SanaColors.lavender,
+                          borderRadius: BorderRadius.all(Radius.circular(999)),
+                        ),
+                        labelColor: SanaColors.pureWhite,
+                        unselectedLabelColor: SanaColors.fgSecondary,
+                        tabs: [
+                          Tab(text: 'Conversation'),
+                          Tab(text: 'Canvas'),
+                        ],
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: TabBarView(
+                      children: [
+                        conversationBuilder(context),
+                        const Padding(
+                          padding: EdgeInsets.fromLTRB(16, 0, 16, 8),
+                          child: ArchitectureCanvasPanel(),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }
+
+          return Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+            child: Row(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Expanded(
-                  child: GestureDetector(
-                    onTap: () => ctx.read<AppCtrl>().messageFocusNode.unfocus(),
-                    child: Consumer<ConversationTimeline>(
-                      builder: (context, timeline, _) {
-                        if (!timeline.hasTurns) {
-                          return const _AgentStatusPlaceholder();
-                        }
-                        return ConversationSheet(turns: timeline.turns);
-                      },
-                    ),
-                  ),
+                ConstrainedBox(
+                  constraints: const BoxConstraints(minWidth: 340, maxWidth: 520),
+                  child: conversationBuilder(context),
                 ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-                  child: Selector<AppCtrl, bool>(
-                    selector: (ctx, appCtx) => appCtx.isSendButtonEnabled,
-                    builder: (ctx, isSendEnabled, child) => MessageBar(
-                      focusNode: ctx.read<AppCtrl>().messageFocusNode,
-                      isSendEnabled: isSendEnabled,
-                      controller: ctx.read<AppCtrl>().messageCtrl,
-                      onSendTap: () => ctx.read<AppCtrl>().sendMessage(),
-                    ),
-                  ),
+                const SizedBox(width: 14),
+                const Expanded(
+                  child: ArchitectureCanvasPanel(),
                 ),
               ],
             ),

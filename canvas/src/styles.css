@@ -23,6 +23,8 @@ h1 { margin: 0; font-size: clamp(2rem, 4vw, 3.4rem); letter-spacing: -0.055em; }
 .controls select { padding: 8px; }
 .canvas-stage { position: relative; height: calc(100vh - 205px); min-height: 520px; max-width: 1440px; margin: 0 auto; overflow: hidden; border: 1px solid #ded2f5; border-radius: 22px; background: #fdfcff; box-shadow: 0 18px 50px rgb(93 58 145 / 0.12); }
 .canvas-stage::after { content: ""; position: absolute; inset: 0; z-index: 2; pointer-events: none; background-image: radial-gradient(circle, rgb(92 76 112 / 0.18) 1px, transparent 1.2px); background-position: 10px 10px; background-size: 24px 24px; mix-blend-mode: multiply; }
+.canvas-proof.is-embedded { min-height: 100vh; padding: 0; background: #fdfcff; }
+.canvas-proof.is-embedded .canvas-stage { height: 100vh; min-height: 0; max-width: none; border: 0; border-radius: 0; box-shadow: none; }
 .accessible-summary { max-width: 1440px; margin: 16px auto 0; padding: 16px 20px; border-left: 4px solid #9f80d8; background: #f1ebfc; border-radius: 0 14px 14px 0; }
 .accessible-summary h2, .accessible-summary p { margin: 0; }
 .accessible-summary p { margin-top: 6px; color: #58466f; }

@@ -70,12 +70,13 @@ This is not a restart. The verified Flutter, FastAPI, Supabase and LiveKit imple
 ### Implementation status update: Phase C
 
 **Updated:** 2026-08-22
-**Overall Phase C status:** In progress. C1 is complete; the renderer, embedding, persistence, real-time transport and approval handoff remain separate checkpoints.
+**Overall Phase C status:** In progress. C1 and C2 are complete; C3 has begun with same-origin Flutter Web embedding, while the bridge, persistence, real-time transport and approval handoff remain separate checkpoints.
 
 | Subphase | Status | Verified outcome |
 |---|---|---|
 | C1 - Architecture Blueprint contract | Complete | Versioned, provider-neutral `ArchitectureSpec` and strictly allowlisted canvas-operation contracts are implemented in the backend. They separate architectural meaning from renderer coordinates/style, validate graph references and lifecycle timestamps, and return structured rejection errors. Contract examples and six regression tests are included. |
 | C2 - Standalone Excalidraw canvas proof | Complete | A bounded `canvas/` React/Vite module uses the MIT-licensed, audit-clean Excalidraw package to render an Overview Blueprint through local mock operations. It self-hosts required Excalidraw assets, provides native zoom/pan/selection/fullscreen plus Replay, Pause, 1x/2x, Fit and accessible/reduced-motion behavior, and now uses a subtle dot-only Soul workspace background instead of the heavier native grid. A production build and a real Chrome rendering check passed. The isolated proof bundle is approximately 401 KB gzipped and must be lazy-loaded in C3. |
+| C3 - Embed canvas in the Soul conversation | In progress | Flutter Web now builds the standalone canvas into `mobile/web/canvas` and embeds it as a same-origin iframe in the active Agent conversation screen. Desktop uses a conversation/canvas split and narrow layouts use Conversation/Canvas tabs while preserving the existing LiveKit voice controls. The typed origin-validated `postMessage` bridge, draggable divider, collapse/fullscreen controls and activity cards remain next C3 work. |
 
 ### Version history
 
