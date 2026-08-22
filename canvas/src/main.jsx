@@ -74,7 +74,13 @@ function CanvasProof() {
       <section className="canvas-stage" aria-label="Interactive Overview Architecture canvas">
         <Excalidraw
           excalidrawAPI={(api) => { apiRef.current = api; }}
-          initialData={{ elements, appState: { viewBackgroundColor: "#fbf9ff" } }}
+          initialData={{
+            elements,
+            appState: {
+              gridSize: null,
+              viewBackgroundColor: "#fdfcff",
+            },
+          }}
           UIOptions={{ canvasActions: { loadScene: false, saveToActiveFile: false, export: false } }}
         />
       </section>
