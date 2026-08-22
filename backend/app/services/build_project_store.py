@@ -263,8 +263,7 @@ class SupabaseBuildProjectStore:
         self._client.table('build_runs').delete().eq('project_id', project.project_id).execute()
 
         for run in project.history:
-            run_row = run.model_dump(mode='json', exclude={'events'})
-            run_row['user_id'] = normalize_user_id(run.user_id or project.user_id)
+            run_row = self._build_run_row(run, project.user_id)
             self._client.table('build_runs').upsert(run_row, on_conflict='run_id').execute()
 
             event_rows = [
@@ -294,6 +293,15 @@ class SupabaseBuildProjectStore:
         ]
         if file_rows:
             self._client.table('build_files').insert(file_rows).execute()
+
+    @staticmethod
+    def _build_run_row(run: BuildRunTurnModel, project_user_id: str) -> dict:
+        row = run.model_dump(mode='json', exclude={'events'})
+        # The API model preserves the legacy `turn_id` field, while the
+        # normalized persistence table calls the same identifier `run_id`.
+        row['run_id'] = row.pop('turn_id')
+        row['user_id'] = normalize_user_id(run.user_id or project_user_id)
+        return row
 
     def _hydrate_project(self, project_row: dict) -> BuildProjectModel:
         project_id = project_row['project_id']
