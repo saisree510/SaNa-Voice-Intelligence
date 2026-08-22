@@ -27,10 +27,10 @@ This is not a restart. The verified Flutter, FastAPI, Supabase and LiveKit imple
 - Validated, progressive WebSocket drawing operations and replayable canvas history
 - Immutable architecture approval linked to DeepCode BuildRuns
 
-### Implementation status update: Phase A through A4
+### Implementation status update: Phase A through A6
 
 **Updated:** 2026-08-21  
-**Overall Phase A status:** In progress. A0-A5 are complete, and A6 is implemented pending public-browser verification.
+**Overall Phase A status:** Complete. A0-A6 are complete.
 
 | Subphase | Status | Verified outcome |
 |---|---|---|
@@ -40,7 +40,7 @@ This is not a restart. The verified Flutter, FastAPI, Supabase and LiveKit imple
 | A3 - Two-account browser and voice verification | Complete | User A and User B were verified to see only their own data. Railway validates Supabase sessions, mints Soul LiveKit tokens, dispatches `voice_agent`, and the hosted agent joins and responds in the browser room. |
 | A4 - Authenticated voice and Build Mode browser test | Complete | On the public web app, authenticated voice worked and a real Build Mode conversation created a project that User A could see in their Projects tab. Railway's isolated create-and-list persistence check also passed. |
 | A5 - Soul rebrand pass | Complete | Web title and metadata, authentication, onboarding, home, voice conversation, project generation attribution, backend metadata and hosted-agent prompts now identify as Soul. Existing Sana-named storage keys and authenticated integration headers remain as compatibility internals. Flutter analysis and 14 tests passed; backend tests passed. |
-| A6 - Public Flutter Web deployment | Implemented; manual verification pending | GitHub Pages serves the production Flutter Web build over HTTPS at `https://saisree510.github.io/SaNa-Voice-Intelligence/`, with repository-base routing and an SPA fallback. |
+| A6 - Public Flutter Web deployment | Complete | GitHub Pages serves the production Flutter Web build over HTTPS at `https://saisree510.github.io/SaNa-Voice-Intelligence/`, with repository-base routing and an SPA fallback. Public-browser verification passed for sign-in, refresh, voice connection, Projects, History, microphone permission and sign-out. |
 
 **A3 decisions and findings:**
 
@@ -52,7 +52,7 @@ This is not a restart. The verified Flutter, FastAPI, Supabase and LiveKit imple
 
 **A6 hosting note:** GitHub Pages provides HTTPS and SPA fallback but does not apply the deployed `_headers` file. Browser microphone permission therefore uses the standard same-origin HTTPS permission flow; if an explicit `Permissions-Policy` header becomes mandatory, move the static site to a host with configurable response headers.
 
-**Remaining Phase A work:** deploy the A5 rebrand to the hosted agent, Railway and public web URL, then verify sign-up, sign-in, refresh, deep links, microphone permission and sign-out on the public URL.
+**Remaining Phase A work:** Phase A is complete. Phase B can begin with the persistent architecture canvas and project workspace expansion described in the PRD.
 
 ### Version history
 
