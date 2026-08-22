@@ -197,7 +197,7 @@ class AgentScreen extends StatelessWidget {
           return Padding(
             padding: EdgeInsets.only(bottom: keyboardInset > 0 ? max(0, keyboardInset - 90) : 0),
             child: _ConversationCanvasWorkspace(
-              conversationBuilder: (context) => Column(
+              conversationBuilder: (context, viewCanvas) => Column(
                 mainAxisSize: MainAxisSize.max,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -209,7 +209,11 @@ class AgentScreen extends StatelessWidget {
                           if (!timeline.hasTurns) {
                             return const _AgentStatusPlaceholder();
                           }
-                          return ConversationSheet(turns: timeline.turns);
+                          return ConversationSheet(
+                            turns: timeline.turns,
+                            showCanvasActivityCards: ctx.watch<AppCtrl>().conversationMode == ConversationMode.build,
+                            onViewCanvas: viewCanvas,
+                          );
                         },
                       ),
                     ),
@@ -237,7 +241,7 @@ class AgentScreen extends StatelessWidget {
 class _ConversationCanvasWorkspace extends StatefulWidget {
   const _ConversationCanvasWorkspace({required this.conversationBuilder});
 
-  final WidgetBuilder conversationBuilder;
+  final Widget Function(BuildContext context, VoidCallback viewCanvas) conversationBuilder;
 
   @override
   State<_ConversationCanvasWorkspace> createState() => _ConversationCanvasWorkspaceState();
@@ -247,6 +251,14 @@ class _ConversationCanvasWorkspaceState extends State<_ConversationCanvasWorkspa
   double _conversationFraction = 0.42;
   bool _isCanvasCollapsed = false;
   bool _isCanvasFullscreen = false;
+
+  void _showCanvas({TabController? tabController}) {
+    setState(() {
+      _isCanvasCollapsed = false;
+      _isCanvasFullscreen = false;
+    });
+    tabController?.animateTo(1);
+  }
 
   void _toggleCanvasCollapsed() {
     setState(() {
@@ -301,7 +313,12 @@ class _ConversationCanvasWorkspaceState extends State<_ConversationCanvasWorkspa
                   Expanded(
                     child: TabBarView(
                       children: [
-                        widget.conversationBuilder(context),
+                        Builder(
+                          builder: (tabContext) => widget.conversationBuilder(
+                            tabContext,
+                            () => _showCanvas(tabController: DefaultTabController.maybeOf(tabContext)),
+                          ),
+                        ),
                         const Padding(
                           padding: EdgeInsets.fromLTRB(16, 0, 16, 8),
                           child: ArchitectureCanvasPanel(),
@@ -335,7 +352,7 @@ class _ConversationCanvasWorkspaceState extends State<_ConversationCanvasWorkspa
                   children: [
                     SizedBox(
                       width: conversationWidth,
-                      child: widget.conversationBuilder(context),
+                      child: widget.conversationBuilder(context, _showCanvas),
                     ),
                     if (_isCanvasCollapsed) ...[
                       const SizedBox(width: 12),
