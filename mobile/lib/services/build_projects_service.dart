@@ -7,6 +7,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import 'auth_service.dart';
 import 'token_service.dart';
+import 'download_file.dart';
 
 class BuildProjectSummary {
   BuildProjectSummary({
@@ -244,13 +245,25 @@ class BuildProjectsService extends ChangeNotifier {
         return false;
       }
 
+      final signedUri = Uri.parse(downloadUrl);
+      final backendUri = Uri.parse(backendUrl);
+      final resolvedDownloadUri = backendUri.replace(
+        path: signedUri.path,
+        query: signedUri.query,
+      );
+      final filename = '${project.title.replaceAll(RegExp(r'[^a-zA-Z0-9_-]+'), '_')}.zip';
+
+      if (kIsWeb) {
+        final downloaded = await downloadFile(resolvedDownloadUri, filename);
+        if (!downloaded) {
+          _errorMessage = 'The secure project archive could not be downloaded.';
+        }
+        return downloaded;
+      }
+
       final launched = await launchUrl(
-        Uri.parse(downloadUrl),
-        // A new tab can be blocked after the authenticated link request has
-        // completed. Reusing the current web tab lets the attachment response
-        // trigger the browser download reliably.
-        mode: kIsWeb ? LaunchMode.platformDefault : LaunchMode.externalApplication,
-        webOnlyWindowName: kIsWeb ? '_self' : null,
+        resolvedDownloadUri,
+        mode: LaunchMode.externalApplication,
       );
       if (!launched) {
         _errorMessage = 'Could not open the download link.';
