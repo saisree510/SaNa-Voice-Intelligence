@@ -234,16 +234,41 @@ class AgentScreen extends StatelessWidget {
       );
 }
 
-class _ConversationCanvasWorkspace extends StatelessWidget {
+class _ConversationCanvasWorkspace extends StatefulWidget {
   const _ConversationCanvasWorkspace({required this.conversationBuilder});
 
   final WidgetBuilder conversationBuilder;
+
+  @override
+  State<_ConversationCanvasWorkspace> createState() => _ConversationCanvasWorkspaceState();
+}
+
+class _ConversationCanvasWorkspaceState extends State<_ConversationCanvasWorkspace> {
+  double _conversationFraction = 0.42;
+  bool _isCanvasCollapsed = false;
+  bool _isCanvasFullscreen = false;
+
+  void _toggleCanvasCollapsed() {
+    setState(() {
+      _isCanvasCollapsed = !_isCanvasCollapsed;
+      if (_isCanvasCollapsed) _isCanvasFullscreen = false;
+    });
+  }
+
+  void _toggleCanvasFullscreen() {
+    setState(() {
+      _isCanvasFullscreen = !_isCanvasFullscreen;
+      if (_isCanvasFullscreen) _isCanvasCollapsed = false;
+    });
+  }
 
   @override
   Widget build(BuildContext context) => LayoutBuilder(
         builder: (context, constraints) {
           final isWide = constraints.maxWidth >= 980;
           if (!isWide) {
+            _isCanvasCollapsed = false;
+            _isCanvasFullscreen = false;
             return DefaultTabController(
               length: 2,
               child: Column(
@@ -276,7 +301,7 @@ class _ConversationCanvasWorkspace extends StatelessWidget {
                   Expanded(
                     child: TabBarView(
                       children: [
-                        conversationBuilder(context),
+                        widget.conversationBuilder(context),
                         const Padding(
                           padding: EdgeInsets.fromLTRB(16, 0, 16, 8),
                           child: ArchitectureCanvasPanel(),
@@ -291,21 +316,115 @@ class _ConversationCanvasWorkspace extends StatelessWidget {
 
           return Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                ConstrainedBox(
-                  constraints: const BoxConstraints(minWidth: 340, maxWidth: 520),
-                  child: conversationBuilder(context),
-                ),
-                const SizedBox(width: 14),
-                const Expanded(
-                  child: ArchitectureCanvasPanel(),
-                ),
-              ],
+            child: LayoutBuilder(
+              builder: (context, innerConstraints) {
+                if (_isCanvasFullscreen) {
+                  return ArchitectureCanvasPanel(
+                    isFullscreen: true,
+                    onFullscreen: _toggleCanvasFullscreen,
+                  );
+                }
+
+                final availableWidth = innerConstraints.maxWidth;
+                final conversationWidth =
+                    (_isCanvasCollapsed ? availableWidth - 64 : availableWidth * _conversationFraction)
+                        .clamp(340.0, availableWidth - 430.0);
+
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    SizedBox(
+                      width: conversationWidth,
+                      child: widget.conversationBuilder(context),
+                    ),
+                    if (_isCanvasCollapsed) ...[
+                      const SizedBox(width: 12),
+                      _CollapsedCanvasRail(onTap: _toggleCanvasCollapsed),
+                    ] else ...[
+                      _CanvasResizeHandle(
+                        onDrag: (delta) {
+                          setState(() {
+                            _conversationFraction =
+                                (_conversationFraction + (delta / availableWidth)).clamp(0.28, 0.62);
+                          });
+                        },
+                      ),
+                      Expanded(
+                        child: ArchitectureCanvasPanel(
+                          onCollapse: _toggleCanvasCollapsed,
+                          onFullscreen: _toggleCanvasFullscreen,
+                        ),
+                      ),
+                    ],
+                  ],
+                );
+              },
             ),
           );
         },
+      );
+}
+
+class _CanvasResizeHandle extends StatelessWidget {
+  const _CanvasResizeHandle({required this.onDrag});
+
+  final ValueChanged<double> onDrag;
+
+  @override
+  Widget build(BuildContext context) => GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onHorizontalDragUpdate: (details) => onDrag(details.delta.dx),
+        child: MouseRegion(
+          cursor: SystemMouseCursors.resizeColumn,
+          child: SizedBox(
+            width: 18,
+            child: Center(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: SanaColors.lavender.withValues(alpha: 0.35),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: const SizedBox(width: 4, height: 74),
+              ),
+            ),
+          ),
+        ),
+      );
+}
+
+class _CollapsedCanvasRail extends StatelessWidget {
+  const _CollapsedCanvasRail({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => Material(
+        color: SanaColors.surface,
+        borderRadius: BorderRadius.circular(22),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(22),
+          onTap: onTap,
+          child: SizedBox(
+            width: 52,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.account_tree_rounded, color: SanaColors.lavenderDeep),
+                const SizedBox(height: 10),
+                RotatedBox(
+                  quarterTurns: 3,
+                  child: Text(
+                    'Canvas',
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: SanaColors.lavenderDeep,
+                          fontWeight: FontWeight.w800,
+                        ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       );
 }
 

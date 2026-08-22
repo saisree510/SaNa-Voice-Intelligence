@@ -7,8 +7,12 @@ import 'dart:ui_web' as ui_web;
 
 import 'package:flutter/widgets.dart';
 
+import 'architecture_canvas_controller.dart';
+
 class ArchitectureCanvasView extends StatefulWidget {
-  const ArchitectureCanvasView({super.key});
+  const ArchitectureCanvasView({super.key, this.controller});
+
+  final ArchitectureCanvasController? controller;
 
   @override
   State<ArchitectureCanvasView> createState() => _ArchitectureCanvasViewState();
@@ -26,6 +30,7 @@ class _ArchitectureCanvasViewState extends State<ArchitectureCanvasView> {
   @override
   void initState() {
     super.initState();
+    widget.controller?.bindCommandSender(_sendCommand);
     ui_web.platformViewRegistry.registerViewFactory(
       _viewType,
       (int viewId) {
@@ -47,10 +52,19 @@ class _ArchitectureCanvasViewState extends State<ArchitectureCanvasView> {
 
   @override
   void dispose() {
+    widget.controller?.unbindCommandSender(_sendCommand);
     unawaited(_messageSubscription?.cancel());
     _messageSubscription = null;
     _iframe = null;
     super.dispose();
+  }
+
+  @override
+  void didUpdateWidget(covariant ArchitectureCanvasView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.controller == widget.controller) return;
+    oldWidget.controller?.unbindCommandSender(_sendCommand);
+    widget.controller?.bindCommandSender(_sendCommand);
   }
 
   static String _canvasUrl() {
@@ -77,14 +91,35 @@ class _ArchitectureCanvasViewState extends State<ArchitectureCanvasView> {
 
     switch (data['type']) {
       case 'soul.canvas.ready':
+        final payload = data['payload'];
+        widget.controller?.markReady(
+          totalOperations: payload is Map ? payload['operationCount'] as int? ?? 0 : 0,
+        );
         _postToCanvas('soul.canvas.parent_ready');
         break;
       case 'soul.canvas.state':
+        final payload = data['payload'];
+        if (payload is Map) {
+          widget.controller?.updateState(
+            status: payload['status'] as String? ?? 'unknown',
+            appliedOperations: payload['appliedOperations'] as int? ?? 0,
+            totalOperations: payload['totalOperations'] as int? ?? 0,
+          );
+        }
+        break;
       case 'soul.canvas.ack':
+        break;
+      case 'soul.canvas.rejected':
+        final payload = data['payload'];
+        widget.controller?.reject(payload is Map ? payload['reason'] as String? ?? 'rejected' : 'rejected');
         break;
       default:
         _postToCanvas('soul.canvas.rejected', {'reason': 'unsupported_type', 'type': data['type']});
     }
+  }
+
+  void _sendCommand(String command) {
+    _postToCanvas('soul.canvas.command', {'command': command});
   }
 
   void _postToCanvas(String type, [Map<String, Object?> payload = const {}]) {
