@@ -315,7 +315,7 @@ class _ProjectsPaneState extends State<_ProjectsPane> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Build Projects',
+            'Projects',
             style: textTheme.headlineMedium?.copyWith(
               color: SanaColors.lavender,
               fontWeight: FontWeight.bold,
@@ -323,7 +323,7 @@ class _ProjectsPaneState extends State<_ProjectsPane> {
           ),
           const SizedBox(height: 6),
           Text(
-            'Download generated project files from your latest builds.',
+            'Plans, builds, files, and progress for your work.',
             style: textTheme.bodySmall?.copyWith(color: SanaColors.fgMuted),
           ),
           const SizedBox(height: 20),
@@ -361,20 +361,17 @@ class _ProjectsPaneState extends State<_ProjectsPane> {
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                const Icon(Icons.folder_copy_outlined,
-                                    size: 48, color: SanaColors.fgMuted),
+                                const Icon(Icons.folder_copy_outlined, size: 48, color: SanaColors.fgMuted),
                                 const SizedBox(height: 12),
                                 Text(
                                   'No build projects yet',
-                                  style: textTheme.titleMedium
-                                      ?.copyWith(color: SanaColors.fgSecondary),
+                                  style: textTheme.titleMedium?.copyWith(color: SanaColors.fgSecondary),
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
                                   'Start a build conversation and approve execution first.',
                                   textAlign: TextAlign.center,
-                                  style: textTheme.bodySmall
-                                      ?.copyWith(color: SanaColors.fgMuted),
+                                  style: textTheme.bodySmall?.copyWith(color: SanaColors.fgMuted),
                                 ),
                               ],
                             ),
@@ -388,93 +385,120 @@ class _ProjectsPaneState extends State<_ProjectsPane> {
                               itemBuilder: (context, index) {
                                 final project = projects[index];
                                 final updatedAt = DateFormat('MMM d, h:mm a').format(project.updatedAt);
-                                final isDownloading =
-                                    projectsService.activeDownloadProjectId == project.projectId;
+                                final isDownloading = projectsService.activeDownloadProjectId == project.projectId;
 
-                                return Container(
-                                  padding: const EdgeInsets.all(16),
-                                  decoration: BoxDecoration(
-                                    color: SanaColors.surface,
+                                return Material(
+                                  color: Colors.transparent,
+                                  child: InkWell(
+                                    onTap: () {
+                                      unawaited(Navigator.of(context).push(
+                                        MaterialPageRoute<void>(
+                                          builder: (_) => ProjectDetailScreen(project: project),
+                                        ),
+                                      ));
+                                    },
                                     borderRadius: BorderRadius.circular(16),
-                                    border: Border.all(color: SanaColors.lavender.withValues(alpha: 0.12)),
-                                  ),
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Row(
+                                    child: Container(
+                                      padding: const EdgeInsets.all(16),
+                                      decoration: BoxDecoration(
+                                        color: SanaColors.surface,
+                                        borderRadius: BorderRadius.circular(16),
+                                        border: Border.all(color: SanaColors.lavender.withValues(alpha: 0.12)),
+                                      ),
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
-                                          Expanded(
-                                            child: Text(
-                                              project.title,
-                                              style: textTheme.titleMedium?.copyWith(
-                                                color: SanaColors.fgPrimary,
-                                                fontWeight: FontWeight.w700,
+                                          Row(
+                                            children: [
+                                              Expanded(
+                                                child: Text(
+                                                  project.title,
+                                                  style: textTheme.titleMedium?.copyWith(
+                                                    color: SanaColors.fgPrimary,
+                                                    fontWeight: FontWeight.w700,
+                                                  ),
+                                                ),
                                               ),
-                                            ),
+                                              Container(
+                                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                                decoration: BoxDecoration(
+                                                  color: SanaColors.nearBlack,
+                                                  borderRadius: BorderRadius.circular(999),
+                                                ),
+                                                child: Text(
+                                                  project.currentPhase,
+                                                  style: textTheme.labelSmall?.copyWith(
+                                                    color: SanaColors.lavender,
+                                                    fontWeight: FontWeight.w700,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
                                           ),
-                                          Container(
-                                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                                            decoration: BoxDecoration(
-                                              color: SanaColors.nearBlack,
-                                              borderRadius: BorderRadius.circular(999),
+                                          const SizedBox(height: 10),
+                                          Text(
+                                            'Updated $updatedAt',
+                                            style: textTheme.bodySmall?.copyWith(color: SanaColors.fgMuted),
+                                          ),
+                                          if (project.planSummary != null) ...[
+                                            const SizedBox(height: 6),
+                                            Text(
+                                              project.planSummary!,
+                                              maxLines: 2,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: textTheme.bodySmall?.copyWith(color: SanaColors.fgSecondary),
                                             ),
-                                            child: Text(
-                                              project.status,
-                                              style: textTheme.labelSmall?.copyWith(
-                                                color: SanaColors.lavender,
-                                                fontWeight: FontWeight.w700,
+                                          ],
+                                          const SizedBox(height: 14),
+                                          Row(
+                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              TextButton(
+                                                onPressed: () {
+                                                  unawaited(Navigator.of(context).push(
+                                                    MaterialPageRoute<void>(
+                                                      builder: (_) => ProjectDetailScreen(project: project),
+                                                    ),
+                                                  ));
+                                                },
+                                                child: const Text('Open project'),
                                               ),
-                                            ),
+                                              if (project.canDownload)
+                                                FilledButton.icon(
+                                                  onPressed: isDownloading
+                                                      ? null
+                                                      : () async {
+                                                          final ok = await context
+                                                              .read<BuildProjectsService>()
+                                                              .downloadProject(project);
+                                                          if (!context.mounted) return;
+                                                          ScaffoldMessenger.of(context).showSnackBar(
+                                                            SnackBar(
+                                                              content: Text(
+                                                                ok
+                                                                    ? 'Download link opened for ${project.title}.'
+                                                                    : (context
+                                                                            .read<BuildProjectsService>()
+                                                                            .errorMessage ??
+                                                                        'Failed to open download link.'),
+                                                              ),
+                                                            ),
+                                                          );
+                                                        },
+                                                  icon: isDownloading
+                                                      ? const SizedBox(
+                                                          width: 16,
+                                                          height: 16,
+                                                          child: CircularProgressIndicator(strokeWidth: 2),
+                                                        )
+                                                      : const Icon(Icons.download_rounded),
+                                                  label: const Text('Download'),
+                                                ),
+                                            ],
                                           ),
                                         ],
                                       ),
-                                      const SizedBox(height: 10),
-                                      Text(
-                                        'Updated $updatedAt',
-                                        style: textTheme.bodySmall?.copyWith(color: SanaColors.fgMuted),
-                                      ),
-                                      if (project.workspacePath.isNotEmpty) ...[
-                                        const SizedBox(height: 6),
-                                        Text(
-                                          project.workspacePath,
-                                          maxLines: 2,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: textTheme.bodySmall?.copyWith(color: SanaColors.fgSecondary),
-                                        ),
-                                      ],
-                                      const SizedBox(height: 14),
-                                      Align(
-                                        alignment: Alignment.centerRight,
-                                        child: FilledButton.icon(
-                                          onPressed: !project.canDownload || isDownloading
-                                              ? null
-                                              : () async {
-                                                  final ok = await context
-                                                      .read<BuildProjectsService>()
-                                                      .downloadProject(project);
-                                                  if (!context.mounted) return;
-                                                  ScaffoldMessenger.of(context).showSnackBar(
-                                                    SnackBar(
-                                                      content: Text(
-                                                        ok
-                                                            ? 'Download link opened for ${project.title}.'
-                                                            : (context.read<BuildProjectsService>().errorMessage ??
-                                                                'Failed to open download link.'),
-                                                      ),
-                                                    ),
-                                                  );
-                                                },
-                                          icon: isDownloading
-                                              ? const SizedBox(
-                                                  width: 16,
-                                                  height: 16,
-                                                  child: CircularProgressIndicator(strokeWidth: 2),
-                                                )
-                                              : const Icon(Icons.download_rounded),
-                                          label: Text(project.canDownload ? 'Download files' : 'Await completion'),
-                                        ),
-                                      ),
-                                    ],
+                                    ),
                                   ),
                                 );
                               },
@@ -485,6 +509,260 @@ class _ProjectsPaneState extends State<_ProjectsPane> {
       ),
     );
   }
+}
+
+class ProjectDetailScreen extends StatefulWidget {
+  const ProjectDetailScreen({super.key, required this.project});
+
+  final BuildProjectSummary project;
+
+  @override
+  State<ProjectDetailScreen> createState() => _ProjectDetailScreenState();
+}
+
+class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
+  BuildProjectDetail? _detail;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    unawaited(_load());
+  }
+
+  Future<void> _load() async {
+    setState(() => _isLoading = true);
+    final detail = await context.read<BuildProjectsService>().fetchProject(widget.project.projectId);
+    if (!mounted) return;
+    setState(() {
+      _detail = detail;
+      _isLoading = false;
+    });
+  }
+
+  Future<void> _resume() async {
+    final prompt = await showDialog<String>(
+      context: context,
+      builder: (context) {
+        final controller = TextEditingController();
+        return AlertDialog(
+          title: const Text('Resume project'),
+          content: TextField(
+            controller: controller,
+            autofocus: true,
+            minLines: 2,
+            maxLines: 4,
+            decoration: const InputDecoration(
+              hintText: 'Describe the next change you want Soul to build.',
+            ),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+            FilledButton(
+              onPressed: () => Navigator.pop(context, controller.text),
+              child: const Text('Resume'),
+            ),
+          ],
+        );
+      },
+    );
+    if (prompt == null || !mounted) return;
+    final service = context.read<BuildProjectsService>();
+    final ok = await service.resumeProject(widget.project, prompt);
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content:
+            Text(ok ? 'Soul resumed ${widget.project.title}.' : (service.errorMessage ?? 'Could not resume project.')),
+      ),
+    );
+    if (ok) await _load();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    final service = context.watch<BuildProjectsService>();
+    final detail = _detail;
+
+    return Scaffold(
+      appBar: AppBar(title: Text(widget.project.title)),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator(color: SanaColors.lavender))
+          : detail == null
+              ? Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.error_outline_rounded, color: Colors.redAccent, size: 40),
+                        const SizedBox(height: 12),
+                        Text(service.errorMessage ?? 'This project could not be loaded.'),
+                        const SizedBox(height: 12),
+                        FilledButton(onPressed: _load, child: const Text('Retry')),
+                      ],
+                    ),
+                  ),
+                )
+              : RefreshIndicator(
+                  color: SanaColors.lavender,
+                  onRefresh: _load,
+                  child: ListView(
+                    padding: const EdgeInsets.fromLTRB(20, 20, 20, 36),
+                    children: [
+                      _ProjectStatusCard(project: detail),
+                      const SizedBox(height: 16),
+                      _ProjectSection(
+                        title: 'Specification',
+                        child: Text(detail.specification, style: textTheme.bodyMedium),
+                      ),
+                      const SizedBox(height: 16),
+                      _ProjectSection(
+                        title: 'Approved Plan',
+                        child: Text(
+                          detail.planSummary ?? 'Soul has not created a plan summary yet.',
+                          style: textTheme.bodyMedium?.copyWith(color: SanaColors.fgSecondary),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      _ProjectSection(
+                        title: 'Architecture',
+                        child: Row(
+                          children: [
+                            const Icon(Icons.account_tree_outlined, color: SanaColors.lavender),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                'Architecture Blueprint and live canvas arrive in Phase C.',
+                                style: textTheme.bodyMedium?.copyWith(color: SanaColors.fgSecondary),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      _ProjectSection(
+                        title: 'Build History',
+                        child: detail.runs.isEmpty
+                            ? Text('No build runs yet.',
+                                style: textTheme.bodyMedium?.copyWith(color: SanaColors.fgMuted))
+                            : Column(
+                                children: [
+                                  for (final run in detail.runs)
+                                    ListTile(
+                                      contentPadding: EdgeInsets.zero,
+                                      leading: const Icon(Icons.bolt_rounded, color: SanaColors.lavender),
+                                      title: Text(run.prompt, maxLines: 2, overflow: TextOverflow.ellipsis),
+                                      subtitle: Text(
+                                          '${run.eventCount} events · ${DateFormat('MMM d, h:mm a').format(run.createdAt)}'),
+                                      trailing: Text(run.status,
+                                          style: textTheme.labelSmall?.copyWith(color: SanaColors.fgMuted)),
+                                    ),
+                                ],
+                              ),
+                      ),
+                      const SizedBox(height: 16),
+                      _ProjectSection(
+                        title: 'Generated Files',
+                        child: detail.generatedFiles.isEmpty
+                            ? Text('Files appear here after a completed build.',
+                                style: textTheme.bodyMedium?.copyWith(color: SanaColors.fgMuted))
+                            : Wrap(
+                                spacing: 8,
+                                runSpacing: 8,
+                                children: detail.generatedFiles
+                                    .map((path) => Chip(label: Text(path, overflow: TextOverflow.ellipsis)))
+                                    .toList(),
+                              ),
+                      ),
+                      const SizedBox(height: 24),
+                      Wrap(
+                        spacing: 12,
+                        runSpacing: 12,
+                        children: [
+                          FilledButton.icon(
+                            onPressed: service.activeResumeProjectId == detail.projectId ? null : _resume,
+                            icon: service.activeResumeProjectId == detail.projectId
+                                ? const SizedBox(
+                                    width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                                : const Icon(Icons.play_arrow_rounded),
+                            label: const Text('Resume'),
+                          ),
+                          OutlinedButton.icon(
+                            onPressed: !detail.canDownload || service.activeDownloadProjectId == detail.projectId
+                                ? null
+                                : () async {
+                                    final ok = await service.downloadProject(detail);
+                                    if (!context.mounted) return;
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                          content: Text(ok
+                                              ? 'Download link opened.'
+                                              : (service.errorMessage ?? 'Download failed.'))),
+                                    );
+                                  },
+                            icon: const Icon(Icons.download_rounded),
+                            label: const Text('Download files'),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+    );
+  }
+}
+
+class _ProjectStatusCard extends StatelessWidget {
+  const _ProjectStatusCard({required this.project});
+
+  final BuildProjectSummary project;
+
+  @override
+  Widget build(BuildContext context) => Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: SanaColors.surface,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: SanaColors.lavender.withValues(alpha: 0.18)),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.rocket_launch_outlined, color: SanaColors.lavender),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(project.currentPhase, style: Theme.of(context).textTheme.titleMedium),
+            ),
+            Text(DateFormat('MMM d').format(project.updatedAt), style: Theme.of(context).textTheme.labelSmall),
+          ],
+        ),
+      );
+}
+
+class _ProjectSection extends StatelessWidget {
+  const _ProjectSection({required this.title, required this.child});
+
+  final String title;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: SanaColors.surface,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: SanaColors.lavender.withValues(alpha: 0.1)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(title, style: Theme.of(context).textTheme.titleSmall?.copyWith(color: SanaColors.lavender)),
+            const SizedBox(height: 10),
+            child,
+          ],
+        ),
+      );
 }
 
 class _ProfilePane extends StatelessWidget {
@@ -521,7 +799,8 @@ class _ProfilePane extends StatelessWidget {
                     backgroundColor: SanaColors.lavender,
                     child: Icon(Icons.person, color: SanaColors.nearBlack),
                   ),
-                  title: Text(userName, style: const TextStyle(fontWeight: FontWeight.bold, color: SanaColors.fgPrimary)),
+                  title:
+                      Text(userName, style: const TextStyle(fontWeight: FontWeight.bold, color: SanaColors.fgPrimary)),
                   subtitle: Text(userEmail, style: const TextStyle(color: SanaColors.fgSecondary)),
                 ),
                 const Divider(color: SanaColors.nearBlack, height: 24),
@@ -529,7 +808,8 @@ class _ProfilePane extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     const Text('Assistant Name', style: TextStyle(color: SanaColors.fgSecondary)),
-                    Text(assistantName, style: const TextStyle(color: SanaColors.lavender, fontWeight: FontWeight.w600)),
+                    Text(assistantName,
+                        style: const TextStyle(color: SanaColors.lavender, fontWeight: FontWeight.w600)),
                   ],
                 ),
                 if (authService.isMock) ...[
@@ -625,35 +905,29 @@ class _HistoryPaneState extends State<_HistoryPane> {
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const Icon(Icons.chat_bubble_outline_rounded,
-                                size: 48, color: SanaColors.fgMuted),
+                            const Icon(Icons.chat_bubble_outline_rounded, size: 48, color: SanaColors.fgMuted),
                             const SizedBox(height: 12),
                             Text(
                               'No past conversations yet',
-                              style: textTheme.titleMedium
-                                  ?.copyWith(color: SanaColors.fgSecondary),
+                              style: textTheme.titleMedium?.copyWith(color: SanaColors.fgSecondary),
                             ),
                             const SizedBox(height: 4),
                             Text(
                               'Start talking with Soul on the Home tab!',
-                              style: textTheme.bodySmall
-                                  ?.copyWith(color: SanaColors.fgMuted),
+                              style: textTheme.bodySmall?.copyWith(color: SanaColors.fgMuted),
                             ),
                           ],
                         ),
                       )
                     : RefreshIndicator(
                         color: SanaColors.lavender,
-                        onRefresh: () =>
-                            conversationService.fetchUserConversations(),
+                        onRefresh: () => conversationService.fetchUserConversations(),
                         child: ListView.separated(
                           itemCount: conversations.length,
-                          separatorBuilder: (_, __) =>
-                              const SizedBox(height: 12),
+                          separatorBuilder: (_, __) => const SizedBox(height: 12),
                           itemBuilder: (context, index) {
                             final session = conversations[index];
-                            final timeFormatted =
-                                DateFormat('MMM d, h:mm a').format(session.updatedAt);
+                            final timeFormatted = DateFormat('MMM d, h:mm a').format(session.updatedAt);
                             final preview = session.previewText ?? 'Voice & text session';
 
                             return Material(
@@ -673,14 +947,12 @@ class _HistoryPaneState extends State<_HistoryPane> {
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceBetween,
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                         children: [
                                           Expanded(
                                             child: Text(
                                               session.title,
-                                              style: textTheme.titleMedium
-                                                  ?.copyWith(
+                                              style: textTheme.titleMedium?.copyWith(
                                                 fontWeight: FontWeight.bold,
                                                 color: SanaColors.fgPrimary,
                                               ),
@@ -689,13 +961,10 @@ class _HistoryPaneState extends State<_HistoryPane> {
                                             ),
                                           ),
                                           Container(
-                                            padding: const EdgeInsets.symmetric(
-                                                horizontal: 8, vertical: 3),
+                                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                                             decoration: BoxDecoration(
-                                              color: SanaColors.lavender
-                                                  .withValues(alpha: 0.15),
-                                              borderRadius:
-                                                  BorderRadius.circular(8),
+                                              color: SanaColors.lavender.withValues(alpha: 0.15),
+                                              borderRadius: BorderRadius.circular(8),
                                             ),
                                             child: Text(
                                               session.mode.toUpperCase(),
@@ -719,14 +988,11 @@ class _HistoryPaneState extends State<_HistoryPane> {
                                       ),
                                       const SizedBox(height: 10),
                                       Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceBetween,
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                         children: [
                                           Text(
                                             timeFormatted,
-                                            style: textTheme.bodySmall
-                                                ?.copyWith(
-                                                    color: SanaColors.fgMuted),
+                                            style: textTheme.bodySmall?.copyWith(color: SanaColors.fgMuted),
                                           ),
                                           IconButton(
                                             icon: const Icon(
@@ -736,13 +1002,10 @@ class _HistoryPaneState extends State<_HistoryPane> {
                                             ),
                                             onPressed: () {
                                               unawaited(
-                                                conversationService
-                                                    .deleteConversation(
-                                                        session.id),
+                                                conversationService.deleteConversation(session.id),
                                               );
                                             },
-                                            visualDensity:
-                                                VisualDensity.compact,
+                                            visualDensity: VisualDensity.compact,
                                           ),
                                         ],
                                       ),

@@ -54,6 +54,19 @@ This is not a restart. The verified Flutter, FastAPI, Supabase and LiveKit imple
 
 **Remaining Phase A work:** Phase A is complete. Phase B can begin with the persistent architecture canvas and project workspace expansion described in the PRD.
 
+### Implementation status update: Phase B
+
+**Updated:** 2026-08-22
+**Overall Phase B status:** In progress. B1 is complete; B2 through B4 are implemented locally and await the controlled Supabase migration and Railway configuration; B5 remains pending end-to-end deployment verification.
+
+| Subphase | Status | Verified outcome |
+|---|---|---|
+| B1 - Audit the existing project data path | Complete | The authoritative-path audit is recorded in `docs/phase-b1-project-data-path.md`. Project metadata currently lives in a Railway-local JSON file and generated files in the same local filesystem, which is not durable across service replacement or redeploy. |
+| B2 - Normalize project and build data | Implemented; migration pending | Migration `09_persistent_build_projects.sql` defines owner-scoped Supabase projects, runs, immutable run events and generated-file metadata. The FastAPI durable store activates only when `SUPABASE_SERVICE_ROLE_KEY` is configured. Legacy JSON records remain quarantined rather than being automatically claimed. |
+| B3 - Project list experience | Implemented; deployment pending | Projects now show lifecycle phase, last update, plan summary, empty/error/retry states and a project-detail entry point without exposing local workspace paths. |
+| B4 - Project detail experience | Implemented; deployment pending | The Flutter detail view includes specification, approved plan, Phase C architecture placeholder, build history, generated-file metadata, Resume and secure Download controls. |
+| B5 - Resume and download verification | Pending | Requires the migration, Railway durable-store activation, and public two-account verification after a browser refresh and re-login. |
+
 ### Version history
 
 | Version | Date | Purpose |

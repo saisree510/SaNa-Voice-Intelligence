@@ -15,6 +15,8 @@ class BuildProjectSummary {
     required this.status,
     required this.workspacePath,
     required this.updatedAt,
+    this.planSummary,
+    this.latestResult,
   });
 
   final String projectId;
@@ -22,8 +24,19 @@ class BuildProjectSummary {
   final String status;
   final String workspacePath;
   final DateTime updatedAt;
+  final String? planSummary;
+  final String? latestResult;
 
   bool get canDownload => status == 'completed';
+
+  String get currentPhase => switch (status) {
+        'plan_generated' => 'Plan ready',
+        'approved' => 'Approved',
+        'executing' => 'Building',
+        'completed' => 'Completed',
+        'failed' => 'Needs attention',
+        _ => 'Drafting',
+      };
 
   factory BuildProjectSummary.fromJson(Map<String, dynamic> json) {
     return BuildProjectSummary(
@@ -32,6 +45,74 @@ class BuildProjectSummary {
       status: json['status'] as String? ?? 'unknown',
       workspacePath: json['workspace_path'] as String? ?? '',
       updatedAt: DateTime.tryParse(json['updated_at'] as String? ?? '') ?? DateTime.now(),
+      planSummary: json['plan_summary'] as String?,
+      latestResult: json['result_summary'] as String?,
+    );
+  }
+}
+
+class BuildProjectRun {
+  BuildProjectRun({
+    required this.runId,
+    required this.prompt,
+    required this.status,
+    required this.createdAt,
+    required this.eventCount,
+  });
+
+  final String runId;
+  final String prompt;
+  final String status;
+  final DateTime createdAt;
+  final int eventCount;
+
+  factory BuildProjectRun.fromJson(Map<String, dynamic> json) {
+    final events = json['events'] as List<dynamic>? ?? const [];
+    return BuildProjectRun(
+      runId: json['turn_id'] as String? ?? '',
+      prompt: json['prompt'] as String? ?? '',
+      status: json['status'] as String? ?? 'unknown',
+      createdAt: DateTime.tryParse(json['created_at'] as String? ?? '') ?? DateTime.now(),
+      eventCount: events.length,
+    );
+  }
+}
+
+class BuildProjectDetail extends BuildProjectSummary {
+  BuildProjectDetail({
+    required super.projectId,
+    required super.title,
+    required super.status,
+    required super.workspacePath,
+    required super.updatedAt,
+    super.planSummary,
+    super.latestResult,
+    required this.specification,
+    required this.generatedFiles,
+    required this.runs,
+  });
+
+  final String specification;
+  final List<String> generatedFiles;
+  final List<BuildProjectRun> runs;
+
+  factory BuildProjectDetail.fromJson(Map<String, dynamic> json) {
+    final files = json['generated_files'] as List<dynamic>? ?? const [];
+    final history = json['history'] as List<dynamic>? ?? const [];
+    return BuildProjectDetail(
+      projectId: json['project_id'] as String,
+      title: json['title'] as String? ?? 'Untitled Project',
+      status: json['status'] as String? ?? 'unknown',
+      workspacePath: json['workspace_path'] as String? ?? '',
+      updatedAt: DateTime.tryParse(json['updated_at'] as String? ?? '') ?? DateTime.now(),
+      planSummary: json['plan_summary'] as String?,
+      specification: json['specification'] as String? ?? '',
+      generatedFiles: files
+          .whereType<Map<String, dynamic>>()
+          .map((file) => file['path'] as String? ?? '')
+          .where((path) => path.isNotEmpty)
+          .toList(),
+      runs: history.whereType<Map<String, dynamic>>().map(BuildProjectRun.fromJson).toList(),
     );
   }
 }
@@ -51,11 +132,13 @@ class BuildProjectsService extends ChangeNotifier {
   List<BuildProjectSummary> _projects = const [];
   bool _isLoading = false;
   String? _activeDownloadProjectId;
+  String? _activeResumeProjectId;
   String? _errorMessage;
 
   List<BuildProjectSummary> get projects => _projects;
   bool get isLoading => _isLoading;
   String? get activeDownloadProjectId => _activeDownloadProjectId;
+  String? get activeResumeProjectId => _activeResumeProjectId;
   String? get errorMessage => _errorMessage;
   bool get hasBackend => TokenService().backendUrl.isNotEmpty;
 
@@ -66,6 +149,7 @@ class BuildProjectsService extends ChangeNotifier {
     _projects = const [];
     _isLoading = false;
     _activeDownloadProjectId = null;
+    _activeResumeProjectId = null;
     _errorMessage = null;
     notifyListeners();
   }
@@ -175,6 +259,82 @@ class BuildProjectsService extends ChangeNotifier {
       return false;
     } finally {
       _activeDownloadProjectId = null;
+      notifyListeners();
+    }
+  }
+
+  Future<BuildProjectDetail?> fetchProject(String projectId) async {
+    if (_activeOwnerId == null || _authService.accessToken == null) {
+      _errorMessage = 'A valid Supabase session is required to load this project.';
+      notifyListeners();
+      return null;
+    }
+    final backendUrl = TokenService().backendUrl;
+    if (backendUrl.isEmpty) {
+      _errorMessage = 'Backend URL is not configured for this build.';
+      notifyListeners();
+      return null;
+    }
+
+    try {
+      final response = await http.get(
+        Uri.parse('$backendUrl/v1/build/projects/$projectId'),
+        headers: _headers(),
+      );
+      if (response.statusCode != 200) {
+        _errorMessage = 'Failed to load project details (${response.statusCode}).';
+        notifyListeners();
+        return null;
+      }
+      return BuildProjectDetail.fromJson(jsonDecode(response.body) as Map<String, dynamic>);
+    } catch (error, stackTrace) {
+      _logger.warning('Failed to load project $projectId: $error', error, stackTrace);
+      _errorMessage = 'Failed to load project details.';
+      notifyListeners();
+      return null;
+    }
+  }
+
+  Future<bool> resumeProject(BuildProjectSummary project, String prompt) async {
+    final cleanPrompt = prompt.trim();
+    if (cleanPrompt.isEmpty) {
+      _errorMessage = 'Enter the next change before resuming this project.';
+      notifyListeners();
+      return false;
+    }
+    if (_activeOwnerId == null || _authService.accessToken == null) {
+      _errorMessage = 'A valid Supabase session is required to resume this project.';
+      notifyListeners();
+      return false;
+    }
+    final backendUrl = TokenService().backendUrl;
+    if (backendUrl.isEmpty) {
+      _errorMessage = 'Backend URL is not configured for this build.';
+      notifyListeners();
+      return false;
+    }
+
+    _activeResumeProjectId = project.projectId;
+    _errorMessage = null;
+    notifyListeners();
+    try {
+      final response = await http.post(
+        Uri.parse('$backendUrl/v1/build/projects/${project.projectId}/turns'),
+        headers: _headers(),
+        body: jsonEncode({'prompt': cleanPrompt}),
+      );
+      if (response.statusCode != 200) {
+        _errorMessage = 'Failed to resume project (${response.statusCode}).';
+        return false;
+      }
+      await fetchProjects();
+      return true;
+    } catch (error, stackTrace) {
+      _logger.warning('Failed to resume project ${project.projectId}: $error', error, stackTrace);
+      _errorMessage = 'Failed to resume project.';
+      return false;
+    } finally {
+      _activeResumeProjectId = null;
       notifyListeners();
     }
   }

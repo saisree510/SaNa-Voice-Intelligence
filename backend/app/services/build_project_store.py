@@ -4,8 +4,10 @@ import re
 from threading import Lock
 from typing import Iterable, Optional
 
+from supabase import create_client
+
 from app.auth.auth_bearer import normalize_user_id, user_id_aliases
-from app.models.deepcode_models import BuildProjectModel
+from app.models.deepcode_models import BuildFileModel, BuildProjectModel, BuildRunTurnModel, DeepCodeEvent
 
 
 class BuildProjectStore:
@@ -157,3 +159,206 @@ class BuildProjectStore:
             return os.path.commonpath([root, candidate]) == root
         except ValueError:
             return False
+
+
+class SupabaseBuildProjectStore:
+    """Durable Build Mode metadata store backed by Supabase.
+
+    Workspace files remain under the trusted build root. This store persists the
+    metadata needed to reopen and authorize a project after a Railway restart.
+    """
+
+    def __init__(self, trusted_root: str, supabase_url: str, service_role_key: str):
+        self._trusted_root = os.path.abspath(os.path.normpath(trusted_root))
+        self._client = create_client(supabase_url, service_role_key)
+        os.makedirs(self._trusted_root, exist_ok=True)
+
+    def trusted_folder(self) -> str:
+        os.makedirs(self._trusted_root, exist_ok=True)
+        return self._trusted_root
+
+    def user_workspace_root(self, user_id: str) -> str:
+        normalized_user = normalize_user_id(user_id)
+        safe_user = re.sub(r'[^a-zA-Z0-9_-]', '_', normalized_user).strip('_')
+        if not safe_user:
+            raise ValueError('Authenticated user id is required for build storage')
+        root = os.path.join(self.trusted_folder(), 'users', safe_user)
+        os.makedirs(root, exist_ok=True)
+        return root
+
+    def default_workspace_path(self, title: str, project_id: str, user_id: str) -> str:
+        slug = re.sub(r'[^a-zA-Z0-9_-]', '_', title.lower()).strip('_') or project_id
+        candidate = os.path.join(self.user_workspace_root(user_id), f'{slug}_{project_id}')
+        return self.validate_user_workspace_path(user_id, candidate)
+
+    def validate_workspace_path(self, candidate_path: str) -> str:
+        normalized = os.path.abspath(os.path.normpath(candidate_path))
+        trusted = self.trusted_folder()
+        if not BuildProjectStore._is_within(trusted, normalized):
+            raise ValueError(f'Workspace path must stay inside trusted build root: {trusted}')
+        return normalized
+
+    def validate_user_workspace_path(self, user_id: str, candidate_path: str) -> str:
+        normalized = self.validate_workspace_path(candidate_path)
+        user_root = self.user_workspace_root(user_id)
+        if not BuildProjectStore._is_within(user_root, normalized):
+            raise ValueError('Workspace path must stay inside the authenticated user build folder')
+        return normalized
+
+    def get_project(self, project_id: str) -> Optional[BuildProjectModel]:
+        response = (
+            self._client.table('build_projects')
+            .select('*')
+            .eq('project_id', project_id)
+            .execute()
+        )
+        rows = response.data or []
+        return self._hydrate_project(rows[0]) if rows else None
+
+    def find_project_by_session_id(self, session_id: str) -> Optional[BuildProjectModel]:
+        response = (
+            self._client.table('build_projects')
+            .select('*')
+            .eq('session_id', session_id)
+            .execute()
+        )
+        rows = response.data or []
+        return self._hydrate_project(rows[0]) if rows else None
+
+    def list_projects_for_user(self, user_id: str) -> list[BuildProjectModel]:
+        normalized_user = normalize_user_id(user_id)
+        response = (
+            self._client.table('build_projects')
+            .select('*')
+            .eq('user_id', normalized_user)
+            .order('updated_at', desc=True)
+            .execute()
+        )
+        return [self._hydrate_project(row) for row in response.data or []]
+
+    def find_latest_project_for_user(
+        self,
+        user_id: str,
+        *,
+        statuses: Optional[Iterable[str]] = None,
+    ) -> Optional[BuildProjectModel]:
+        projects = self.list_projects_for_user(user_id)
+        if statuses is not None:
+            allowed_statuses = set(statuses)
+            projects = [project for project in projects if project.status in allowed_statuses]
+        return projects[0] if projects else None
+
+    def claim_legacy_dev_projects_for_user(self, user_id: str) -> list[BuildProjectModel]:
+        # Legacy JSON records are deliberately quarantined rather than claimed.
+        return []
+
+    def upsert_project(self, project: BuildProjectModel) -> None:
+        project_row = project.model_dump(mode='json', exclude={'history', 'generated_files'})
+        project_row['user_id'] = normalize_user_id(project.user_id)
+        self._client.table('build_projects').upsert(project_row, on_conflict='project_id').execute()
+
+        # A project model is authoritative for its child metadata. Replace the
+        # recorded run/file projection as one bounded update to avoid duplicates.
+        self._client.table('build_files').delete().eq('project_id', project.project_id).execute()
+        self._client.table('build_runs').delete().eq('project_id', project.project_id).execute()
+
+        for run in project.history:
+            run_row = run.model_dump(mode='json', exclude={'events'})
+            run_row['user_id'] = normalize_user_id(run.user_id or project.user_id)
+            self._client.table('build_runs').upsert(run_row, on_conflict='run_id').execute()
+
+            event_rows = [
+                {
+                    'run_id': run.turn_id,
+                    'project_id': project.project_id,
+                    'user_id': normalize_user_id(event.user_id or project.user_id),
+                    'sequence_no': index,
+                    'event_type': event.event_type,
+                    'message': event.message,
+                    'details': event.details,
+                    'event_timestamp': event.timestamp,
+                }
+                for index, event in enumerate(run.events)
+            ]
+            if event_rows:
+                self._client.table('build_run_events').insert(event_rows).execute()
+
+        file_rows = [
+            {
+                'project_id': file.project_id,
+                'run_id': file.run_id,
+                'user_id': normalize_user_id(file.user_id),
+                'path': file.path,
+            }
+            for file in project.generated_files
+        ]
+        if file_rows:
+            self._client.table('build_files').insert(file_rows).execute()
+
+    def _hydrate_project(self, project_row: dict) -> BuildProjectModel:
+        project_id = project_row['project_id']
+        runs_response = (
+            self._client.table('build_runs')
+            .select('*')
+            .eq('project_id', project_id)
+            .order('created_at')
+            .execute()
+        )
+        runs = runs_response.data or []
+        run_ids = [run['run_id'] for run in runs]
+        events_by_run: dict[str, list[DeepCodeEvent]] = {run_id: [] for run_id in run_ids}
+        if run_ids:
+            events_response = (
+                self._client.table('build_run_events')
+                .select('*')
+                .in_('run_id', run_ids)
+                .order('sequence_no')
+                .execute()
+            )
+            for event in events_response.data or []:
+                events_by_run.setdefault(event['run_id'], []).append(
+                    DeepCodeEvent(
+                        event_type=event['event_type'],
+                        timestamp=event['event_timestamp'],
+                        message=event['message'],
+                        details=event.get('details'),
+                        user_id=event.get('user_id'),
+                        project_id=event.get('project_id'),
+                        session_id=next(
+                            (run['session_id'] for run in runs if run['run_id'] == event['run_id']),
+                            None,
+                        ),
+                    )
+                )
+
+        files_response = (
+            self._client.table('build_files')
+            .select('*')
+            .eq('project_id', project_id)
+            .execute()
+        )
+        return BuildProjectModel(
+            **project_row,
+            history=[
+                BuildRunTurnModel(
+                    turn_id=run['run_id'],
+                    project_id=run['project_id'],
+                    session_id=run['session_id'],
+                    user_id=run.get('user_id'),
+                    prompt=run['prompt'],
+                    status=run['status'],
+                    events=events_by_run.get(run['run_id'], []),
+                    created_at=run['created_at'],
+                )
+                for run in runs
+            ],
+            generated_files=[
+                BuildFileModel(
+                    path=file['path'],
+                    user_id=file['user_id'],
+                    project_id=file['project_id'],
+                    run_id=file['run_id'],
+                )
+                for file in files_response.data or []
+            ],
+        )

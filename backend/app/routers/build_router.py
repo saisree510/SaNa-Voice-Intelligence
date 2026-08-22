@@ -21,13 +21,21 @@ from app.models.deepcode_models import (
     DeepCodeEvent,
     DeepCodeSession,
 )
-from app.services.build_project_store import BuildProjectStore
+from app.services.build_project_store import BuildProjectStore, SupabaseBuildProjectStore
 
 logger = logging.getLogger("backend.build_router")
 router = APIRouter(prefix="/v1/build", tags=["Build Mode"])
 
 deepcode_adapter = DeepCodeAdapter()
-project_store = BuildProjectStore(trusted_root=settings.BUILD_STORAGE_ROOT)
+project_store = (
+    SupabaseBuildProjectStore(
+        trusted_root=settings.BUILD_STORAGE_ROOT,
+        supabase_url=settings.SUPABASE_URL,
+        service_role_key=settings.SUPABASE_SERVICE_ROLE_KEY,
+    )
+    if settings.SUPABASE_URL and settings.SUPABASE_SERVICE_ROLE_KEY
+    else BuildProjectStore(trusted_root=settings.BUILD_STORAGE_ROOT)
+)
 
 
 class CreateSessionRequest(BaseModel):
