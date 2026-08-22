@@ -71,6 +71,7 @@ class BuildProjectModel(BaseModel):
     status: str = "drafting"  # drafting, plan_generated, approved, executing, completed, failed
     plan_summary: Optional[str] = None
     session_id: Optional[str] = None
+    artifact_path: Optional[str] = None
     history: List[BuildRunTurnModel] = Field(default_factory=list)
     generated_files: List[BuildFileModel] = Field(default_factory=list)
     created_at: str = Field(default_factory=lambda: datetime.utcnow().isoformat())

@@ -255,16 +255,17 @@ def _build_workspace_zip_bytes(workspace_path: str, generated_files: List[str]) 
 
 
 def _build_project_archive_response(project: BuildProjectModel) -> StreamingResponse:
-    generated_files = [item.path for item in project.generated_files]
-    if not generated_files:
-        generated_files = _list_workspace_files(project.workspace_path)
-    if not generated_files:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail='No generated files found for this project',
-        )
-
-    archive_bytes = _build_workspace_zip_bytes(project.workspace_path, generated_files)
+    archive_bytes = project_store.read_project_archive(project.artifact_path)
+    if archive_bytes is None:
+        generated_files = [item.path for item in project.generated_files]
+        if not generated_files:
+            generated_files = _list_workspace_files(project.workspace_path)
+        if not generated_files:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail='No generated files found for this project',
+            )
+        archive_bytes = _build_workspace_zip_bytes(project.workspace_path, generated_files)
     if not archive_bytes:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -515,6 +516,8 @@ async def _approve_and_execute_project_model(
             )
             for file_path in generated_files
         ]
+        archive_bytes = _build_workspace_zip_bytes(project.workspace_path, generated_files)
+        project.artifact_path = project_store.store_project_archive(project, archive_bytes)
         project_store.upsert_project(project)
 
         summary = (
@@ -675,6 +678,8 @@ async def run_project_incremental_turn(
             )
             for file_path in generated_files
         ]
+        archive_bytes = _build_workspace_zip_bytes(project.workspace_path, generated_files)
+        project.artifact_path = project_store.store_project_archive(project, archive_bytes)
         project_store.upsert_project(project)
 
         return TurnResponse(

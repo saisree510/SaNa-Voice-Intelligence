@@ -120,6 +120,14 @@ class BuildProjectStore:
             data[project.project_id] = project.model_dump(mode='json')
             self._write_data_unlocked(data)
 
+    def store_project_archive(self, project: BuildProjectModel, archive_bytes: bytes) -> Optional[str]:
+        del project, archive_bytes
+        return None
+
+    def read_project_archive(self, artifact_path: Optional[str]) -> Optional[bytes]:
+        del artifact_path
+        return None
+
     def _read_data(self) -> dict:
         with self._lock:
             return self._read_data_unlocked()
@@ -172,6 +180,8 @@ class SupabaseBuildProjectStore:
         self._trusted_root = os.path.abspath(os.path.normpath(trusted_root))
         self._client = create_client(supabase_url, service_role_key)
         os.makedirs(self._trusted_root, exist_ok=True)
+
+    artifact_bucket = 'soul-build-artifacts'
 
     def trusted_folder(self) -> str:
         os.makedirs(self._trusted_root, exist_ok=True)
@@ -293,6 +303,30 @@ class SupabaseBuildProjectStore:
         ]
         if file_rows:
             self._client.table('build_files').insert(file_rows).execute()
+
+    @classmethod
+    def build_artifact_path(cls, project: BuildProjectModel) -> str:
+        user_id = normalize_user_id(project.user_id)
+        return f'{user_id}/{project.project_id}/{project.project_id}.zip'
+
+    def store_project_archive(self, project: BuildProjectModel, archive_bytes: bytes) -> Optional[str]:
+        if not archive_bytes:
+            return None
+        artifact_path = self.build_artifact_path(project)
+        self._client.storage.from_(self.artifact_bucket).upload(
+            artifact_path,
+            archive_bytes,
+            file_options={
+                'content-type': 'application/zip',
+                'upsert': 'true',
+            },
+        )
+        return artifact_path
+
+    def read_project_archive(self, artifact_path: Optional[str]) -> Optional[bytes]:
+        if not artifact_path:
+            return None
+        return self._client.storage.from_(self.artifact_bucket).download(artifact_path)
 
     @staticmethod
     def _build_run_row(run: BuildRunTurnModel, project_user_id: str) -> dict:
