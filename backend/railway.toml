@@ -16,6 +16,11 @@
 #   BUILD_RUN_TIMEOUT_SECONDS=600
 #   BUILD_RUN_MAX_OUTPUT_BYTES=2000000
 #
+#   DEEPCODE_SANDBOX=0                    (disable sandbox mode for container execution)
+#   DEEPCODE_TRUST_WORKSPACE=1            (explicitly trust workspace paths)
+#   DEEPCODE_WORK_LOCALLY=1               (tell DeepCode to treat container as local)
+#   DOCKER_BUILDKIT=0                     (ensure files can be written to volume)
+#
 # On every process start, app.services.deepcode_provider_setup registers the
 # DeepCode connection (`deepcode init` + `deepcode provider set`) because
 # ~/.deepcode lives outside the persistent volume and does not survive redeploys.
