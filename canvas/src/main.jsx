@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
-import { Excalidraw } from "@excalidraw/excalidraw";
+import { Excalidraw, exportToBlob } from "@excalidraw/excalidraw";
 import { mockOperations, overviewBlueprint } from "./blueprint";
 import { sceneForOperations } from "./scene";
 import "./styles.css";
@@ -250,6 +250,78 @@ function CanvasProof() {
     }, 800);
   };
 
+  const exportPng = async () => {
+    if (!apiRef.current || !blueprint) return;
+    try {
+      const elementsList = apiRef.current.getSceneElements();
+      const appState = apiRef.current.getAppState();
+      const blob = await exportToBlob({
+        elements: elementsList,
+        appState: {
+          ...appState,
+          exportBackground: true,
+          viewBackgroundColor: "#fdfcff",
+        },
+        mimeType: "image/png",
+      });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${blueprint.architecture_id || "blueprint"}.png`;
+      a.click();
+      window.URL.revokeObjectURL(url);
+    } catch (e) {
+      console.error("Failed to export PNG:", e);
+    }
+  };
+
+  const downloadTextFile = (filename, text) => {
+    const element = document.createElement("a");
+    element.setAttribute("href", "data:text/plain;charset=utf-8," + encodeURIComponent(text));
+    element.setAttribute("download", filename);
+    element.style.display = "none";
+    document.body.appendChild(element);
+    element.click();
+    document.body.removeChild(element);
+  };
+
+  const exportJson = () => {
+    if (!blueprint) return;
+    downloadTextFile(
+      `${blueprint.architecture_id || "blueprint"}.json`,
+      JSON.stringify(blueprint, null, 2),
+    );
+  };
+
+  const exportMermaid = () => {
+    if (!blueprint) return;
+    let out = "graph TD\n";
+    const components = blueprint.components || [];
+    const connections = blueprint.connections || [];
+    
+    for (const comp of components) {
+      const subtitle = comp.technology || comp.type || "";
+      const label = subtitle ? `"${comp.name}\n(${subtitle})"` : `"${comp.name}"`;
+      out += `  ${comp.id}[${label}]\n`;
+    }
+    
+    for (const conn of connections) {
+      const label = conn.protocol ? ` -- ${conn.protocol} --> ` : " --> ";
+      out += `  ${conn.source_id}${label}${conn.target_id}\n`;
+    }
+    
+    downloadTextFile(`${blueprint.architecture_id || "blueprint"}.mermaid`, out);
+  };
+
+  useEffect(() => {
+    if (!isEmbedded || !blueprint || step < operations.length || operations.length === 0) return;
+    const elementsList = apiRef.current?.getSceneElements() || [];
+    postToParent("soul.canvas.snapshot_ready", {
+      sequenceNumber: step,
+      scene: { elements: elementsList },
+    });
+  }, [blueprint, isEmbedded, operations.length, step]);
+
   return (
     <main className={`canvas-proof${isEmbedded ? " is-embedded" : ""}`}>
       {!isEmbedded && <header className="canvas-header">
@@ -286,6 +358,11 @@ function CanvasProof() {
           onChange={handleCanvasChange}
           UIOptions={{ canvasActions: { loadScene: false, saveToActiveFile: false, export: false } }}
         />
+        <div className="canvas-floating-controls" aria-label="Export controls">
+          <button type="button" onClick={exportPng} title="Export PNG image">PNG</button>
+          <button type="button" onClick={exportJson} title="Export Blueprint JSON">JSON</button>
+          <button type="button" onClick={exportMermaid} title="Export Mermaid TD flowchart">Mermaid</button>
+        </div>
       </section>
       {!isEmbedded && <section className="accessible-summary" aria-label="Architecture Blueprint text summary">
         <h2>Blueprint summary</h2>

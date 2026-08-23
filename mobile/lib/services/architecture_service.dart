@@ -349,6 +349,39 @@ class ArchitectureService extends ChangeNotifier {
     }
   }
 
+  Future<void> createCanvasSnapshot(
+    String architectureId,
+    int sequenceNumber,
+    Map<String, dynamic> scene,
+  ) async {
+    final activeArch = _latestArchitecture;
+    if (activeArch == null) return;
+
+    final backendUrl = TokenService().backendUrl;
+    if (backendUrl.isEmpty) return;
+
+    _logger.info('Creating canvas snapshot for sequence number: $sequenceNumber');
+    try {
+      final response = await http.post(
+        Uri.parse('$backendUrl/v1/architectures/$architectureId/snapshots'),
+        headers: _headers(),
+        body: jsonEncode({
+          'sequence_number': sequenceNumber,
+          'blueprint': activeArch.blueprint,
+          'scene': scene,
+        }),
+      );
+
+      if (response.statusCode != 200 && response.statusCode != 201) {
+        _logger.warning('Failed to create canvas snapshot (${response.statusCode}): ${response.body}');
+      } else {
+        _logger.info('Canvas snapshot created successfully.');
+      }
+    } catch (e, st) {
+      _logger.severe('Error creating canvas snapshot: $e', e, st);
+    }
+  }
+
   int _displayScore(ArchitectureCanvasData architecture) =>
       architecture.componentCount + architecture.connectionCount * 2;
 }

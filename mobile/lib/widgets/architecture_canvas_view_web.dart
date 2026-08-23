@@ -182,6 +182,22 @@ class _ArchitectureCanvasViewState extends State<ArchitectureCanvasView> {
           }
         }
         break;
+      case 'soul.canvas.snapshot_ready':
+        final payload = data['payload'];
+        if (payload is Map) {
+          final seq = payload['sequenceNumber'] as int?;
+          final scene = payload['scene'] as Map<dynamic, dynamic>?;
+          final service = Provider.of<ArchitectureService>(context, listen: false);
+          final activeArch = service.latestArchitecture;
+          if (seq != null && scene != null && activeArch != null) {
+            unawaited(service.createCanvasSnapshot(
+              activeArch.architectureId,
+              seq,
+              Map<String, dynamic>.from(scene),
+            ));
+          }
+        }
+        break;
       default:
         _postToCanvas('soul.canvas.rejected', {'reason': 'unsupported_type', 'type': data['type']});
     }
