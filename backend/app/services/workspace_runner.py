@@ -45,6 +45,8 @@ _ENV_ALLOWLIST = {
     "DEEPCODE_HOME",
     "XDG_CONFIG_HOME",
     "XDG_DATA_HOME",
+    # Disable sandboxing for DeepCode in containers
+    "DEEPCODE_SANDBOX",
 }
 
 
