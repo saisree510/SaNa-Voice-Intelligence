@@ -147,16 +147,32 @@ function CanvasProof() {
       return;
     }
 
+    const nextId = nextBlueprint.id || payload.architectureId || nextBlueprint.architecture_id || "architecture";
+    const isSameArch = blueprint && blueprint.id === nextId;
+
     setBlueprint({
       ...nextBlueprint,
-      id: nextBlueprint.id || payload.architectureId || "architecture",
+      id: nextId,
       components: Array.isArray(nextBlueprint.components) ? nextBlueprint.components : [],
       connections: Array.isArray(nextBlueprint.connections) ? nextBlueprint.connections : [],
     });
-    setOperations(nextOperations);
-    setStep(reducedMotionRef.current ? nextOperations.length : 0);
-    setPlaying(!reducedMotionRef.current && nextOperations.length > 0);
+
+    if (isSameArch) {
+      const oldLength = operations.length;
+      setOperations(nextOperations);
+      if (nextOperations.length > oldLength) {
+        if (stepRef.current === oldLength) {
+          // Continue playing new operations progressively
+          setPlaying(!reducedMotionRef.current);
+        }
+      }
+    } else {
+      setOperations(nextOperations);
+      setStep(reducedMotionRef.current ? nextOperations.length : 0);
+      setPlaying(!reducedMotionRef.current && nextOperations.length > 0);
+    }
   };
+
 
   const fitToContent = () =>
     apiRef.current?.scrollToContent(elementsRef.current, { fitToContent: true, animate: !reducedMotionRef.current });

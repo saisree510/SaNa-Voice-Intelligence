@@ -186,7 +186,17 @@ async def append_canvas_event(
     request: AppendCanvasEventRequest,
     current_user: AuthenticatedUser = Depends(get_current_user),
 ):
-    return _append_validated_canvas_event(architecture_id, request, current_user)
+    event = _append_validated_canvas_event(architecture_id, request, current_user)
+    await canvas_connections.broadcast(
+        architecture_id,
+        {
+            "type": "canvas_event",
+            "architecture_id": architecture_id,
+            "event": event.model_dump(mode="json"),
+        },
+    )
+    return event
+
 
 
 @router.get("/{architecture_id}/events", response_model=list[CanvasEventRecord])

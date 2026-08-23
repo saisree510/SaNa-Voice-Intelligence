@@ -15,6 +15,7 @@ import '../models/conversation_turn.dart';
 import '../services/conversation_memory.dart';
 import '../services/conversation_service.dart';
 import '../services/token_service.dart';
+import '../services/architecture_service.dart';
 
 final String homepageAgentTokenEndpoint = 'https://livekit.com/api/homepage-agent/token';
 
@@ -93,8 +94,14 @@ class AppCtrl extends ChangeNotifier {
 
   String? activeConversationId;
   ConversationService? _conversationService;
+  ArchitectureService? _architectureService;
+  sdk.EventsListener<sdk.RoomEvent>? _roomListener;
   List<PersistedMessage> _restoredMessages = const [];
   String? _restoreRetriesScheduledForConversationId;
+
+  void bindArchitectureService(ArchitectureService service) {
+    _architectureService = service;
+  }
 
   void bindConversationService(ConversationService service) {
     _conversationService = service;
@@ -272,6 +279,23 @@ class AppCtrl extends ChangeNotifier {
     });
 
     session.addListener(_handleSessionChange);
+
+    _roomListener = room.createListener();
+    _roomListener!.on<sdk.DataReceivedEvent>((event) {
+      try {
+        final decoded = utf8.decode(event.data);
+        final payload = jsonDecode(decoded);
+        if (payload is Map && payload['type'] == 'architecture_created') {
+          final archId = payload['architecture_id'] as String;
+          _logger.info('Received architecture_created packet for $archId');
+          if (_architectureService != null) {
+            unawaited(_architectureService!.fetchLatestArchitecture());
+          }
+        }
+      } catch (e, st) {
+        _logger.warning('Error handling room data event: $e', e, st);
+      }
+    });
   }
 
   Future<void> cleanUp() async {
@@ -280,6 +304,8 @@ class AppCtrl extends ChangeNotifier {
 
     conversationTimeline.dispose();
     session.removeListener(_handleSessionChange);
+    unawaited(_roomListener?.dispose());
+    _roomListener = null;
     await session.dispose();
     await room.dispose();
     roomContext.dispose();
@@ -522,6 +548,9 @@ class AppCtrl extends ChangeNotifier {
     _restoreRetriesScheduledForConversationId = null;
     session.restoreMessageHistory(const []);
     conversationTimeline.clear();
+    if (_architectureService != null) {
+      _architectureService!.disconnectFromCanvasStream();
+    }
     appScreenState = AppScreenState.welcome;
     agentScreenState = AgentScreenState.visualizer;
     isCanvasFocusVisible = false;

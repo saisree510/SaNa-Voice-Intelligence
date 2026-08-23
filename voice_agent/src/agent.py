@@ -211,6 +211,7 @@ async def create_overview_architecture(
     request_user_email: Optional[str] = None,
     conversation_id: Optional[str] = None,
     project_id: Optional[str] = None,
+    on_created: Optional[Any] = None,
 ) -> str:
     """Create a persistent Overview Architecture Blueprint and progressive canvas operations."""
     configured_backend_url = get_backend_url()
@@ -241,6 +242,11 @@ async def create_overview_architecture(
             created = json.loads(resp.read().decode("utf-8"))
             architecture_id = created.get("architecture_id") or architecture_id
 
+        # Notify client of architecture creation before publishing canvas events
+        if on_created:
+            await on_created(architecture_id)
+            await asyncio.sleep(0.8) # Wait for client to connect to WebSocket
+
         operations = _build_architecture_operations(architecture_id, components)
         accepted = 0
         for operation_payload in operations:
@@ -253,6 +259,9 @@ async def create_overview_architecture(
             with urllib.request.urlopen(req, timeout=8) as resp:
                 json.loads(resp.read().decode("utf-8"))
                 accepted += 1
+            
+            # Progressively stream each event at a human-visible cadence
+            await asyncio.sleep(1.0)
 
         component_names = ", ".join(component["name"] for component in components)
         return (
@@ -265,6 +274,7 @@ async def create_overview_architecture(
             f"I could not create the live architecture for '{title}' through the configured backend. "
             "No canvas operations were saved. Please retry after verifying the backend and user session."
         )
+
 
 
 def normalize_restored_messages(
@@ -677,6 +687,18 @@ async def my_agent(ctx: JobContext):
 
     @llm.function_tool
     async def create_overview_architecture_tool(title: str, specification: str, conversation_id: Optional[str] = None, project_id: Optional[str] = None) -> str:
+        async def on_created_callback(arch_id: str):
+            try:
+                payload = json.dumps({
+                    "type": "architecture_created",
+                    "architecture_id": arch_id,
+                })
+                if ctx.room.local_participant:
+                    await ctx.room.local_participant.publish_data(payload.encode("utf-8"))
+                    logger.info(f"Published architecture_created packet to LiveKit room for {arch_id}")
+            except Exception as pe:
+                logger.warning(f"Failed to publish architecture_created room packet: {pe}")
+
         return await create_overview_architecture(
             title,
             specification,
@@ -684,7 +706,9 @@ async def my_agent(ctx: JobContext):
             request_user_email=current_build_user_email,
             conversation_id=conversation_id,
             project_id=project_id,
+            on_created=on_created_callback,
         )
+
 
     session = AgentSession(
         stt=groq.STT(model="whisper-large-v3-turbo", api_key=groq_key),

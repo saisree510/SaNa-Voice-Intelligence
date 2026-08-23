@@ -66,7 +66,9 @@ class _AuthGateState extends State<AuthGate> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<AppCtrl>().bindConversationService(context.read<ConversationService>());
+      final appCtrl = context.read<AppCtrl>();
+      appCtrl.bindConversationService(context.read<ConversationService>());
+      appCtrl.bindArchitectureService(context.read<ArchitectureService>());
       final service = context.read<AuthService>();
       _boundAuthService = service;
       _lastUserId = service.userId;

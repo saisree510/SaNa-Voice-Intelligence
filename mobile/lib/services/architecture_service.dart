@@ -6,6 +6,7 @@ import 'package:logging/logging.dart';
 
 import 'auth_service.dart';
 import 'token_service.dart';
+import 'architecture_websocket_client.dart';
 
 class ArchitectureCanvasData {
   ArchitectureCanvasData({
@@ -32,9 +33,16 @@ class ArchitectureCanvasData {
       };
 
   factory ArchitectureCanvasData.fromJson(Map<String, dynamic> json) {
-    final blueprint = Map<String, dynamic>.from(
-      json['current_blueprint'] as Map? ?? const {},
-    );
+    final blueprintRaw = json['current_blueprint'] as Map? ?? const {};
+    final blueprint = {
+      ...Map<String, dynamic>.from(blueprintRaw),
+      'components': List<Map<String, dynamic>>.from(
+        (blueprintRaw['components'] as List? ?? const []).map((e) => Map<String, dynamic>.from(e as Map)),
+      ),
+      'connections': List<Map<String, dynamic>>.from(
+        (blueprintRaw['connections'] as List? ?? const []).map((e) => Map<String, dynamic>.from(e as Map)),
+      ),
+    };
     return ArchitectureCanvasData(
       architectureId: json['architecture_id'] as String? ?? '',
       title: json['title'] as String? ?? 'Architecture Blueprint',
@@ -62,6 +70,47 @@ class ArchitectureCanvasData {
           },
     ];
   }
+
+  void applyCanvasEvent(Map<String, dynamic> eventData) {
+    final operation = eventData['operation'] as Map<String, dynamic>?;
+    if (operation == null) return;
+
+    final operationType = operation['operation_type'] as String?;
+    final payload = operation['payload'] as Map<String, dynamic>?;
+    if (operationType == null || payload == null) return;
+
+    if (operationType == 'add_node') {
+      final component = payload['component'] as Map<String, dynamic>?;
+      if (component != null && component['id'] != null) {
+        final currentComponents = List<Map<String, dynamic>>.from(
+          (blueprint['components'] as List? ?? const []).map((e) => Map<String, dynamic>.from(e as Map)),
+        );
+        if (!currentComponents.any((c) => c['id'] == component['id'])) {
+          currentComponents.add(component);
+          blueprint['components'] = currentComponents;
+          operations.add({
+            'type': 'add_node',
+            'componentId': component['id'],
+          });
+        }
+      }
+    } else if (operationType == 'connect_nodes') {
+      final connection = payload['connection'] as Map<String, dynamic>?;
+      if (connection != null && connection['id'] != null) {
+        final currentConnections = List<Map<String, dynamic>>.from(
+          (blueprint['connections'] as List? ?? const []).map((e) => Map<String, dynamic>.from(e as Map)),
+        );
+        if (!currentConnections.any((c) => c['id'] == connection['id'])) {
+          currentConnections.add(connection);
+          blueprint['connections'] = currentConnections;
+          operations.add({
+            'type': 'connect_nodes',
+            'connectionId': connection['id'],
+          });
+        }
+      }
+    }
+  }
 }
 
 class ArchitectureService extends ChangeNotifier {
@@ -78,6 +127,7 @@ class ArchitectureService extends ChangeNotifier {
   ArchitectureCanvasData? _latestArchitecture;
   bool _isLoading = false;
   String? _errorMessage;
+  ArchitectureWebSocketClient? _wsClient;
 
   ArchitectureCanvasData? get latestArchitecture => _latestArchitecture;
   bool get isLoading => _isLoading;
@@ -86,6 +136,7 @@ class ArchitectureService extends ChangeNotifier {
   void _handleAuthChanged() {
     final nextOwnerId = _authService.userId;
     if (nextOwnerId == _activeOwnerId) return;
+    disconnectFromCanvasStream();
     _activeOwnerId = nextOwnerId;
     _latestArchitecture = null;
     _isLoading = false;
@@ -162,6 +213,9 @@ class ArchitectureService extends ChangeNotifier {
         return bDate.compareTo(aDate);
       });
       _latestArchitecture = architectures.first;
+      if (_latestArchitecture != null) {
+        connectToCanvasStream(_latestArchitecture!.architectureId);
+      }
     } catch (error, stackTrace) {
       _logger.warning('Failed to fetch latest architecture: $error', error, stackTrace);
       _latestArchitecture = null;
@@ -170,6 +224,67 @@ class ArchitectureService extends ChangeNotifier {
       _isLoading = false;
       notifyListeners();
     }
+  }
+
+  String _wsUrl(String architectureId) {
+    final backendUrl = TokenService().backendUrl;
+    final parsed = Uri.parse(backendUrl);
+    final scheme = parsed.scheme == 'https' ? 'wss' : 'ws';
+    final basePath = parsed.path.endsWith('/') ? parsed.path.substring(0, parsed.path.length - 1) : parsed.path;
+    final token = _authService.accessToken ?? '';
+
+    return Uri(
+      scheme: scheme,
+      host: parsed.host,
+      port: parsed.port != 0 ? parsed.port : null,
+      path: '$basePath/v1/architectures/$architectureId/ws',
+      queryParameters: {'token': token},
+    ).toString();
+  }
+
+  void connectToCanvasStream(String architectureId) {
+    if (_wsClient != null) {
+      // Don't reconnect if we are already connected to the same architecture ID
+      return;
+    }
+    if (_activeOwnerId == null || _authService.accessToken == null) return;
+
+    final url = _wsUrl(architectureId);
+    _logger.info('Connecting to canvas WebSocket stream at $url');
+    try {
+      _wsClient = ArchitectureWebSocketClient(
+        url,
+        onEvent: (event) {
+          if (event['type'] == 'canvas_event') {
+            final eventData = event['event'] as Map<String, dynamic>?;
+            if (eventData != null && _latestArchitecture != null) {
+              _logger.fine('Received canvas stream event: $eventData');
+              _latestArchitecture!.applyCanvasEvent(eventData);
+              notifyListeners();
+            }
+          }
+        },
+        onError: (err) {
+          _logger.warning('Canvas WebSocket stream error: $err');
+        },
+      );
+    } catch (e) {
+      _logger.warning('Failed to establish canvas WebSocket connection: $e');
+    }
+  }
+
+  void disconnectFromCanvasStream() {
+    if (_wsClient != null) {
+      _logger.info('Closing canvas WebSocket stream');
+      _wsClient!.close();
+      _wsClient = null;
+    }
+  }
+
+  @override
+  void dispose() {
+    disconnectFromCanvasStream();
+    super.dispose();
   }
 
   int _displayScore(ArchitectureCanvasData architecture) =>
