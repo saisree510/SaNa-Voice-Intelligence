@@ -67,12 +67,16 @@ def _get_agent_authenticated_user(request: Request) -> Optional[AuthenticatedUse
 
 def _decode_authenticated_claims(token: str) -> Dict[str, Any]:
     if settings.SUPABASE_JWT_SECRET:
-        return jwt.decode(
-            token,
-            settings.SUPABASE_JWT_SECRET,
-            algorithms=["HS256"],
-            options={"verify_aud": False, "require": ["sub", "exp"]},
-        )
+        try:
+            return jwt.decode(
+                token,
+                settings.SUPABASE_JWT_SECRET,
+                algorithms=["HS256"],
+                options={"verify_aud": False, "require": ["sub", "exp"]},
+            )
+        except jwt.PyJWTError:
+            if not settings.SUPABASE_URL or not settings.SUPABASE_ANON_KEY:
+                raise
 
     if not settings.SUPABASE_URL or not settings.SUPABASE_ANON_KEY:
         raise jwt.InvalidTokenError(

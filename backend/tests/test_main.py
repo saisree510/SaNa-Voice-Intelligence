@@ -69,6 +69,34 @@ def test_build_projects_production_rejects_signature_mismatch_token():
     assert response.status_code == 401
 
 
+def test_authenticated_routes_fallback_to_supabase_get_user_when_local_jwt_secret_mismatches():
+    token = jwt.encode({"sub": "user-1234", "email": "user@example.com"}, "new-signing-key", algorithm="HS256")
+    headers = {"Authorization": f"Bearer {token}"}
+
+    class SupabaseUser:
+        id = "user-1234"
+        email = "user@example.com"
+        user_metadata = {}
+
+    class SupabaseAuth:
+        @staticmethod
+        def get_user(received_token):
+            assert received_token == token
+            return type("SupabaseResponse", (), {"user": SupabaseUser()})()
+
+    class SupabaseClient:
+        auth = SupabaseAuth()
+
+    with patch("app.auth.auth_bearer.settings.SUPABASE_JWT_SECRET", "legacy-secret"), patch(
+        "app.auth.auth_bearer.settings.SUPABASE_URL", "https://supabase.example.test"
+    ), patch("app.auth.auth_bearer.settings.SUPABASE_ANON_KEY", "anon-key"), patch(
+        "app.auth.auth_bearer.create_client", return_value=SupabaseClient()
+    ):
+        response = client.get("/v1/build/projects", headers=headers)
+
+    assert response.status_code == 200
+
+
 def test_protected_routes_reject_missing_session():
     assert client.get("/v1/build/projects").status_code == 401
     assert client.get("/v1/conversations").status_code == 401
