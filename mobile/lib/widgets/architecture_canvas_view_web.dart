@@ -152,7 +152,9 @@ class _ArchitectureCanvasViewState extends State<ArchitectureCanvasView> {
         break;
       case 'soul.canvas.node_deleted':
         final payload = data['payload'];
-        if (payload is Map) {
+        if (widget.controller!.isReadOnly) {
+          _postToCanvas('soul.canvas.rejected', {'reason': 'Canvas is in read-only mode during build execution'});
+        } else if (payload is Map) {
           final componentId = payload['componentId'] as String?;
           final name = payload['name'] as String? ?? 'this component';
           if (componentId != null) {

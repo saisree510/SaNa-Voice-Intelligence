@@ -8,6 +8,7 @@ import 'package:intl/intl.dart';
 
 import '../controllers/app_ctrl.dart';
 import '../models/sana_orb_state.dart';
+import '../services/architecture_service.dart';
 import '../services/auth_service.dart';
 import '../services/build_projects_service.dart';
 import '../services/build_stream_service.dart';
@@ -552,14 +553,14 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
   }
 
   Future<void> _approveAndStream() async {
-    final service = context.read<BuildProjectsService>();
-    setState(() => _showStreamView = true);
-    await service.streamBuild(widget.project.projectId);
-  }
+    final buildService = context.read<BuildProjectsService>();
+    final archService = context.read<ArchitectureService>();
 
-  void _setCanvasReadOnly(bool readOnly) {
-    // Canvas controller is managed by ArchitectureCanvasPanel
-    // We need to access it through the widget tree during build
+    // Ensure latest architecture is loaded before streaming
+    await archService.fetchLatestArchitecture();
+
+    setState(() => _showStreamView = true);
+    await buildService.streamBuild(widget.project.projectId);
   }
 
   Future<void> _resume() async {
