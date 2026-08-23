@@ -124,6 +124,149 @@ def build_project_download_url(backend_url: str, project_id: str) -> str:
     return f"{base}/v1/build/projects/{project_id}/download"
 
 
+def _safe_architecture_id(text: str, *, prefix: str = "arch") -> str:
+    slug = re.sub(r"[^a-z0-9_-]", "-", text.lower()).strip("-_")
+    slug = re.sub(r"-+", "-", slug)[:40].strip("-_")
+    if not slug or not slug[0].isalpha():
+        slug = f"{prefix}-{slug or uuid.uuid4().hex[:8]}"
+    return slug[:64]
+
+
+def _infer_overview_components(specification: str) -> list[dict[str, str]]:
+    text = specification.lower()
+    components: list[dict[str, str]] = [{"id": "frontend", "name": "Flutter Web", "type": "frontend"}]
+    if any(term in text for term in ("api", "backend", "server", "fastapi", "database", "auth", "build")):
+        components.append({"id": "api", "name": "FastAPI Backend", "type": "service"})
+    if any(term in text for term in ("database", "data", "store", "save", "persist", "supabase", "login", "auth")):
+        components.append({"id": "database", "name": "Supabase PostgreSQL", "type": "database"})
+    if any(term in text for term in ("ai", "agent", "voice", "livekit", "llm", "speech")):
+        components.append({"id": "agent", "name": "Soul Voice Agent", "type": "agent"})
+    if len(components) == 1:
+        components.append({"id": "api", "name": "Application Logic", "type": "service"})
+    return components
+
+
+def _build_architecture_operations(architecture_id: str, components: list[dict[str, str]]) -> list[dict[str, Any]]:
+    operations: list[dict[str, Any]] = []
+    sequence = 1
+    for component in components:
+        operations.append(
+            {
+                "sequence_number": sequence,
+                "idempotency_key": f"{architecture_id}-add-{component['id']}",
+                "operation": {
+                    "operation_id": f"op-{sequence}",
+                    "architecture_id": architecture_id,
+                    "base_version": 1,
+                    "operation_type": "add_node",
+                    "actor": "soul_agent",
+                    "payload": {"component": component},
+                },
+            }
+        )
+        sequence += 1
+
+    for source, target, protocol in (
+        ("frontend", "api", "HTTPS"),
+        ("api", "database", "SQL"),
+        ("frontend", "agent", "LiveKit"),
+        ("agent", "api", "HTTPS"),
+    ):
+        if not any(component["id"] == source for component in components):
+            continue
+        if not any(component["id"] == target for component in components):
+            continue
+        connection_id = f"{source}-{target}"
+        operations.append(
+            {
+                "sequence_number": sequence,
+                "idempotency_key": f"{architecture_id}-connect-{connection_id}",
+                "operation": {
+                    "operation_id": f"op-{sequence}",
+                    "architecture_id": architecture_id,
+                    "base_version": 1,
+                    "operation_type": "connect_nodes",
+                    "actor": "soul_agent",
+                    "payload": {
+                        "connection": {
+                            "id": connection_id,
+                            "source_id": source,
+                            "target_id": target,
+                            "protocol": protocol,
+                        }
+                    },
+                },
+            }
+        )
+        sequence += 1
+    return operations
+
+
+@llm.function_tool
+async def create_overview_architecture(
+    title: str,
+    specification: str,
+    *,
+    request_user_id: Optional[str] = None,
+    request_user_email: Optional[str] = None,
+    conversation_id: Optional[str] = None,
+    project_id: Optional[str] = None,
+) -> str:
+    """Create a persistent Overview Architecture Blueprint and progressive canvas operations."""
+    configured_backend_url = get_backend_url()
+    backend_url = configured_backend_url or "http://127.0.0.1:8000"
+    architecture_id = _safe_architecture_id(f"arch-{title}-{uuid.uuid4().hex[:6]}")
+    components = _infer_overview_components(specification)
+
+    try:
+        create_payload: dict[str, Any] = {
+            "title": title,
+            "conversation_id": conversation_id,
+            "project_id": project_id,
+            "blueprint": {
+                "architecture_id": architecture_id,
+                "project_id": project_id if project_id and re.match(r"^[a-z][a-z0-9_-]{0,63}$", project_id) else None,
+                "version": 1,
+                "components": [],
+                "connections": [],
+            },
+        }
+        req = urllib.request.Request(
+            f"{backend_url}/v1/architectures",
+            data=json.dumps(create_payload).encode("utf-8"),
+            headers=build_backend_headers(request_user_id=request_user_id, request_user_email=request_user_email),
+            method="POST",
+        )
+        with urllib.request.urlopen(req, timeout=8) as resp:
+            created = json.loads(resp.read().decode("utf-8"))
+            architecture_id = created.get("architecture_id") or architecture_id
+
+        operations = _build_architecture_operations(architecture_id, components)
+        accepted = 0
+        for operation_payload in operations:
+            req = urllib.request.Request(
+                f"{backend_url}/v1/architectures/{architecture_id}/events",
+                data=json.dumps(operation_payload).encode("utf-8"),
+                headers=build_backend_headers(request_user_id=request_user_id, request_user_email=request_user_email),
+                method="POST",
+            )
+            with urllib.request.urlopen(req, timeout=8) as resp:
+                json.loads(resp.read().decode("utf-8"))
+                accepted += 1
+
+        component_names = ", ".join(component["name"] for component in components)
+        return (
+            f"Architecture Blueprint created with ID {architecture_id}. "
+            f"Drew {len(components)} components and {accepted - len(components)} connections progressively: {component_names}."
+        )
+    except Exception as e:
+        logger.warning(f"Error creating overview architecture: {e}")
+        return (
+            f"I could not create the live architecture for '{title}' through the configured backend. "
+            "No canvas operations were saved. Please retry after verifying the backend and user session."
+        )
+
+
 def normalize_restored_messages(
     messages: Any,
     *,
@@ -444,6 +587,7 @@ You are Soul, a decisive, precise Tech Lead and Build Orchestrator. You are curr
 YOUR MANDATORY BEHAVIOR FOR EVERY SINGLE TURN:
 - HELP THE USER DEFINE CLEAR PROJECT REQUIREMENTS, SPECIFICATIONS, AND ARCHITECTURE PLANS.
 - Sound like an approachable, decisive tech lead in a working session: refer naturally to earlier decisions and move the discussion forward one concrete choice at a time.
+- When the user asks to create, show, draw, map, or update an architecture/canvas/technical plan, call create_overview_architecture_tool with a concise title and the finalized specification before saying it is available on the canvas.
 - EXPLICIT APPROVAL GATE: NEVER TRIGGER CODE EXECUTION OR FILE MUTATION AUTOMATICALLY. ALWAYS PRESENT THE PLAN CLEARLY AND ASK FOR THE USER'S EXPLICIT APPROVAL ("Are you ready to approve and execute this plan?").
 - WHEN BUILD EXECUTION FINISHES, SUMMARIZE THE GENERATED FILES AND VERIFICATION RESULTS IN 2 TO 3 CLEAR, DIRECT SENTENCES.
 - If asked what mode you are in, answer clearly: "I am in Build Mode."
@@ -531,6 +675,17 @@ async def my_agent(ctx: JobContext):
             request_user_email=current_build_user_email,
         )
 
+    @llm.function_tool
+    async def create_overview_architecture_tool(title: str, specification: str, conversation_id: Optional[str] = None, project_id: Optional[str] = None) -> str:
+        return await create_overview_architecture(
+            title,
+            specification,
+            request_user_id=current_build_user_id,
+            request_user_email=current_build_user_email,
+            conversation_id=conversation_id,
+            project_id=project_id,
+        )
+
     session = AgentSession(
         stt=groq.STT(model="whisper-large-v3-turbo", api_key=groq_key),
         llm=groq.LLM(model="llama-3.3-70b-versatile", api_key=groq_key),
@@ -540,7 +695,7 @@ async def my_agent(ctx: JobContext):
             language="en",
         ),
         vad=silero.VAD.load(),
-        tools=[create_build_project_plan_tool, approve_and_execute_build_project_tool],
+        tools=[create_build_project_plan_tool, approve_and_execute_build_project_tool, create_overview_architecture_tool],
         preemptive_generation=False,
     )
 

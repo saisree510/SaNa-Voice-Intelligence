@@ -8,6 +8,7 @@ from src.agent import (
     approve_and_execute_build_project,
     build_backend_headers,
     create_build_project_plan,
+    create_overview_architecture,
     extract_participant_user_context,
 )
 
@@ -101,6 +102,50 @@ async def test_voice_agent_remote_backend_omits_local_workspace(monkeypatch):
     assert captured["url"].endswith("/v1/build/projects")
     assert "workspace_path" not in captured["body"]
     assert "/data/sana-builds/remote_project" in result
+
+
+@pytest.mark.asyncio
+async def test_voice_agent_creates_progressive_overview_architecture(monkeypatch):
+    monkeypatch.setenv("BACKEND_URL", "https://example.up.railway.app")
+    monkeypatch.setenv("AGENT_BACKEND_SHARED_SECRET", "shared-secret")
+
+    captured = []
+
+    class DummyResponse:
+        def __init__(self, payload):
+            self.payload = payload
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc, tb):
+            return False
+
+        def read(self):
+            return json.dumps(self.payload).encode("utf-8")
+
+    def fake_urlopen(request, timeout=0):
+        body = json.loads(request.data.decode("utf-8"))
+        captured.append({"url": request.full_url, "body": body, "headers": dict(request.headers)})
+        if request.full_url.endswith("/v1/architectures"):
+            return DummyResponse({"architecture_id": body["blueprint"]["architecture_id"]})
+        return DummyResponse({"event_id": "evt-test"})
+
+    monkeypatch.setattr(urllib.request, "urlopen", fake_urlopen)
+
+    result = await create_overview_architecture(
+        "Voice app architecture",
+        "Build a Flutter voice app with FastAPI, Supabase database, LiveKit voice agent and auth.",
+        request_user_id="00000000-0000-0000-0000-000000000001",
+    )
+
+    assert "Architecture Blueprint created" in result
+    assert captured[0]["url"].endswith("/v1/architectures")
+    assert captured[0]["headers"]["X-sana-agent-user-id"] == "00000000-0000-0000-0000-000000000001"
+    event_bodies = [item["body"] for item in captured[1:]]
+    operation_types = [item["operation"]["operation_type"] for item in event_bodies]
+    assert operation_types[:4] == ["add_node", "add_node", "add_node", "add_node"]
+    assert "connect_nodes" in operation_types
 
 
 @pytest.mark.asyncio

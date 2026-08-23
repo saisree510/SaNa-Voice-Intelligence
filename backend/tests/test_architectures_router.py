@@ -107,6 +107,55 @@ def test_canvas_event_validation_rejects_unknown_component():
     assert response.json()["detail"][0]["code"] == "unknown_reference"
 
 
+def test_canvas_events_advance_the_current_blueprint():
+    created = create_architecture(title="Progressive")
+    architecture_id = created["architecture_id"]
+    add_node = {
+        "sequence_number": 1,
+        "idempotency_key": "add-api",
+        "operation": {
+            "operation_id": "operation-add-api",
+            "architecture_id": architecture_id,
+            "base_version": 1,
+            "operation_type": "add_node",
+            "actor": "soul_agent",
+            "payload": {"component": {"id": "api", "name": "FastAPI", "type": "service"}},
+        },
+    }
+    connect = {
+        "sequence_number": 2,
+        "idempotency_key": "connect-web-api",
+        "operation": {
+            "operation_id": "operation-connect",
+            "architecture_id": architecture_id,
+            "base_version": 1,
+            "operation_type": "connect_nodes",
+            "actor": "soul_agent",
+            "payload": {
+                "connection": {
+                    "id": "web-api",
+                    "source_id": "web",
+                    "target_id": "api",
+                    "protocol": "HTTPS",
+                }
+            },
+        },
+    }
+
+    add_response = client.post(f"/v1/architectures/{architecture_id}/events", json=add_node, headers=auth_headers(USER_A))
+    connect_response = client.post(f"/v1/architectures/{architecture_id}/events", json=connect, headers=auth_headers(USER_A))
+
+    assert add_response.status_code == 200
+    assert connect_response.status_code == 200
+
+    response = client.get(f"/v1/architectures/{architecture_id}", headers=auth_headers(USER_A))
+
+    assert response.status_code == 200
+    blueprint = response.json()["current_blueprint"]
+    assert [component["id"] for component in blueprint["components"]] == ["web", "api"]
+    assert blueprint["connections"][0]["id"] == "web-api"
+
+
 def test_snapshots_and_versions_are_owner_scoped():
     created = create_architecture(title="Snapshot")
     architecture_id = created["architecture_id"]

@@ -277,4 +277,58 @@ def validate_canvas_operation(operation: CanvasOperation, blueprint: Architectur
     return errors
 
 
-__all__ = ["ArchitectureSpec", "BlueprintStatus", "CanvasOperation", "CanvasOperationType", "CanvasValidationError", "ValidationError", "validate_canvas_operation"]
+def apply_canvas_operation(operation: CanvasOperation, blueprint: ArchitectureSpec) -> ArchitectureSpec:
+    """Apply a previously validated semantic operation to the Blueprint."""
+    payload = PAYLOAD_MODELS[operation.operation_type].model_validate(operation.payload)
+    changes: dict[str, Any] = {"updated_at": datetime.now(timezone.utc)}
+
+    if isinstance(payload, AddNodePayload):
+        changes["components"] = [*blueprint.components, payload.component]
+    elif isinstance(payload, UpdateNodePayload):
+        components = []
+        for component in blueprint.components:
+            if component.id != payload.component_id:
+                components.append(component)
+                continue
+            updates = {
+                key: value
+                for key, value in {
+                    "name": payload.name,
+                    "type": payload.type,
+                    "technology": payload.technology,
+                    "metadata": payload.metadata,
+                }.items()
+                if value is not None
+            }
+            components.append(component.model_copy(update=updates))
+        changes["components"] = components
+    elif isinstance(payload, DeleteNodePayload):
+        changes["components"] = [component for component in blueprint.components if component.id != payload.component_id]
+        changes["connections"] = [
+            connection
+            for connection in blueprint.connections
+            if connection.source_id != payload.component_id and connection.target_id != payload.component_id
+        ]
+        changes["groups"] = [
+            group.model_copy(update={"component_ids": [item for item in group.component_ids if item != payload.component_id]})
+            for group in blueprint.groups
+        ]
+        changes["annotations"] = [
+            annotation.model_copy(update={"component_ids": [item for item in annotation.component_ids if item != payload.component_id]})
+            for annotation in blueprint.annotations
+        ]
+    elif isinstance(payload, ConnectNodesPayload):
+        changes["connections"] = [*blueprint.connections, payload.connection]
+    elif isinstance(payload, DisconnectNodesPayload):
+        changes["connections"] = [
+            connection for connection in blueprint.connections if connection.id != payload.connection_id
+        ]
+    elif isinstance(payload, CreateGroupPayload):
+        changes["groups"] = [*blueprint.groups, payload.group]
+    elif isinstance(payload, AddAnnotationPayload):
+        changes["annotations"] = [*blueprint.annotations, payload.annotation]
+
+    return blueprint.model_copy(update=changes)
+
+
+__all__ = ["ArchitectureSpec", "BlueprintStatus", "CanvasOperation", "CanvasOperationType", "CanvasValidationError", "ValidationError", "apply_canvas_operation", "validate_canvas_operation"]

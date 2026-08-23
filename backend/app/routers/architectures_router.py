@@ -6,7 +6,7 @@ from pydantic import BaseModel, Field, ValidationError
 
 from app.auth.auth_bearer import AuthenticatedUser, authenticated_user_from_token, get_current_user, user_id_aliases
 from app.config import settings
-from app.models.architecture_models import ArchitectureSpec, BlueprintStatus, CanvasOperation, validate_canvas_operation
+from app.models.architecture_models import ArchitectureSpec, BlueprintStatus, CanvasOperation, apply_canvas_operation, validate_canvas_operation
 from app.models.architecture_storage_models import (
     ArchitectureRecord,
     ArchitectureVersionRecord,
@@ -118,7 +118,10 @@ def _append_validated_canvas_event(
         operation=request.operation,
     )
     try:
-        return architecture_store.append_event(event)
+        saved_event = architecture_store.append_event(event)
+        record.current_blueprint = apply_canvas_operation(request.operation, record.current_blueprint)
+        architecture_store.update_architecture(record)
+        return saved_event
     except DuplicateIdempotencyError as exc:
         return exc.existing_event
     except SequenceConflictError as exc:
