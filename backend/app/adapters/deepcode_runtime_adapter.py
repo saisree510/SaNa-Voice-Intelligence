@@ -78,11 +78,24 @@ class DeepCodeRuntimeAdapter(CodingAgentAdapter):
         spec: BuildSpec,
         run_id: str,
     ) -> AsyncGenerator[BuildRunEvent, None]:
+        import os
+
         prompt = spec.to_prompt()
+        workspace_path = os.path.abspath(os.path.normpath(spec.workspace_path))
+
+        # Ensure workspace exists and is writable before invoking DeepCode
+        os.makedirs(workspace_path, exist_ok=True)
+        if not os.path.isdir(workspace_path):
+            raise RuntimeError(f"Workspace directory does not exist: {workspace_path}")
+        if not os.access(workspace_path, os.W_OK):
+            raise RuntimeError(f"Workspace directory is not writable: {workspace_path}")
+
+        # Run DeepCode with explicit output handling to ensure files are written to disk
+        # Use absolute workspace path and add sandbox-disable environment variable
         command = [
             settings.DEEPCODE_BINARY_PATH,
             "exec",
-            "--workspace", spec.workspace_path,
+            "--workspace", workspace_path,
             "--json",
             "--access", "full-access",
             "--trust",
@@ -92,7 +105,7 @@ class DeepCodeRuntimeAdapter(CodingAgentAdapter):
 
         logger.info(
             "DeepCodeRuntimeAdapter[%s] invoking: %s --workspace %s --connection %s ...",
-            run_id, settings.DEEPCODE_BINARY_PATH, spec.workspace_path, settings.DEEPCODE_CONNECTION,
+            run_id, settings.DEEPCODE_BINARY_PATH, workspace_path, settings.DEEPCODE_CONNECTION,
         )
 
         seq = 0
