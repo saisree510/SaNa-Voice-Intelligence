@@ -1,4 +1,5 @@
 import io
+import json
 import logging
 import os
 import re
@@ -663,6 +664,152 @@ async def approve_and_execute_project(
     project = _load_project_or_404(project_id)
     _authorize_project_access(project, current_user)
     return await _approve_and_execute_project_model(project, request, current_user)
+
+
+@router.post('/projects/{project_id}/stream', tags=["Build Mode"])
+async def stream_build_execution(
+    project_id: str,
+    current_user: AuthenticatedUser = Depends(get_current_user),
+):
+    """
+    Server-Sent Events endpoint for real-time build progress streaming.
+    Executes the build and streams each event as it occurs.
+
+    Client connects with: fetch('/v1/build/projects/{id}/stream', {method: 'POST'})
+    Receives events as SSE data: {"event_type": "...", "message": "...", ...}
+    """
+    _ensure_build_mode_enabled()
+    project = _load_project_or_404(project_id)
+    _authorize_project_access(project, current_user)
+
+    if project.status not in ('plan_generated',):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f'Project status is {project.status}, expected "plan_generated" for streaming execution',
+        )
+
+    async def event_generator() -> AsyncGenerator[str, None]:
+        import uuid
+        from app.models.build_models import BuildSpec
+
+        run_id = f'run-{uuid.uuid4().hex[:8]}'
+        session = _ensure_project_session(project)
+        spec = BuildSpec(
+            run_id=run_id,
+            project_id=project.project_id,
+            architecture_id=getattr(project, 'architecture_id', None),
+            architecture_version=getattr(project, 'blueprint_version', None),
+            blueprint=None,
+            specification=project.specification,
+            acceptance_criteria=getattr(project, 'acceptance_criteria', []),
+            technical_stack=getattr(project, 'technical_stack', {}),
+            repository_rules=getattr(project, 'repository_rules', []),
+            test_requirements=getattr(project, 'test_requirements', []),
+            workspace_path=project.workspace_path,
+            approved_by=current_user.id,
+        )
+
+        provider_label = coding_adapter.provider_label
+        project.provider = provider_label
+        project.status = 'building'
+        project.updated_at = datetime.utcnow().isoformat()
+        project_store.upsert_project(project)
+
+        blueprint_hash: Optional[str] = spec.blueprint_hash()
+        events: list[DeepCodeEvent] = []
+        build_run_events: list[BuildRunEvent] = []
+
+        try:
+            yield 'data: {"event_type":"start","message":"Build execution started","provider":"' + provider_label + '"}\n\n'
+
+            async for run_event in coding_adapter.run(spec, run_id):
+                build_run_events.append(run_event)
+                event_dict = {
+                    'event_type': run_event.event_type,
+                    'message': run_event.message,
+                    'details': run_event.details,
+                    'timestamp': run_event.timestamp.isoformat(),
+                    'provider': provider_label,
+                }
+                yield f'data: {json.dumps(event_dict)}\n\n'
+
+                legacy_event = DeepCodeEvent(
+                    event_type=run_event.event_type,
+                    message=run_event.message,
+                    details=run_event.details,
+                    user_id=project.user_id,
+                    project_id=project.project_id,
+                    session_id=session.session_id,
+                )
+                events.append(legacy_event)
+
+            generated_files = _list_workspace_files(project.workspace_path)
+            if not generated_files:
+                raise RuntimeError(
+                    f"Build execution completed but produced no files in workspace '{project.workspace_path}'."
+                )
+
+            project.status = 'completed'
+            project.updated_at = datetime.utcnow().isoformat()
+            run_turn = BuildRunTurnModel(
+                turn_id=run_id,
+                project_id=project.project_id,
+                session_id=session.session_id,
+                user_id=project.user_id,
+                prompt=project.specification,
+                status='completed',
+                provider=provider_label,
+                blueprint_hash=blueprint_hash,
+                events=events,
+                created_at=datetime.utcnow().isoformat(),
+            )
+            project.history.append(run_turn)
+            project.generated_files = [
+                BuildFileModel(
+                    path=file_path,
+                    user_id=project.user_id,
+                    project_id=project.project_id,
+                    run_id=run_id,
+                )
+                for file_path in generated_files
+            ]
+            archive_bytes = _build_workspace_zip_bytes(project.workspace_path, generated_files)
+            project.artifact_path = project_store.store_project_archive(project, archive_bytes)
+            project_store.upsert_project(project)
+
+            summary = (
+                f"Build execution completed using {provider_label}. "
+                f"Generated {len(generated_files)} file(s)."
+            )
+            completion_data = {
+                'event_type': 'complete',
+                'message': summary,
+                'generated_files': generated_files,
+                'provider': provider_label,
+            }
+            yield f'data: {json.dumps(completion_data)}\n\n'
+
+        except Exception as exc:
+            project.status = 'failed'
+            project.updated_at = datetime.utcnow().isoformat()
+            project_store.upsert_project(project)
+            logger.error('Stream build execution failed for project %s: %s', project.project_id, exc)
+            error_data = {
+                'event_type': 'error',
+                'message': str(exc),
+                'provider': provider_label,
+            }
+            yield f'data: {json.dumps(error_data)}\n\n'
+
+    return StreamingResponse(
+        event_generator(),
+        media_type='text/event-stream',
+        headers={
+            'Cache-Control': 'no-cache',
+            'Connection': 'keep-alive',
+            'X-Accel-Buffering': 'no',
+        },
+    )
 
 
 @router.get('/projects/{project_id}/download-link', response_model=DownloadLinkResponse)
