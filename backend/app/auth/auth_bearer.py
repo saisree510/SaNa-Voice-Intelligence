@@ -98,6 +98,18 @@ def _decode_authenticated_claims(token: str) -> Dict[str, Any]:
     }
 
 
+def authenticated_user_from_token(token: str) -> AuthenticatedUser:
+    payload = _decode_authenticated_claims(token)
+    user_id = normalize_user_id(payload.get("sub"))
+    if not user_id:
+        raise jwt.InvalidTokenError("Invalid token: sub claim missing")
+    return AuthenticatedUser(
+        user_id=user_id,
+        email=payload.get("email"),
+        metadata=payload.get("user_metadata", {}),
+    )
+
+
 async def get_current_user(
     request: Request,
     credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
@@ -120,19 +132,7 @@ async def get_current_user(
 
     token = credentials.credentials
     try:
-        payload = _decode_authenticated_claims(token)
-
-        user_id = normalize_user_id(payload.get("sub"))
-        email = payload.get("email")
-        user_metadata = payload.get("user_metadata", {})
-
-        if not user_id:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid token: sub claim missing",
-            )
-
-        return AuthenticatedUser(user_id=user_id, email=email, metadata=user_metadata)
+        return authenticated_user_from_token(token)
 
     except jwt.PyJWTError as e:
         logger.warning("JWT verification failed: %s", e)

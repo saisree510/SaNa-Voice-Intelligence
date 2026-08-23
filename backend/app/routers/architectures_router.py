@@ -1,9 +1,10 @@
 from typing import Any, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel, Field
+import jwt
+from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisconnect, status
+from pydantic import BaseModel, Field, ValidationError
 
-from app.auth.auth_bearer import AuthenticatedUser, get_current_user, user_id_aliases
+from app.auth.auth_bearer import AuthenticatedUser, authenticated_user_from_token, get_current_user, user_id_aliases
 from app.config import settings
 from app.models.architecture_models import ArchitectureSpec, BlueprintStatus, CanvasOperation, validate_canvas_operation
 from app.models.architecture_storage_models import (
@@ -19,8 +20,11 @@ from app.services.architecture_store import (
     SupabaseArchitectureStore,
     new_architecture_id,
 )
+from app.services.canvas_connection_manager import CanvasConnectionManager
 
 router = APIRouter(prefix="/v1/architectures", tags=["Architectures"])
+MAX_CANVAS_WS_MESSAGE_BYTES = 64 * 1024
+MAX_CANVAS_WS_MESSAGES_PER_CONNECTION = 120
 
 architecture_store = (
     SupabaseArchitectureStore(
@@ -30,6 +34,7 @@ architecture_store = (
     if settings.SUPABASE_URL and settings.SUPABASE_SERVICE_ROLE_KEY
     else ArchitectureStore(trusted_root=settings.BUILD_STORAGE_ROOT)
 )
+canvas_connections = CanvasConnectionManager()
 
 
 class CreateArchitectureRequest(BaseModel):
@@ -48,6 +53,10 @@ class AppendCanvasEventRequest(BaseModel):
     sequence_number: int = Field(ge=1)
     idempotency_key: str = Field(min_length=1, max_length=120)
     operation: CanvasOperation
+
+
+class CanvasWebSocketEventRequest(AppendCanvasEventRequest):
+    type: str = "canvas_operation"
 
 
 class CreateSnapshotRequest(BaseModel):
@@ -80,6 +89,40 @@ def _load_owned_architecture_or_404(architecture_id: str, current_user: Authenti
             detail=f"Architecture {architecture_id} not found",
         )
     return record
+
+
+def _append_validated_canvas_event(
+    architecture_id: str,
+    request: AppendCanvasEventRequest,
+    current_user: AuthenticatedUser,
+) -> CanvasEventRecord:
+    record = _load_owned_architecture_or_404(architecture_id, current_user)
+    if request.operation.architecture_id != architecture_id:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Operation architecture_id mismatch")
+
+    validation_errors = validate_canvas_operation(request.operation, record.current_blueprint)
+    if validation_errors:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=[error.model_dump(mode="json") for error in validation_errors],
+        )
+
+    event = CanvasEventRecord(
+        event_id=new_architecture_id("evt"),
+        architecture_id=architecture_id,
+        user_id=current_user.id,
+        architecture_version=record.current_version,
+        sequence_number=request.sequence_number,
+        idempotency_key=request.idempotency_key,
+        event_type=request.operation.operation_type.value,
+        operation=request.operation,
+    )
+    try:
+        return architecture_store.append_event(event)
+    except DuplicateIdempotencyError as exc:
+        return exc.existing_event
+    except SequenceConflictError as exc:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
 
 
 @router.post("", response_model=ArchitectureRecord)
@@ -140,33 +183,7 @@ async def append_canvas_event(
     request: AppendCanvasEventRequest,
     current_user: AuthenticatedUser = Depends(get_current_user),
 ):
-    record = _load_owned_architecture_or_404(architecture_id, current_user)
-    if request.operation.architecture_id != architecture_id:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Operation architecture_id mismatch")
-
-    validation_errors = validate_canvas_operation(request.operation, record.current_blueprint)
-    if validation_errors:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=[error.model_dump(mode="json") for error in validation_errors],
-        )
-
-    event = CanvasEventRecord(
-        event_id=new_architecture_id("evt"),
-        architecture_id=architecture_id,
-        user_id=current_user.id,
-        architecture_version=record.current_version,
-        sequence_number=request.sequence_number,
-        idempotency_key=request.idempotency_key,
-        event_type=request.operation.operation_type.value,
-        operation=request.operation,
-    )
-    try:
-        return architecture_store.append_event(event)
-    except DuplicateIdempotencyError as exc:
-        return exc.existing_event
-    except SequenceConflictError as exc:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
+    return _append_validated_canvas_event(architecture_id, request, current_user)
 
 
 @router.get("/{architecture_id}/events", response_model=list[CanvasEventRecord])
@@ -242,3 +259,98 @@ async def list_architecture_versions(
 ):
     _load_owned_architecture_or_404(architecture_id, current_user)
     return architecture_store.list_versions(architecture_id)
+
+
+@router.websocket("/{architecture_id}/ws")
+async def architecture_canvas_websocket(
+    architecture_id: str,
+    websocket: WebSocket,
+    token: str = "",
+):
+    try:
+        current_user = authenticated_user_from_token(token)
+        _load_owned_architecture_or_404(architecture_id, current_user)
+    except (HTTPException, jwt.PyJWTError):
+        await websocket.close(code=1008)
+        return
+
+    await canvas_connections.connect(architecture_id, websocket)
+    await websocket.send_json({"type": "canvas_ready", "architecture_id": architecture_id})
+    message_count = 0
+
+    try:
+        while True:
+            raw_message = await websocket.receive_text()
+            message_count += 1
+            if len(raw_message.encode("utf-8")) > MAX_CANVAS_WS_MESSAGE_BYTES:
+                await websocket.send_json(
+                    {
+                        "type": "canvas_rejected",
+                        "code": "payload_too_large",
+                        "message": "Canvas WebSocket message is too large",
+                    }
+                )
+                continue
+            if message_count > MAX_CANVAS_WS_MESSAGES_PER_CONNECTION:
+                await websocket.send_json(
+                    {
+                        "type": "canvas_rejected",
+                        "code": "rate_limited",
+                        "message": "Canvas WebSocket message limit exceeded",
+                    }
+                )
+                await websocket.close(code=1008)
+                return
+
+            try:
+                payload = CanvasWebSocketEventRequest.model_validate_json(raw_message)
+                if payload.type != "canvas_operation":
+                    raise ValueError("Unsupported canvas WebSocket message type")
+                event = _append_validated_canvas_event(architecture_id, payload, current_user)
+            except ValidationError as exc:
+                await websocket.send_json(
+                    {
+                        "type": "canvas_rejected",
+                        "code": "invalid_message",
+                        "message": "Canvas WebSocket message failed schema validation",
+                        "detail": exc.errors(),
+                    }
+                )
+                continue
+            except HTTPException as exc:
+                await websocket.send_json(
+                    {
+                        "type": "canvas_rejected",
+                        "code": "operation_rejected",
+                        "status_code": exc.status_code,
+                        "detail": exc.detail,
+                    }
+                )
+                continue
+            except ValueError as exc:
+                await websocket.send_json(
+                    {
+                        "type": "canvas_rejected",
+                        "code": "invalid_message",
+                        "message": str(exc),
+                    }
+                )
+                continue
+
+            accepted = {
+                "type": "canvas_accepted",
+                "architecture_id": architecture_id,
+                "event": event.model_dump(mode="json"),
+            }
+            await websocket.send_json(accepted)
+            await canvas_connections.broadcast(
+                architecture_id,
+                {
+                    "type": "canvas_event",
+                    "architecture_id": architecture_id,
+                    "event": event.model_dump(mode="json"),
+                },
+                exclude=websocket,
+            )
+    except WebSocketDisconnect:
+        canvas_connections.disconnect(architecture_id, websocket)
