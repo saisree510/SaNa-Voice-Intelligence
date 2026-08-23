@@ -5,7 +5,8 @@ import pytest
 
 from app.adapters.deepcode_adapter import DeepCodeAdapter
 from app.config import settings
-from app.routers import build_router
+from app.routers import architectures_router, build_router
+from app.services.architecture_store import ArchitectureStore
 from app.services.build_project_store import BuildProjectStore
 
 
@@ -44,3 +45,8 @@ def isolated_security_environment(tmp_path, monkeypatch):
         BuildProjectStore(trusted_root=str(tmp_path / "builds")),
     )
     monkeypatch.setattr(build_router, "deepcode_adapter", DeepCodeAdapter())
+    monkeypatch.setattr(
+        architectures_router,
+        "architecture_store",
+        ArchitectureStore(trusted_root=str(tmp_path / "architectures")),
+    )

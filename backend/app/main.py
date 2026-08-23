@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
-from app.routers import livekit_router, conversations_router, build_router
+from app.routers import livekit_router, conversations_router, build_router, architectures_router
 
 # Configure structured logging
 logging.basicConfig(
@@ -31,6 +31,7 @@ app.add_middleware(
 app.include_router(livekit_router.router)
 app.include_router(conversations_router.router)
 app.include_router(build_router.router)
+app.include_router(architectures_router.router)
 
 
 @app.get("/health", tags=["Health"])
@@ -55,6 +56,7 @@ async def system_status():
         "livekit_url": settings.LIVEKIT_URL,
         "supabase_url": settings.SUPABASE_URL,
         "build_project_store": build_router.build_project_store_name(),
+        "architecture_store": architectures_router.architecture_store_name(),
         "version": "0.7.0",
     }
 
