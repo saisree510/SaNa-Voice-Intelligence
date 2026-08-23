@@ -277,8 +277,9 @@ class _ConversationCanvasWorkspaceState extends State<_ConversationCanvasWorkspa
 
   void _toggleChatDrawer() {
     setState(() {
-      _isChatDrawerOpen = !_isChatDrawerOpen;
+      _isChatDrawerOpen = true;
     });
+    context.read<AppCtrl>().setCanvasFocusVisible(true);
   }
 
   void _toggleCanvasCollapsed() {
@@ -302,6 +303,18 @@ class _ConversationCanvasWorkspaceState extends State<_ConversationCanvasWorkspa
   @override
   Widget build(BuildContext context) => LayoutBuilder(
         builder: (context, constraints) {
+          final appCtrl = context.watch<AppCtrl>();
+          if (_isCanvasFullscreen && !appCtrl.isCanvasFocusVisible) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (!mounted || context.read<AppCtrl>().isCanvasFocusVisible) return;
+              setState(() {
+                _isCanvasCollapsed = true;
+                _isCanvasFullscreen = false;
+                _isChatDrawerOpen = false;
+              });
+            });
+          }
+
           final isWide = constraints.maxWidth >= 980;
           if (!isWide) {
             _isCanvasCollapsed = false;
@@ -509,8 +522,8 @@ class _CanvasFocusHeader extends StatelessWidget {
               const Spacer(),
               FilledButton.tonalIcon(
                 onPressed: onToggleChat,
-                icon: Icon(isChatDrawerOpen ? Icons.chat_bubble_rounded : Icons.chat_bubble_outline_rounded, size: 18),
-                label: Text(isChatDrawerOpen ? 'Hide chat' : 'Ask Soul'),
+                icon: const Icon(Icons.chat_bubble_outline_rounded, size: 18),
+                label: const Text('Ask Soul'),
               ),
             ],
           ),
