@@ -1,0 +1,24 @@
+# Railway service configuration — Soul Backend
+#
+# Persistent volume for build workspaces:
+#   Railway mounts /app/build_workspaces as a durable volume.
+#   This path survives redeploys and service restarts.
+#   The BUILD_STORAGE_ROOT environment variable must be set to /app/build_workspaces
+#   in the Railway service environment settings.
+#
+# DeepCode settings (set in Railway environment):
+#   DEEPCODE_ENABLED=true
+#   DEEPCODE_CONNECTION=openrouter   (or your preferred provider)
+#   DEEPCODE_BINARY_PATH=deepcode    (must be installed in the container image)
+#   BUILD_RUN_TIMEOUT_SECONDS=600
+#   BUILD_RUN_MAX_OUTPUT_BYTES=2000000
+
+[deploy]
+healthcheckPath = "/health"
+healthcheckTimeout = 30
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 3
+
+[[volumes]]
+mountPath = "/app/build_workspaces"
+name = "soul-build-workspaces"

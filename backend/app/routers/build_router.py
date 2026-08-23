@@ -2,18 +2,23 @@ import io
 import logging
 import os
 import re
+import shutil
 import zipfile
 from datetime import datetime, timedelta, timezone
-from typing import List, Optional
+from typing import AsyncGenerator, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from fastapi.responses import StreamingResponse
 import jwt
 from pydantic import BaseModel
 
+from app.adapters.coding_agent_adapter import CodingAgentAdapter
 from app.adapters.deepcode_adapter import DeepCodeAdapter
+from app.adapters.deepcode_runtime_adapter import DeepCodeRuntimeAdapter
+from app.adapters.deepcode_adapter import PrototypeScaffoldAdapter
 from app.auth.auth_bearer import AuthenticatedUser, get_current_user, user_id_aliases
 from app.config import settings
+from app.models.build_models import BuildSpec, BuildRunEvent
 from app.models.deepcode_models import (
     BuildFileModel,
     BuildProjectModel,
@@ -26,7 +31,28 @@ from app.services.build_project_store import BuildProjectStore, SupabaseBuildPro
 logger = logging.getLogger("backend.build_router")
 router = APIRouter(prefix="/v1/build", tags=["Build Mode"])
 
+# Backward-compatible legacy adapter (kept for /sessions endpoints)
 deepcode_adapter = DeepCodeAdapter()
+
+# Provider-neutral coding agent: real DeepCode when enabled, labelled scaffold otherwise
+def _verify_deepcode_binary() -> bool:
+    binary = shutil.which(settings.DEEPCODE_BINARY_PATH)
+    return binary is not None
+
+def _select_coding_adapter() -> CodingAgentAdapter:
+    if settings.DEEPCODE_ENABLED and _verify_deepcode_binary():
+        logger.info("DeepCode runtime adapter selected (DEEPCODE_ENABLED=True, binary found).")
+        return DeepCodeRuntimeAdapter()
+    if settings.DEEPCODE_ENABLED:
+        logger.warning(
+            "DEEPCODE_ENABLED=True but binary '%s' not found. Falling back to PrototypeScaffoldAdapter.",
+            settings.DEEPCODE_BINARY_PATH,
+        )
+    else:
+        logger.info("DEEPCODE_ENABLED=False. Using PrototypeScaffoldAdapter.")
+    return PrototypeScaffoldAdapter()
+
+coding_adapter: CodingAgentAdapter = _select_coding_adapter()
 project_store = (
     SupabaseBuildProjectStore(
         trusted_root=settings.BUILD_STORAGE_ROOT,
@@ -479,13 +505,42 @@ async def _approve_and_execute_project_model(
     project.updated_at = datetime.utcnow().isoformat()
     project_store.upsert_project(project)
 
-    events = []
+    import uuid as _uuid
+
+    run_id = f"turn-{uuid.uuid4().hex[:8]}"
+
+    # Assemble BuildSpec from project specification + optional linked blueprint
+    spec = BuildSpec(
+        run_id=run_id,
+        project_id=project.project_id,
+        architecture_id=project.architecture_id,
+        architecture_version=project.blueprint_version,
+        specification=project.specification,
+        workspace_path=project.workspace_path,
+        approved_by=current_user.id,
+    )
+
+    # Record blueprint hash when a linked architecture exists
+    blueprint_hash: Optional[str] = spec.blueprint_hash()
+
+    provider_label = coding_adapter.provider_label
+    project.provider = provider_label
+
+    events: list[DeepCodeEvent] = []
+    build_run_events: list[BuildRunEvent] = []
+
     try:
-        async for event in deepcode_adapter.run_turn(
-            session_id=session.session_id,
-            prompt=project.specification,
-        ):
-            events.append(event)
+        async for run_event in coding_adapter.run(spec, run_id):
+            build_run_events.append(run_event)
+            # Translate to legacy DeepCodeEvent for backward-compat response model
+            events.append(DeepCodeEvent(
+                event_type=run_event.event_type,
+                message=run_event.message,
+                details=run_event.details,
+                user_id=project.user_id,
+                project_id=project.project_id,
+                session_id=session.session_id,
+            ))
 
         generated_files = _list_workspace_files(project.workspace_path)
         if not generated_files:
@@ -495,7 +550,6 @@ async def _approve_and_execute_project_model(
 
         project.status = 'completed'
         project.updated_at = datetime.utcnow().isoformat()
-        run_id = f"turn-{uuid.uuid4().hex[:8]}"
         run_turn = BuildRunTurnModel(
             turn_id=run_id,
             project_id=project.project_id,
@@ -503,6 +557,8 @@ async def _approve_and_execute_project_model(
             user_id=project.user_id,
             prompt=project.specification,
             status='completed',
+            provider=provider_label,
+            blueprint_hash=blueprint_hash,
             events=events,
             created_at=datetime.utcnow().isoformat(),
         )
@@ -521,7 +577,8 @@ async def _approve_and_execute_project_model(
         project_store.upsert_project(project)
 
         summary = (
-            f"Build execution completed for project '{project.title}'. "
+            f"Build execution completed for project '{project.title}' "
+            f"using {provider_label}. "
             f"Generated {len(generated_files)} file(s) in workspace '{project.workspace_path}'."
         )
         return ApproveProjectResponse(

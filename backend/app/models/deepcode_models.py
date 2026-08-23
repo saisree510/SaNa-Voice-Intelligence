@@ -51,6 +51,8 @@ class BuildRunTurnModel(BaseModel):
     user_id: Optional[str] = None
     prompt: str
     status: str = "completed"
+    provider: str = "prototype_scaffold"  # "deepcode" | "prototype_scaffold"
+    blueprint_hash: Optional[str] = None
     events: List[DeepCodeEvent] = Field(default_factory=list)
     created_at: str = Field(default_factory=lambda: datetime.utcnow().isoformat())
 
@@ -72,6 +74,10 @@ class BuildProjectModel(BaseModel):
     plan_summary: Optional[str] = None
     session_id: Optional[str] = None
     artifact_path: Optional[str] = None
+    architecture_id: Optional[str] = None
+    blueprint_version: Optional[int] = None
+    blueprint_hash: Optional[str] = None
+    provider: str = "prototype_scaffold"  # "deepcode" | "prototype_scaffold"
     history: List[BuildRunTurnModel] = Field(default_factory=list)
     generated_files: List[BuildFileModel] = Field(default_factory=list)
     created_at: str = Field(default_factory=lambda: datetime.utcnow().isoformat())

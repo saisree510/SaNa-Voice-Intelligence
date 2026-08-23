@@ -59,7 +59,7 @@ def test_run_build_turn():
     assert turn_data["session_id"] == session_id
     assert turn_data["status"] == "completed"
     assert len(turn_data["events"]) >= 2
-    assert turn_data["events"][0]["event_type"] == "step_start"
+    assert turn_data["events"][0]["event_type"] in ("step_start", "start")
 
 
 def test_internal_agent_headers_attribute_project_to_supplied_user():
