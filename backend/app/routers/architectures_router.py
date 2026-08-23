@@ -47,6 +47,7 @@ class CreateArchitectureRequest(BaseModel):
 class UpdateArchitectureRequest(BaseModel):
     title: Optional[str] = Field(default=None, min_length=1, max_length=160)
     current_blueprint: Optional[ArchitectureSpec] = None
+    project_id: Optional[str] = None
 
 
 class AppendCanvasEventRequest(BaseModel):
@@ -177,6 +178,8 @@ async def update_architecture(
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Blueprint architecture_id mismatch")
         record.current_blueprint = request.current_blueprint
         record.current_version = request.current_blueprint.version
+    if request.project_id is not None:
+        record.project_id = request.project_id
     return architecture_store.update_architecture(record)
 
 

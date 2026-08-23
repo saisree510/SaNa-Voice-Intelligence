@@ -15,12 +15,14 @@ class ArchitectureCanvasData {
     required this.title,
     required this.blueprint,
     required this.operations,
+    this.projectId,
   });
 
   final String architectureId;
   final String title;
   final Map<String, dynamic> blueprint;
   final List<Map<String, dynamic>> operations;
+  final String? projectId;
 
   int get componentCount => (blueprint['components'] as List? ?? const []).length;
   int get connectionCount => (blueprint['connections'] as List? ?? const []).length;
@@ -31,6 +33,7 @@ class ArchitectureCanvasData {
         'title': title,
         'blueprint': blueprint,
         'operations': operations,
+        'projectId': projectId,
       };
 
   factory ArchitectureCanvasData.fromJson(Map<String, dynamic> json) {
@@ -49,6 +52,7 @@ class ArchitectureCanvasData {
       title: json['title'] as String? ?? 'Architecture Blueprint',
       blueprint: blueprint,
       operations: _operationsFromBlueprint(blueprint),
+      projectId: json['project_id'] as String?,
     );
   }
 
@@ -379,6 +383,68 @@ class ArchitectureService extends ChangeNotifier {
       }
     } catch (e, st) {
       _logger.severe('Error creating canvas snapshot: $e', e, st);
+    }
+  }
+
+  Future<bool> approveArchitectureBlueprint(String projectId) async {
+    final activeArch = _latestArchitecture;
+    if (activeArch == null) {
+      _errorMessage = 'No active architecture to approve.';
+      notifyListeners();
+      return false;
+    }
+
+    final backendUrl = TokenService().backendUrl;
+    if (backendUrl.isEmpty) {
+      _errorMessage = 'Backend URL is not configured.';
+      notifyListeners();
+      return false;
+    }
+
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final approvedBlueprint = Map<String, dynamic>.from(activeArch.blueprint);
+      approvedBlueprint['status'] = 'approved';
+      approvedBlueprint['approved_at'] = DateTime.now().toUtc().toIso8601String();
+
+      final versionResponse = await http.post(
+        Uri.parse('$backendUrl/v1/architectures/${activeArch.architectureId}/versions'),
+        headers: _headers(),
+        body: jsonEncode({
+          'blueprint': approvedBlueprint,
+        }),
+      );
+
+      if (versionResponse.statusCode != 200 && versionResponse.statusCode != 201) {
+        _logger.warning('Failed to save blueprint version: ${versionResponse.body}');
+      }
+
+      final patchResponse = await http.patch(
+        Uri.parse('$backendUrl/v1/architectures/${activeArch.architectureId}'),
+        headers: _headers(),
+        body: jsonEncode({
+          'current_blueprint': approvedBlueprint,
+          'project_id': projectId,
+        }),
+      );
+
+      if (patchResponse.statusCode != 200 && patchResponse.statusCode != 201) {
+        _errorMessage = 'Failed to update architecture: ${patchResponse.body}';
+        return false;
+      }
+
+      await fetchLatestArchitecture();
+      return true;
+    } catch (e, st) {
+      _logger.severe('Failed to approve architecture blueprint: $e', e, st);
+      _errorMessage = 'Failed to approve architecture blueprint.';
+      return false;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
     }
   }
 

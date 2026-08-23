@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../services/architecture_service.dart';
+import '../services/build_projects_service.dart';
+import '../screens/home_shell.dart';
 import '../ui/sana_theme.dart';
 import 'architecture_canvas_controller.dart';
 import 'architecture_canvas_view.dart';
@@ -102,29 +104,131 @@ class _CanvasHeader extends StatelessWidget {
   final bool isFullscreen;
 
   @override
-  Widget build(BuildContext context) => ColoredBox(
-        color: SanaColors.pureWhite,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(12, 10, 12, 8),
-          child: Row(
-            children: [
-              Flexible(
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: _CanvasStatusChip(controller: controller),
+  Widget build(BuildContext context) {
+    final activeArch = context.watch<ArchitectureService>().latestArchitecture;
+    final isDraft = activeArch != null && activeArch.blueprint['status'] == 'draft';
+    final isApproved = activeArch != null && activeArch.projectId != null;
+
+    return ColoredBox(
+      color: SanaColors.pureWhite,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(12, 10, 12, 8),
+        child: Row(
+          children: [
+            Flexible(
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Row(
+                  children: [
+                    _CanvasStatusChip(controller: controller),
+                    if (isDraft) ...[
+                      const SizedBox(width: 12),
+                      FilledButton.icon(
+                        onPressed: () => _approveAndBuild(context, activeArch),
+                        icon: const Icon(Icons.rocket_launch_rounded, size: 16),
+                        style: FilledButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                          minimumSize: Size.zero,
+                          textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+                        ),
+                        label: const Text('Approve & Build'),
+                      ),
+                    ] else if (isApproved) ...[
+                      const SizedBox(width: 12),
+                      OutlinedButton.icon(
+                        onPressed: () => _navigateToProject(context, activeArch.projectId!),
+                        icon: const Icon(Icons.folder_open_rounded, size: 16),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                          minimumSize: Size.zero,
+                          textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+                        ),
+                        label: const Text('Open Build'),
+                      ),
+                    ],
+                  ],
                 ),
               ),
-              const SizedBox(width: 10),
-              _CanvasCommandBar(
-                controller: controller,
-                onCollapse: onCollapse,
-                onFullscreen: onFullscreen,
-                isFullscreen: isFullscreen,
-              ),
-            ],
-          ),
+            ),
+            const SizedBox(width: 10),
+            _CanvasCommandBar(
+              controller: controller,
+              onCollapse: onCollapse,
+              onFullscreen: onFullscreen,
+              isFullscreen: isFullscreen,
+            ),
+          ],
         ),
-      );
+      ),
+    );
+  }
+
+  void _navigateToProject(BuildContext context, String projectId) {
+    final scaffold = ScaffoldMessenger.of(context);
+    scaffold.showSnackBar(const SnackBar(content: Text('Opening project details...')));
+    unawaited(context.read<BuildProjectsService>().fetchProject(projectId).then((detail) {
+      if (detail != null && context.mounted) {
+        unawaited(Navigator.of(context).push(
+          MaterialPageRoute<void>(
+            builder: (_) => ProjectDetailScreen(project: detail),
+          ),
+        ));
+      } else {
+        scaffold.showSnackBar(const SnackBar(content: Text('Could not load project details.')));
+      }
+    }));
+  }
+
+  Future<void> _approveAndBuild(BuildContext context, ArchitectureCanvasData architecture) async {
+    final spec = StringBuffer();
+    spec.writeln('Build an application based on the approved architecture blueprint:');
+    spec.writeln('Title: ${architecture.title}');
+    spec.writeln('Components:');
+    final components = architecture.blueprint['components'] as List? ?? const [];
+    for (var comp in components) {
+      final name = comp['name'] ?? 'Untitled';
+      final type = comp['type'] ?? 'Component';
+      final tech = comp['technology'] ?? 'Unspecified';
+      spec.writeln('- Name: $name (Type: $type, Technology: $tech)');
+    }
+    spec.writeln('Connections:');
+    final connections = architecture.blueprint['connections'] as List? ?? const [];
+    for (var conn in connections) {
+      final source = conn['source_id'] ?? '';
+      final target = conn['target_id'] ?? '';
+      final protocol = conn['protocol'] ?? 'HTTP';
+      spec.writeln('- Connection from $source to $target using protocol $protocol');
+    }
+
+    final scaffold = ScaffoldMessenger.of(context);
+    final buildService = Provider.of<BuildProjectsService>(context, listen: false);
+    final archService = Provider.of<ArchitectureService>(context, listen: false);
+
+    scaffold.showSnackBar(const SnackBar(content: Text('Generating build project plan...')));
+    final project = await buildService.createProject(architecture.title, spec.toString());
+    if (project == null) {
+      scaffold.showSnackBar(SnackBar(content: Text(buildService.errorMessage ?? 'Failed to create build project')));
+      return;
+    }
+
+    scaffold.showSnackBar(const SnackBar(content: Text('Approving and locking architecture blueprint...')));
+    final success = await archService.approveArchitectureBlueprint(project.projectId);
+    if (!success) {
+      scaffold
+          .showSnackBar(SnackBar(content: Text(archService.errorMessage ?? 'Failed to lock architecture blueprint')));
+      return;
+    }
+
+    scaffold.showSnackBar(const SnackBar(content: Text('Starting build execution...')));
+    final runStarted = await buildService.approveProject(project.projectId);
+    if (!runStarted) {
+      scaffold.showSnackBar(SnackBar(content: Text(buildService.errorMessage ?? 'Failed to start build execution')));
+      return;
+    }
+
+    scaffold.showSnackBar(const SnackBar(content: Text('Build successfully started! Redirecting to build details...')));
+    _navigateToProject(context, project.projectId);
+  }
 }
 
 class _CanvasStatusChip extends StatelessWidget {

@@ -356,6 +356,92 @@ class BuildProjectsService extends ChangeNotifier {
     }
   }
 
+  Future<BuildProjectSummary?> createProject(String title, String specification) async {
+    if (_activeOwnerId == null || _authService.accessToken == null) {
+      _errorMessage = 'A valid Supabase session is required to create a project.';
+      notifyListeners();
+      return null;
+    }
+    final backendUrl = TokenService().backendUrl;
+    if (backendUrl.isEmpty) {
+      _errorMessage = 'Backend URL is not configured.';
+      notifyListeners();
+      return null;
+    }
+
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final response = await http.post(
+        Uri.parse('$backendUrl/v1/build/projects'),
+        headers: _headers(),
+        body: jsonEncode({
+          'title': title,
+          'specification': specification,
+        }),
+      );
+
+      if (response.statusCode != 200 && response.statusCode != 201) {
+        _errorMessage = 'Failed to create build project (${response.statusCode}): ${response.body}';
+        return null;
+      }
+
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      final summary = BuildProjectSummary.fromJson(data);
+      await fetchProjects();
+      return summary;
+    } catch (error, stackTrace) {
+      _logger.warning('Failed to create build project: $error', error, stackTrace);
+      _errorMessage = 'Failed to create build project.';
+      return null;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<bool> approveProject(String projectId) async {
+    if (_activeOwnerId == null || _authService.accessToken == null) {
+      _errorMessage = 'A valid Supabase session is required to approve this project.';
+      notifyListeners();
+      return false;
+    }
+    final backendUrl = TokenService().backendUrl;
+    if (backendUrl.isEmpty) {
+      _errorMessage = 'Backend URL is not configured.';
+      notifyListeners();
+      return false;
+    }
+
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final response = await http.post(
+        Uri.parse('$backendUrl/v1/build/projects/$projectId/approve'),
+        headers: _headers(),
+      );
+
+      if (response.statusCode != 200 && response.statusCode != 201) {
+        _errorMessage = 'Failed to approve build project (${response.statusCode}): ${response.body}';
+        return false;
+      }
+
+      await fetchProjects();
+      return true;
+    } catch (error, stackTrace) {
+      _logger.warning('Failed to approve build project $projectId: $error', error, stackTrace);
+      _errorMessage = 'Failed to approve build project.';
+      return false;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
   @override
   void dispose() {
     _authService.removeListener(_handleAuthChanged);
