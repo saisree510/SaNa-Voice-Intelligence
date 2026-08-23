@@ -9,6 +9,7 @@ import 'screens/auth_screen.dart';
 import 'screens/home_shell.dart';
 import 'screens/onboarding_screen.dart';
 import 'services/auth_service.dart';
+import 'services/architecture_service.dart';
 import 'services/build_projects_service.dart';
 import 'ui/sana_theme.dart';
 import 'widgets/app_layout_switcher.dart';
@@ -20,6 +21,7 @@ final appCtrl = AppCtrl();
 final authService = AuthService();
 final conversationService = ConversationService(authService: authService);
 final buildProjectsService = BuildProjectsService(authService: authService);
+final architectureService = ArchitectureService(authService: authService);
 
 class VoiceAssistantApp extends StatelessWidget {
   const VoiceAssistantApp({super.key});
@@ -30,6 +32,7 @@ class VoiceAssistantApp extends StatelessWidget {
           ChangeNotifierProvider.value(value: authService),
           ChangeNotifierProvider.value(value: conversationService),
           ChangeNotifierProvider.value(value: buildProjectsService),
+          ChangeNotifierProvider.value(value: architectureService),
           ChangeNotifierProvider.value(value: appCtrl),
           ChangeNotifierProvider.value(value: appCtrl.session),
           ChangeNotifierProvider.value(value: appCtrl.roomContext),

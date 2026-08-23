@@ -2,14 +2,23 @@ import { convertToExcalidrawElements } from "@excalidraw/excalidraw";
 
 const positions = {
   web: { x: 120, y: 220 },
+  frontend: { x: 120, y: 220 },
   api: { x: 460, y: 220 },
   database: { x: 800, y: 220 },
+  agent: { x: 460, y: 380 },
 };
 
 const size = { width: 220, height: 96 };
 
-function componentElements(component) {
-  const position = positions[component.id];
+function positionFor(component, index) {
+  return positions[component.id] ?? {
+    x: 120 + (index % 4) * 340,
+    y: 220 + Math.floor(index / 4) * 160,
+  };
+}
+
+function componentElements(component, position) {
+  const subtitle = component.technology || component.type || "";
   return convertToExcalidrawElements([
     {
       id: `node-${component.id}`,
@@ -29,7 +38,7 @@ function componentElements(component) {
       type: "text",
       x: position.x + 22,
       y: position.y + 24,
-      text: `${component.name}\n${component.technology}`,
+      text: subtitle ? `${component.name}\n${subtitle}` : component.name,
       fontSize: 20,
       strokeColor: "#281d3d",
       customData: { blueprintId: component.id, role: "component-label" },
@@ -37,9 +46,10 @@ function componentElements(component) {
   ]);
 }
 
-function connectionElements(connection) {
-  const source = positions[connection.source_id];
-  const target = positions[connection.target_id];
+function connectionElements(connection, componentPositions) {
+  const source = componentPositions.get(connection.source_id);
+  const target = componentPositions.get(connection.target_id);
+  if (!source || !target) return [];
   const startX = source.x + size.width;
   const startY = source.y + size.height / 2;
   const endX = target.x;
@@ -74,14 +84,21 @@ function connectionElements(connection) {
 
 export function sceneForOperations(blueprint, operations) {
   const elements = [];
+  const components = Array.isArray(blueprint.components) ? blueprint.components : [];
+  const connections = Array.isArray(blueprint.connections) ? blueprint.connections : [];
+  const componentPositions = new Map(
+    components.map((component, index) => [component.id, positionFor(component, index)]),
+  );
+
   for (const operation of operations) {
     if (operation.type === "add_node") {
-      const component = blueprint.components.find(({ id }) => id === operation.componentId);
-      elements.push(...componentElements(component));
+      const component = components.find(({ id }) => id === operation.componentId);
+      const position = component ? componentPositions.get(component.id) : null;
+      if (component && position) elements.push(...componentElements(component, position));
     }
     if (operation.type === "connect_nodes") {
-      const connection = blueprint.connections.find(({ id }) => id === operation.connectionId);
-      elements.push(...connectionElements(connection));
+      const connection = connections.find(({ id }) => id === operation.connectionId);
+      if (connection) elements.push(...connectionElements(connection, componentPositions));
     }
   }
   return elements;

@@ -30,7 +30,7 @@ class _ArchitectureCanvasViewState extends State<ArchitectureCanvasView> {
   @override
   void initState() {
     super.initState();
-    widget.controller?.bindCommandSender(_sendCommand);
+    widget.controller?.bindMessageSender(_sendMessage);
     ui_web.platformViewRegistry.registerViewFactory(
       _viewType,
       (int viewId) {
@@ -52,7 +52,7 @@ class _ArchitectureCanvasViewState extends State<ArchitectureCanvasView> {
 
   @override
   void dispose() {
-    widget.controller?.unbindCommandSender(_sendCommand);
+    widget.controller?.unbindMessageSender(_sendMessage);
     unawaited(_messageSubscription?.cancel());
     _messageSubscription = null;
     _iframe = null;
@@ -63,8 +63,8 @@ class _ArchitectureCanvasViewState extends State<ArchitectureCanvasView> {
   void didUpdateWidget(covariant ArchitectureCanvasView oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.controller == widget.controller) return;
-    oldWidget.controller?.unbindCommandSender(_sendCommand);
-    widget.controller?.bindCommandSender(_sendCommand);
+    oldWidget.controller?.unbindMessageSender(_sendMessage);
+    widget.controller?.bindMessageSender(_sendMessage);
   }
 
   static String _canvasUrl() {
@@ -95,6 +95,7 @@ class _ArchitectureCanvasViewState extends State<ArchitectureCanvasView> {
           totalOperations: payload is Map ? payload['operationCount'] as int? ?? 0 : 0,
         );
         _postToCanvas('soul.canvas.parent_ready');
+        widget.controller?.resendArchitecture();
         break;
       case 'soul.canvas.state':
         final payload = data['payload'];
@@ -117,8 +118,8 @@ class _ArchitectureCanvasViewState extends State<ArchitectureCanvasView> {
     }
   }
 
-  void _sendCommand(String command) {
-    _postToCanvas('soul.canvas.command', {'command': command});
+  void _sendMessage(String type, Map<String, Object?> payload) {
+    _postToCanvas(type, payload);
   }
 
   void _postToCanvas(String type, [Map<String, Object?> payload = const {}]) {

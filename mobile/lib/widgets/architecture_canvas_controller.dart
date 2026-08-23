@@ -1,9 +1,12 @@
 import 'package:flutter/foundation.dart';
 
-typedef ArchitectureCanvasCommandSender = void Function(String command);
+import '../services/architecture_service.dart';
+
+typedef ArchitectureCanvasMessageSender = void Function(String type, Map<String, Object?> payload);
 
 class ArchitectureCanvasController extends ChangeNotifier {
-  ArchitectureCanvasCommandSender? _sendCommand;
+  ArchitectureCanvasMessageSender? _sendMessage;
+  Map<String, Object?>? _pendingCanvasPayload;
 
   bool _isReady = false;
   String _status = 'loading';
@@ -17,18 +20,39 @@ class ArchitectureCanvasController extends ChangeNotifier {
   int get totalOperations => _totalOperations;
   String? get lastError => _lastError;
 
-  void bindCommandSender(ArchitectureCanvasCommandSender sender) {
-    _sendCommand = sender;
+  void bindMessageSender(ArchitectureCanvasMessageSender sender) {
+    _sendMessage = sender;
+    _sendPendingBlueprint();
   }
 
-  void unbindCommandSender(ArchitectureCanvasCommandSender sender) {
-    if (_sendCommand == sender) {
-      _sendCommand = null;
+  void unbindMessageSender(ArchitectureCanvasMessageSender sender) {
+    if (_sendMessage == sender) {
+      _sendMessage = null;
     }
   }
 
   void sendCommand(String command) {
-    _sendCommand?.call(command);
+    _sendMessage?.call('soul.canvas.command', {'command': command});
+  }
+
+  void loadArchitecture(ArchitectureCanvasData architecture) {
+    _pendingCanvasPayload = architecture.toCanvasPayload();
+    _status = architecture.operations.isEmpty ? 'ready' : 'drawing';
+    _appliedOperations = 0;
+    _totalOperations = architecture.operations.length;
+    _lastError = null;
+    _sendPendingBlueprint();
+    notifyListeners();
+  }
+
+  void resendArchitecture() {
+    _sendPendingBlueprint();
+  }
+
+  void _sendPendingBlueprint() {
+    final payload = _pendingCanvasPayload;
+    if (payload == null) return;
+    _sendMessage?.call('soul.canvas.load_blueprint', payload);
   }
 
   void markReady({required int totalOperations}) {

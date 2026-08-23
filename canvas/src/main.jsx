@@ -20,6 +20,8 @@ function postToParent(type, payload = {}) {
 }
 
 function CanvasProof() {
+  const [blueprint, setBlueprint] = useState(overviewBlueprint);
+  const [operations, setOperations] = useState(mockOperations);
   const [step, setStep] = useState(0);
   const [playing, setPlaying] = useState(true);
   const [speed, setSpeed] = useState(1);
@@ -30,8 +32,8 @@ function CanvasProof() {
   useEffect(() => {
     if (!isEmbedded) return undefined;
     postToParent("soul.canvas.ready", {
-      blueprintId: overviewBlueprint.id,
-      operationCount: mockOperations.length,
+      blueprintId: blueprint.id,
+      operationCount: operations.length,
     });
 
     const handleMessage = (event) => {
@@ -53,10 +55,14 @@ function CanvasProof() {
           if (message.payload?.command === "fit") fitToContent();
           if (message.payload?.command === "replay") reset();
           if (message.payload?.command === "pause") setPlaying(false);
-          if (message.payload?.command === "play" && !reducedMotion && step < mockOperations.length) {
+          if (message.payload?.command === "play" && !reducedMotion && step < operations.length) {
             setPlaying(true);
           }
           postToParent("soul.canvas.ack", { received: message.payload?.command ?? "unknown" });
+          break;
+        case "soul.canvas.load_blueprint":
+          loadBlueprint(message.payload);
+          postToParent("soul.canvas.ack", { received: message.type });
           break;
         default:
           postToParent("soul.canvas.rejected", { reason: "unsupported_type", type: message.type });
@@ -65,7 +71,7 @@ function CanvasProof() {
 
     window.addEventListener("message", handleMessage);
     return () => window.removeEventListener("message", handleMessage);
-  }, [isEmbedded, reducedMotion, step]);
+  }, [blueprint.id, isEmbedded, operations.length, reducedMotion, step]);
 
   useEffect(() => {
     const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -78,17 +84,17 @@ function CanvasProof() {
   useEffect(() => {
     if (reducedMotion) {
       setPlaying(false);
-      setStep(mockOperations.length);
+      setStep(operations.length);
     }
-  }, [reducedMotion]);
+  }, [operations.length, reducedMotion]);
 
   useEffect(() => {
-    if (!playing || step >= mockOperations.length || reducedMotion) return undefined;
+    if (!playing || step >= operations.length || reducedMotion) return undefined;
     const timer = window.setTimeout(() => setStep((current) => current + 1), 1100 / speed);
     return () => window.clearTimeout(timer);
-  }, [playing, reducedMotion, speed, step]);
+  }, [operations.length, playing, reducedMotion, speed, step]);
 
-  const elements = sceneForOperations(overviewBlueprint, mockOperations.slice(0, step));
+  const elements = sceneForOperations(blueprint, operations.slice(0, step));
 
   useEffect(() => {
     apiRef.current?.updateScene({ elements });
@@ -97,15 +103,38 @@ function CanvasProof() {
   useEffect(() => {
     if (!isEmbedded) return;
     postToParent("soul.canvas.state", {
-      status: step < mockOperations.length ? "drawing" : "complete",
+      status: step < operations.length ? "drawing" : "complete",
       appliedOperations: step,
-      totalOperations: mockOperations.length,
+      totalOperations: operations.length,
     });
-  }, [isEmbedded, step]);
+  }, [isEmbedded, operations.length, step]);
 
   const reset = () => {
     setStep(0);
     setPlaying(!reducedMotion);
+  };
+
+  const loadBlueprint = (payload) => {
+    if (!payload || typeof payload !== "object") {
+      postToParent("soul.canvas.rejected", { reason: "invalid_blueprint_payload" });
+      return;
+    }
+    const nextBlueprint = payload.blueprint;
+    const nextOperations = Array.isArray(payload.operations) ? payload.operations : [];
+    if (!nextBlueprint || typeof nextBlueprint !== "object") {
+      postToParent("soul.canvas.rejected", { reason: "missing_blueprint" });
+      return;
+    }
+
+    setBlueprint({
+      ...nextBlueprint,
+      id: nextBlueprint.id || payload.architectureId || "architecture",
+      components: Array.isArray(nextBlueprint.components) ? nextBlueprint.components : [],
+      connections: Array.isArray(nextBlueprint.connections) ? nextBlueprint.connections : [],
+    });
+    setOperations(nextOperations);
+    setStep(reducedMotion ? nextOperations.length : 0);
+    setPlaying(!reducedMotion && nextOperations.length > 0);
   };
 
   const fitToContent = () => apiRef.current?.scrollToContent(elements, { fitToContent: true, animate: !reducedMotion });
@@ -116,10 +145,10 @@ function CanvasProof() {
         <div>
           <p className="eyebrow">Soul / Overview Architecture</p>
           <h1>Architecture Blueprint</h1>
-          <p className="status" aria-live="polite">{step < mockOperations.length ? "Drawing validated operations" : "Blueprint preview complete"}</p>
+          <p className="status" aria-live="polite">{step < operations.length ? "Drawing validated operations" : "Blueprint preview complete"}</p>
         </div>
         <div className="controls" aria-label="Canvas proof controls">
-          <button type="button" onClick={() => setPlaying((current) => !current)} disabled={reducedMotion || step >= mockOperations.length}>
+          <button type="button" onClick={() => setPlaying((current) => !current)} disabled={reducedMotion || step >= operations.length}>
             {playing ? "Pause" : "Play"}
           </button>
           <button type="button" onClick={reset}>Replay</button>
