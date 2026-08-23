@@ -6,6 +6,7 @@ import 'package:logging/logging.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'auth_service.dart';
+import 'build_stream_service.dart';
 import 'token_service.dart';
 import 'download_file.dart';
 
@@ -144,20 +145,26 @@ class BuildProjectsService extends ChangeNotifier {
   static final _logger = Logger('BuildProjectsService');
 
   final AuthService _authService;
+  final BuildStreamService _streamService = BuildStreamService();
   String? _activeOwnerId;
 
   List<BuildProjectSummary> _projects = const [];
   bool _isLoading = false;
   String? _activeDownloadProjectId;
   String? _activeResumeProjectId;
+  String? _activeBuildProjectId;
+  List<BuildStreamEvent> _buildStreamEvents = const [];
   String? _errorMessage;
 
   List<BuildProjectSummary> get projects => _projects;
   bool get isLoading => _isLoading;
   String? get activeDownloadProjectId => _activeDownloadProjectId;
   String? get activeResumeProjectId => _activeResumeProjectId;
+  String? get activeBuildProjectId => _activeBuildProjectId;
+  List<BuildStreamEvent> get buildStreamEvents => _buildStreamEvents;
   String? get errorMessage => _errorMessage;
   bool get hasBackend => TokenService().backendUrl.isNotEmpty;
+  bool get isStreaming => _activeBuildProjectId != null;
 
   void _handleAuthChanged() {
     final nextOwnerId = _authService.userId;
@@ -167,6 +174,8 @@ class BuildProjectsService extends ChangeNotifier {
     _isLoading = false;
     _activeDownloadProjectId = null;
     _activeResumeProjectId = null;
+    _activeBuildProjectId = null;
+    _buildStreamEvents = const [];
     _errorMessage = null;
     notifyListeners();
   }
@@ -453,6 +462,73 @@ class BuildProjectsService extends ChangeNotifier {
       _errorMessage = 'Failed to approve build project.';
       return false;
     } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> streamBuild(String projectId) async {
+    if (_activeOwnerId == null || _authService.accessToken == null) {
+      _errorMessage = 'A valid Supabase session is required to stream builds.';
+      notifyListeners();
+      return;
+    }
+    final backendUrl = TokenService().backendUrl;
+    if (backendUrl.isEmpty) {
+      _errorMessage = 'Backend URL is not configured.';
+      notifyListeners();
+      return;
+    }
+
+    _activeBuildProjectId = projectId;
+    _buildStreamEvents = const [];
+    _errorMessage = null;
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      // First, approve the project
+      final approveResponse = await http.post(
+        Uri.parse('$backendUrl/v1/build/projects/$projectId/approve'),
+        headers: _headers(),
+      );
+
+      if (approveResponse.statusCode != 200 && approveResponse.statusCode != 201) {
+        _errorMessage = 'Failed to approve project (${approveResponse.statusCode}): ${approveResponse.body}';
+        _activeBuildProjectId = null;
+        _isLoading = false;
+        notifyListeners();
+        return;
+      }
+
+      _isLoading = false;
+      notifyListeners();
+
+      // Then stream the build
+      await _streamService.streamBuild(
+        backendUrl: backendUrl,
+        projectId: projectId,
+        token: _authService.accessToken!,
+        onEvent: (event) {
+          _buildStreamEvents = [..._buildStreamEvents, event];
+          notifyListeners();
+          if (event.isComplete || event.isError) {
+            _activeBuildProjectId = null;
+            Future.delayed(const Duration(seconds: 2), () {
+              fetchProjects();
+            });
+          }
+        },
+        onError: (error) {
+          _errorMessage = error;
+          _activeBuildProjectId = null;
+          notifyListeners();
+        },
+      );
+    } catch (error, stackTrace) {
+      _logger.warning('Failed to stream build for project $projectId: $error', error, stackTrace);
+      _errorMessage = 'Failed to execute build stream.';
+      _activeBuildProjectId = null;
       _isLoading = false;
       notifyListeners();
     }

@@ -10,8 +10,10 @@ import '../controllers/app_ctrl.dart';
 import '../models/sana_orb_state.dart';
 import '../services/auth_service.dart';
 import '../services/build_projects_service.dart';
+import '../services/build_stream_service.dart';
 import '../services/conversation_service.dart';
 import '../ui/sana_theme.dart';
+import '../widgets/build_stream_viewer.dart';
 import '../widgets/sana_orb_view.dart';
 
 /// Soul home: brand, greeting, orb, mode shells, minimal bottom nav.
@@ -529,6 +531,7 @@ class ProjectDetailScreen extends StatefulWidget {
 class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
   BuildProjectDetail? _detail;
   bool _isLoading = true;
+  bool _showStreamView = false;
 
   @override
   void initState() {
@@ -544,6 +547,12 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
       _detail = detail;
       _isLoading = false;
     });
+  }
+
+  Future<void> _approveAndStream() async {
+    final service = context.read<BuildProjectsService>();
+    setState(() => _showStreamView = true);
+    await service.streamBuild(widget.project.projectId);
   }
 
   Future<void> _resume() async {
@@ -692,11 +701,31 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
                                     .toList(),
                               ),
                       ),
+                      if (_showStreamView) ...[
+                        const SizedBox(height: 24),
+                        SizedBox(
+                          height: 400,
+                          child: BuildStreamViewer(
+                            events: service.buildStreamEvents,
+                            isStreaming: service.isStreaming,
+                            onClose: () => setState(() => _showStreamView = false),
+                          ),
+                        ),
+                      ],
                       const SizedBox(height: 24),
                       Wrap(
                         spacing: 12,
                         runSpacing: 12,
                         children: [
+                          if (detail.status == 'plan_generated')
+                            FilledButton.icon(
+                              onPressed: service.isStreaming ? null : _approveAndStream,
+                              icon: service.isStreaming
+                                  ? const SizedBox(
+                                      width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                                  : const Icon(Icons.check_circle_outline),
+                              label: const Text('Approve & Build'),
+                            ),
                           FilledButton.icon(
                             onPressed: service.activeResumeProjectId == detail.projectId ? null : _resume,
                             icon: service.activeResumeProjectId == detail.projectId
