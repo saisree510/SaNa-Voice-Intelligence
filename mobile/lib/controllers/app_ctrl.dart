@@ -327,8 +327,18 @@ class AppCtrl extends ChangeNotifier {
   }
 
   void toggleAgentScreenMode() {
+    if (isCanvasFocusVisible) {
+      isCanvasFocusVisible = false;
+      agentScreenState = AgentScreenState.transcription;
+      notifyListeners();
+      return;
+    }
+
     agentScreenState =
         agentScreenState == AgentScreenState.visualizer ? AgentScreenState.transcription : AgentScreenState.visualizer;
+    if (agentScreenState == AgentScreenState.visualizer) {
+      isCanvasFocusVisible = false;
+    }
     notifyListeners();
   }
 

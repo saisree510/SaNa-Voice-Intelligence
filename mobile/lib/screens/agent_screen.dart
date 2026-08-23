@@ -122,36 +122,37 @@ class AgentScreen extends StatelessWidget {
                 color: SanaColors.nearBlack,
                 child: _buildLayoutSwitcher(ctx, agentLayoutState),
               ),
-              Positioned(
-                top: MediaQuery.paddingOf(ctx).top + 8,
-                left: 16,
-                right: 16,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
-                      onPressed: () => ctx.read<AppCtrl>().disconnect(),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: SanaColors.lavender.withValues(alpha: 0.25),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: SanaColors.lavender.withValues(alpha: 0.4)),
+              if (!agentLayoutState.isImmersiveWorkspaceVisible)
+                Positioned(
+                  top: MediaQuery.paddingOf(ctx).top + 8,
+                  left: 16,
+                  right: 16,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
+                        onPressed: () => ctx.read<AppCtrl>().disconnect(),
                       ),
-                      child: Text(
-                        ctx.watch<AppCtrl>().conversationMode.label.toUpperCase(),
-                        style: const TextStyle(
-                          color: SanaColors.lavender,
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: SanaColors.lavender.withValues(alpha: 0.25),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: SanaColors.lavender.withValues(alpha: 0.4)),
+                        ),
+                        child: Text(
+                          ctx.watch<AppCtrl>().conversationMode.label.toUpperCase(),
+                          style: const TextStyle(
+                            color: SanaColors.lavender,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
             ],
           ),
         ),
