@@ -368,7 +368,6 @@ class _ConversationCanvasWorkspaceState extends State<_ConversationCanvasWorkspa
                 if (_isCanvasFullscreen) {
                   return _CanvasFocusMode(
                     onBackToConversation: _showConversation,
-                    onAskSoul: _showConversation,
                     canvas: ArchitectureCanvasPanel(
                       isFullscreen: true,
                       onFullscreen: _showConversation,
@@ -419,12 +418,10 @@ class _ConversationCanvasWorkspaceState extends State<_ConversationCanvasWorkspa
 class _CanvasFocusMode extends StatelessWidget {
   const _CanvasFocusMode({
     required this.onBackToConversation,
-    required this.onAskSoul,
     required this.canvas,
   });
 
   final VoidCallback onBackToConversation;
-  final VoidCallback onAskSoul;
   final Widget canvas;
 
   @override
@@ -433,7 +430,6 @@ class _CanvasFocusMode extends StatelessWidget {
         children: [
           _CanvasFocusHeader(
             onBackToConversation: onBackToConversation,
-            onAskSoul: onAskSoul,
           ),
           const SizedBox(height: 12),
           Expanded(child: canvas),
@@ -444,11 +440,9 @@ class _CanvasFocusMode extends StatelessWidget {
 class _CanvasFocusHeader extends StatelessWidget {
   const _CanvasFocusHeader({
     required this.onBackToConversation,
-    required this.onAskSoul,
   });
 
   final VoidCallback onBackToConversation;
-  final VoidCallback onAskSoul;
 
   @override
   Widget build(BuildContext context) => DecoratedBox(
@@ -475,11 +469,7 @@ class _CanvasFocusHeader extends StatelessWidget {
                     ),
               ),
               const Spacer(),
-              FilledButton.tonalIcon(
-                onPressed: onAskSoul,
-                icon: const Icon(Icons.chat_bubble_outline_rounded, size: 18),
-                label: const Text('Ask Soul'),
-              ),
+              const SizedBox(width: 170),
             ],
           ),
         ),
