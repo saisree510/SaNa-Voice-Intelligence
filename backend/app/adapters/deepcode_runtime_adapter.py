@@ -110,6 +110,16 @@ class DeepCodeRuntimeAdapter(CodingAgentAdapter):
             run_id, workspace_path, os.path.isdir(workspace_path), os.access(workspace_path, os.W_OK),
         )
 
+        sandbox_env = {
+            "DEEPCODE_SANDBOX": os.environ.get("DEEPCODE_SANDBOX", "NOT SET"),
+            "DEEPCODE_TRUST_WORKSPACE": os.environ.get("DEEPCODE_TRUST_WORKSPACE", "NOT SET"),
+            "DEEPCODE_WORK_LOCALLY": os.environ.get("DEEPCODE_WORK_LOCALLY", "NOT SET"),
+        }
+        logger.info(
+            "DeepCodeRuntimeAdapter[%s] sandbox environment: %s",
+            run_id, sandbox_env,
+        )
+
         seq = 0
 
         def _evt(event_type: str, message: str, raw_line: str = "", **details) -> BuildRunEvent:
