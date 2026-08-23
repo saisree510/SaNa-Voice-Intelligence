@@ -27,13 +27,17 @@ function CanvasProof() {
   const [speed, setSpeed] = useState(1);
   const [reducedMotion, setReducedMotion] = useState(false);
   const apiRef = useRef(null);
+  const elementsRef = useRef([]);
+  const operationsRef = useRef(mockOperations);
+  const reducedMotionRef = useRef(false);
+  const stepRef = useRef(0);
   const isEmbedded = new URLSearchParams(window.location.search).get("embed") === "1";
 
   useEffect(() => {
     if (!isEmbedded) return undefined;
     postToParent("soul.canvas.ready", {
-      blueprintId: blueprint.id,
-      operationCount: operations.length,
+      blueprintId: overviewBlueprint.id,
+      operationCount: mockOperations.length,
     });
 
     const handleMessage = (event) => {
@@ -55,7 +59,11 @@ function CanvasProof() {
           if (message.payload?.command === "fit") fitToContent();
           if (message.payload?.command === "replay") reset();
           if (message.payload?.command === "pause") setPlaying(false);
-          if (message.payload?.command === "play" && !reducedMotion && step < operations.length) {
+          if (
+            message.payload?.command === "play" &&
+            !reducedMotionRef.current &&
+            stepRef.current < operationsRef.current.length
+          ) {
             setPlaying(true);
           }
           postToParent("soul.canvas.ack", { received: message.payload?.command ?? "unknown" });
@@ -71,7 +79,19 @@ function CanvasProof() {
 
     window.addEventListener("message", handleMessage);
     return () => window.removeEventListener("message", handleMessage);
-  }, [blueprint.id, isEmbedded, operations.length, reducedMotion, step]);
+  }, [isEmbedded]);
+
+  useEffect(() => {
+    operationsRef.current = operations;
+  }, [operations]);
+
+  useEffect(() => {
+    reducedMotionRef.current = reducedMotion;
+  }, [reducedMotion]);
+
+  useEffect(() => {
+    stepRef.current = step;
+  }, [step]);
 
   useEffect(() => {
     const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -97,6 +117,7 @@ function CanvasProof() {
   const elements = sceneForOperations(blueprint, operations.slice(0, step));
 
   useEffect(() => {
+    elementsRef.current = elements;
     apiRef.current?.updateScene({ elements });
   }, [elements]);
 
@@ -133,11 +154,12 @@ function CanvasProof() {
       connections: Array.isArray(nextBlueprint.connections) ? nextBlueprint.connections : [],
     });
     setOperations(nextOperations);
-    setStep(reducedMotion ? nextOperations.length : 0);
-    setPlaying(!reducedMotion && nextOperations.length > 0);
+    setStep(reducedMotionRef.current ? nextOperations.length : 0);
+    setPlaying(!reducedMotionRef.current && nextOperations.length > 0);
   };
 
-  const fitToContent = () => apiRef.current?.scrollToContent(elements, { fitToContent: true, animate: !reducedMotion });
+  const fitToContent = () =>
+    apiRef.current?.scrollToContent(elementsRef.current, { fitToContent: true, animate: !reducedMotionRef.current });
 
   return (
     <main className={`canvas-proof${isEmbedded ? " is-embedded" : ""}`}>
