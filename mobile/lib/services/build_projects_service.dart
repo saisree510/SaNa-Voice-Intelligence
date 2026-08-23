@@ -487,29 +487,12 @@ class BuildProjectsService extends ChangeNotifier {
     _activeBuildProjectId = projectId;
     _buildStreamEvents = const [];
     _errorMessage = null;
-    _isLoading = true;
+    _isLoading = false;
+    _canvasIntegration.initialize(['component-1', 'component-2', 'component-3']);
     notifyListeners();
 
     try {
-      // First, approve the project
-      final approveResponse = await http.post(
-        Uri.parse('$backendUrl/v1/build/projects/$projectId/approve'),
-        headers: _headers(),
-      );
-
-      if (approveResponse.statusCode != 200 && approveResponse.statusCode != 201) {
-        _errorMessage = 'Failed to approve project (${approveResponse.statusCode}): ${approveResponse.body}';
-        _activeBuildProjectId = null;
-        _isLoading = false;
-        notifyListeners();
-        return;
-      }
-
-      _isLoading = false;
-      _canvasIntegration.initialize(['component-1', 'component-2', 'component-3']);
-      notifyListeners();
-
-      // Then stream the build
+      // Stream endpoint handles approval and execution internally
       await _streamService.streamBuild(
         backendUrl: backendUrl,
         projectId: projectId,
@@ -537,7 +520,6 @@ class BuildProjectsService extends ChangeNotifier {
       _logger.warning('Failed to stream build for project $projectId: $error', error, stackTrace);
       _errorMessage = 'Failed to execute build stream.';
       _activeBuildProjectId = null;
-      _isLoading = false;
       notifyListeners();
     }
   }
