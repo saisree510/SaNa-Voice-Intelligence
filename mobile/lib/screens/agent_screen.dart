@@ -253,14 +253,12 @@ class _ConversationCanvasWorkspaceState extends State<_ConversationCanvasWorkspa
   double _conversationFraction = 0.42;
   bool _isCanvasCollapsed = true;
   bool _isCanvasFullscreen = false;
-  bool _isChatDrawerOpen = false;
 
   void _showCanvas({TabController? tabController}) {
     final opensDesktopFocus = tabController == null;
     setState(() {
       _isCanvasCollapsed = false;
       _isCanvasFullscreen = opensDesktopFocus;
-      _isChatDrawerOpen = false;
     });
     context.read<AppCtrl>().setCanvasFocusVisible(opensDesktopFocus);
     tabController?.animateTo(1);
@@ -270,23 +268,14 @@ class _ConversationCanvasWorkspaceState extends State<_ConversationCanvasWorkspa
     setState(() {
       _isCanvasCollapsed = true;
       _isCanvasFullscreen = false;
-      _isChatDrawerOpen = false;
     });
     context.read<AppCtrl>().setCanvasFocusVisible(false);
-  }
-
-  void _toggleChatDrawer() {
-    setState(() {
-      _isChatDrawerOpen = true;
-    });
-    context.read<AppCtrl>().setCanvasFocusVisible(true);
   }
 
   void _toggleCanvasCollapsed() {
     setState(() {
       _isCanvasCollapsed = !_isCanvasCollapsed;
       if (_isCanvasCollapsed) _isCanvasFullscreen = false;
-      if (_isCanvasCollapsed) _isChatDrawerOpen = false;
     });
     context.read<AppCtrl>().setCanvasFocusVisible(false);
   }
@@ -295,7 +284,6 @@ class _ConversationCanvasWorkspaceState extends State<_ConversationCanvasWorkspa
     setState(() {
       _isCanvasFullscreen = !_isCanvasFullscreen;
       if (_isCanvasFullscreen) _isCanvasCollapsed = false;
-      if (!_isCanvasFullscreen) _isChatDrawerOpen = false;
     });
     context.read<AppCtrl>().setCanvasFocusVisible(_isCanvasFullscreen);
   }
@@ -310,7 +298,6 @@ class _ConversationCanvasWorkspaceState extends State<_ConversationCanvasWorkspa
               setState(() {
                 _isCanvasCollapsed = true;
                 _isCanvasFullscreen = false;
-                _isChatDrawerOpen = false;
               });
             });
           }
@@ -380,10 +367,8 @@ class _ConversationCanvasWorkspaceState extends State<_ConversationCanvasWorkspa
               builder: (context, innerConstraints) {
                 if (_isCanvasFullscreen) {
                   return _CanvasFocusMode(
-                    isChatDrawerOpen: _isChatDrawerOpen,
                     onBackToConversation: _showConversation,
-                    onToggleChat: _toggleChatDrawer,
-                    conversation: widget.conversationBuilder(context, _showCanvas),
+                    onAskSoul: _showConversation,
                     canvas: ArchitectureCanvasPanel(
                       isFullscreen: true,
                       onFullscreen: _showConversation,
@@ -433,17 +418,13 @@ class _ConversationCanvasWorkspaceState extends State<_ConversationCanvasWorkspa
 
 class _CanvasFocusMode extends StatelessWidget {
   const _CanvasFocusMode({
-    required this.isChatDrawerOpen,
     required this.onBackToConversation,
-    required this.onToggleChat,
-    required this.conversation,
+    required this.onAskSoul,
     required this.canvas,
   });
 
-  final bool isChatDrawerOpen;
   final VoidCallback onBackToConversation;
-  final VoidCallback onToggleChat;
-  final Widget conversation;
+  final VoidCallback onAskSoul;
   final Widget canvas;
 
   @override
@@ -451,49 +432,23 @@ class _CanvasFocusMode extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           _CanvasFocusHeader(
-            isChatDrawerOpen: isChatDrawerOpen,
             onBackToConversation: onBackToConversation,
-            onToggleChat: onToggleChat,
+            onAskSoul: onAskSoul,
           ),
           const SizedBox(height: 12),
-          Expanded(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Expanded(child: canvas),
-                AnimatedContainer(
-                  duration: const Duration(milliseconds: 220),
-                  curve: Curves.easeOutCubic,
-                  width: isChatDrawerOpen ? 390 : 0,
-                  margin: EdgeInsets.only(left: isChatDrawerOpen ? 14 : 0),
-                  child: ClipRect(
-                    child: OverflowBox(
-                      alignment: Alignment.centerLeft,
-                      maxWidth: 390,
-                      child: SizedBox(
-                        width: 390,
-                        child: _CanvasChatDrawer(child: conversation),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
+          Expanded(child: canvas),
         ],
       );
 }
 
 class _CanvasFocusHeader extends StatelessWidget {
   const _CanvasFocusHeader({
-    required this.isChatDrawerOpen,
     required this.onBackToConversation,
-    required this.onToggleChat,
+    required this.onAskSoul,
   });
 
-  final bool isChatDrawerOpen;
   final VoidCallback onBackToConversation;
-  final VoidCallback onToggleChat;
+  final VoidCallback onAskSoul;
 
   @override
   Widget build(BuildContext context) => DecoratedBox(
@@ -521,38 +476,12 @@ class _CanvasFocusHeader extends StatelessWidget {
               ),
               const Spacer(),
               FilledButton.tonalIcon(
-                onPressed: onToggleChat,
+                onPressed: onAskSoul,
                 icon: const Icon(Icons.chat_bubble_outline_rounded, size: 18),
                 label: const Text('Ask Soul'),
               ),
             ],
           ),
-        ),
-      );
-}
-
-class _CanvasChatDrawer extends StatelessWidget {
-  const _CanvasChatDrawer({required this.child});
-
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) => DecoratedBox(
-        decoration: BoxDecoration(
-          color: SanaColors.pureWhite,
-          border: Border.all(color: SanaColors.outline),
-          borderRadius: BorderRadius.circular(22),
-          boxShadow: [
-            BoxShadow(
-              color: SanaColors.lavenderDeep.withValues(alpha: 0.10),
-              blurRadius: 28,
-              offset: const Offset(0, 14),
-            ),
-          ],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(22),
-          child: child,
         ),
       );
 }
