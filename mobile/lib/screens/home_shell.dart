@@ -436,9 +436,15 @@ class _ProjectsPaneState extends State<_ProjectsPane> {
                                             ],
                                           ),
                                           const SizedBox(height: 10),
-                                          Text(
-                                            'Updated $updatedAt',
-                                            style: textTheme.bodySmall?.copyWith(color: SanaColors.fgMuted),
+                                          Row(
+                                            children: [
+                                              _ProviderBadge(provider: project.provider),
+                                              const SizedBox(width: 8),
+                                              Text(
+                                                'Updated $updatedAt',
+                                                style: textTheme.bodySmall?.copyWith(color: SanaColors.fgMuted),
+                                              ),
+                                            ],
                                           ),
                                           if (project.planSummary != null) ...[
                                             const SizedBox(height: 6),
@@ -654,8 +660,18 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
                                       contentPadding: EdgeInsets.zero,
                                       leading: const Icon(Icons.bolt_rounded, color: SanaColors.lavender),
                                       title: Text(run.prompt, maxLines: 2, overflow: TextOverflow.ellipsis),
-                                      subtitle: Text(
-                                          '${run.eventCount} events · ${DateFormat('MMM d, h:mm a').format(run.createdAt)}'),
+                                      subtitle: Row(
+                                        children: [
+                                          _ProviderBadge(provider: run.provider),
+                                          const SizedBox(width: 8),
+                                          Expanded(
+                                            child: Text(
+                                              '${run.eventCount} events · ${DateFormat('MMM d, h:mm a').format(run.createdAt)}',
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                       trailing: Text(run.status,
                                           style: textTheme.labelSmall?.copyWith(color: SanaColors.fgMuted)),
                                     ),
@@ -734,10 +750,40 @@ class _ProjectStatusCard extends StatelessWidget {
             Expanded(
               child: Text(project.currentPhase, style: Theme.of(context).textTheme.titleMedium),
             ),
+            _ProviderBadge(provider: project.provider),
+            const SizedBox(width: 8),
             Text(DateFormat('MMM d').format(project.updatedAt), style: Theme.of(context).textTheme.labelSmall),
           ],
         ),
       );
+}
+
+class _ProviderBadge extends StatelessWidget {
+  const _ProviderBadge({required this.provider});
+
+  final String provider;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDeepCode = provider == 'deepcode';
+    final color = isDeepCode ? SanaColors.success : SanaColors.fgMuted;
+    final label = isDeepCode ? '🤖 DeepCode' : '🏗 Prototype Scaffold';
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.14),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: color.withValues(alpha: 0.4)),
+      ),
+      child: Text(
+        label,
+        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              color: color,
+              fontWeight: FontWeight.w700,
+            ),
+      ),
+    );
+  }
 }
 
 class _ProjectSection extends StatelessWidget {

@@ -18,6 +18,7 @@ class BuildProjectSummary {
     required this.updatedAt,
     this.planSummary,
     this.latestResult,
+    this.provider = 'prototype_scaffold',
   });
 
   final String projectId;
@@ -27,6 +28,11 @@ class BuildProjectSummary {
   final DateTime updatedAt;
   final String? planSummary;
   final String? latestResult;
+
+  /// "deepcode" | "prototype_scaffold" — which coding agent produced this project.
+  final String provider;
+
+  bool get isDeepCode => provider == 'deepcode';
 
   bool get canDownload => status == 'completed';
 
@@ -48,6 +54,7 @@ class BuildProjectSummary {
       updatedAt: DateTime.tryParse(json['updated_at'] as String? ?? '') ?? DateTime.now(),
       planSummary: json['plan_summary'] as String?,
       latestResult: json['result_summary'] as String?,
+      provider: json['provider'] as String? ?? 'prototype_scaffold',
     );
   }
 }
@@ -59,6 +66,7 @@ class BuildProjectRun {
     required this.status,
     required this.createdAt,
     required this.eventCount,
+    this.provider = 'prototype_scaffold',
   });
 
   final String runId;
@@ -66,6 +74,11 @@ class BuildProjectRun {
   final String status;
   final DateTime createdAt;
   final int eventCount;
+
+  /// "deepcode" | "prototype_scaffold" — which coding agent executed this run.
+  final String provider;
+
+  bool get isDeepCode => provider == 'deepcode';
 
   factory BuildProjectRun.fromJson(Map<String, dynamic> json) {
     final events = json['events'] as List<dynamic>? ?? const [];
@@ -75,6 +88,7 @@ class BuildProjectRun {
       status: json['status'] as String? ?? 'unknown',
       createdAt: DateTime.tryParse(json['created_at'] as String? ?? '') ?? DateTime.now(),
       eventCount: events.length,
+      provider: json['provider'] as String? ?? 'prototype_scaffold',
     );
   }
 }
@@ -88,6 +102,7 @@ class BuildProjectDetail extends BuildProjectSummary {
     required super.updatedAt,
     super.planSummary,
     super.latestResult,
+    super.provider,
     required this.specification,
     required this.generatedFiles,
     required this.runs,
@@ -107,6 +122,7 @@ class BuildProjectDetail extends BuildProjectSummary {
       workspacePath: json['workspace_path'] as String? ?? '',
       updatedAt: DateTime.tryParse(json['updated_at'] as String? ?? '') ?? DateTime.now(),
       planSummary: json['plan_summary'] as String?,
+      provider: json['provider'] as String? ?? 'prototype_scaffold',
       specification: json['specification'] as String? ?? '',
       generatedFiles: files
           .whereType<Map<String, dynamic>>()

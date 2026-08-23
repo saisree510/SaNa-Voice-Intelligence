@@ -98,6 +98,13 @@ def test_project_approval_execution_flow():
     assert data["status"] == "plan_generated"
     proj_id = data["project_id"]
 
+    # Explicit consent required before falling back to the Prototype Scaffold provider
+    confirm_resp = client.post(
+        f"/v1/build/projects/{proj_id}/prototype-scaffold/confirm", headers=headers
+    )
+    assert confirm_resp.status_code == 200
+    assert confirm_resp.json()["scaffold_confirmed"] is True
+
     # Approve project -> triggers DeepCode execution
     approve_resp = client.post(f"/v1/build/projects/{proj_id}/approve", headers=headers)
     assert approve_resp.status_code == 200

@@ -487,6 +487,25 @@ async def get_build_project(
     return project
 
 
+@router.post('/projects/{project_id}/prototype-scaffold/confirm', response_model=BuildProjectModel)
+async def confirm_prototype_scaffold(
+    project_id: str,
+    current_user: AuthenticatedUser = Depends(get_current_user),
+):
+    """Explicit user consent to execute this project on the Prototype Scaffold
+    fallback instead of real DeepCode. Required before approval whenever the
+    active coding adapter is not DeepCode; see `_approve_and_execute_project_model`.
+    """
+    _ensure_build_mode_enabled()
+    project = _load_project_or_404(project_id)
+    _authorize_project_access(project, current_user)
+
+    project.scaffold_confirmed = True
+    project.updated_at = datetime.utcnow().isoformat()
+    project_store.upsert_project(project)
+    return project
+
+
 async def _approve_and_execute_project_model(
     project: BuildProjectModel,
     request: Request,
@@ -498,6 +517,17 @@ async def _approve_and_execute_project_model(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail='Project execution is already in progress.',
+        )
+
+    if coding_adapter.provider_label != 'deepcode' and not project.scaffold_confirmed:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=(
+                'DeepCode is unavailable, so this build would run on the Prototype Scaffold '
+                'fallback instead of real DeepCode execution. Call '
+                f'POST /v1/build/projects/{project.project_id}/prototype-scaffold/confirm '
+                'to explicitly consent before approving.'
+            ),
         )
 
     session = _ensure_project_session(project)

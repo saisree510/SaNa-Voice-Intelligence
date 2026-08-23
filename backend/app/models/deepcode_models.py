@@ -78,6 +78,7 @@ class BuildProjectModel(BaseModel):
     blueprint_version: Optional[int] = None
     blueprint_hash: Optional[str] = None
     provider: str = "prototype_scaffold"  # "deepcode" | "prototype_scaffold"
+    scaffold_confirmed: bool = False  # explicit user consent to run on Prototype Scaffold instead of DeepCode
     history: List[BuildRunTurnModel] = Field(default_factory=list)
     generated_files: List[BuildFileModel] = Field(default_factory=list)
     created_at: str = Field(default_factory=lambda: datetime.utcnow().isoformat())

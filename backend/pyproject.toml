@@ -3,7 +3,7 @@ name = "sana-backend"
 version = "0.1.0"
 description = "SaNa FastAPI Application Backend & LiveKit Token Service"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.12"
 dependencies = [
     "fastapi>=0.110.0",
     "uvicorn>=0.28.0",
@@ -15,6 +15,7 @@ dependencies = [
     "pyjwt>=2.8.0",
     "httpx>=0.27.0",
     "pytest>=8.0.0",
+    "deepcode-hku==2.0.0",
 ]
 
 [project.scripts]

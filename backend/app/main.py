@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
 from app.routers import livekit_router, conversations_router, build_router, architectures_router
+from app.services import deepcode_provider_setup
 
 # Configure structured logging
 logging.basicConfig(
@@ -17,6 +18,11 @@ app = FastAPI(
     version="0.8.0",
     description="Soul Developer Conversational Intelligence Backend",
 )
+
+
+@app.on_event("startup")
+async def _register_deepcode_provider() -> None:
+    deepcode_provider_setup.ensure_deepcode_provider_registered()
 
 # Configure CORS
 app.add_middleware(
@@ -57,6 +63,9 @@ async def system_status():
         "supabase_url": settings.SUPABASE_URL,
         "build_project_store": build_router.build_project_store_name(),
         "architecture_store": architectures_router.architecture_store_name(),
+        "coding_provider": build_router.coding_adapter.provider_label,
+        "deepcode_provider_registered": deepcode_provider_setup.provider_registered,
+        "deepcode_provider_error": deepcode_provider_setup.provider_registration_error,
         "version": "0.7.0",
     }
 

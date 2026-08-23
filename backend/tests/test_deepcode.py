@@ -158,6 +158,9 @@ def test_create_project_and_approval_gate():
     assert get_res.status_code == 200
     assert get_res.json()["status"] == "plan_generated"
 
+    confirm_res = client.post(f"/v1/build/projects/{project_id}/prototype-scaffold/confirm")
+    assert confirm_res.status_code == 200
+
     approve_res = client.post(f"/v1/build/projects/{project_id}/approve")
     assert approve_res.status_code == 200
     approve_data = approve_res.json()
@@ -182,6 +185,36 @@ def test_create_project_and_approval_gate():
     assert any(p.is_dir() and p.name == "src" for p in Path(workspace_path).iterdir())
     assert any(p.is_dir() and p.name == "tests" for p in Path(workspace_path).iterdir())
     assert len(approve_data["events"]) >= 2
+
+
+def test_approval_blocked_until_scaffold_confirmed():
+    workspace_path = _workspace("scaffold_consent_gate")
+    create_res = client.post(
+        "/v1/build/projects",
+        json={
+            "title": "Scaffold Consent Gate",
+            "specification": "Build something while DeepCode is unavailable",
+            "workspace_path": workspace_path,
+        },
+    )
+    assert create_res.status_code == 200
+    project_id = create_res.json()["project_id"]
+
+    approve_res = client.post(f"/v1/build/projects/{project_id}/approve")
+    assert approve_res.status_code == 409
+    assert "prototype-scaffold/confirm" in approve_res.json()["detail"]
+
+    get_res = client.get(f"/v1/build/projects/{project_id}")
+    assert get_res.json()["status"] == "plan_generated"
+    assert get_res.json()["scaffold_confirmed"] is False
+
+    confirm_res = client.post(f"/v1/build/projects/{project_id}/prototype-scaffold/confirm")
+    assert confirm_res.status_code == 200
+    assert confirm_res.json()["scaffold_confirmed"] is True
+
+    approve_res = client.post(f"/v1/build/projects/{project_id}/approve")
+    assert approve_res.status_code == 200
+    assert approve_res.json()["status"] == "completed"
 
 
 def test_approve_latest_pending_project():
@@ -209,6 +242,9 @@ def test_approve_latest_pending_project():
     assert second_res.status_code == 200
     latest_project_id = second_res.json()["project_id"]
 
+    confirm_res = client.post(f"/v1/build/projects/{latest_project_id}/prototype-scaffold/confirm")
+    assert confirm_res.status_code == 200
+
     approve_res = client.post("/v1/build/projects/approve-latest")
     assert approve_res.status_code == 200
     approve_data = approve_res.json()
@@ -230,6 +266,9 @@ def test_download_project_archive():
     )
     assert create_res.status_code == 200
     project_id = create_res.json()["project_id"]
+
+    confirm_res = client.post(f"/v1/build/projects/{project_id}/prototype-scaffold/confirm")
+    assert confirm_res.status_code == 200
 
     approve_res = client.post(f"/v1/build/projects/{project_id}/approve")
     assert approve_res.status_code == 200
@@ -281,6 +320,7 @@ def test_persistent_project_continuation_and_history():
         },
     )
     project_id = create_res.json()["project_id"]
+    client.post(f"/v1/build/projects/{project_id}/prototype-scaffold/confirm")
     client.post(f"/v1/build/projects/{project_id}/approve")
 
     list_res = client.get("/v1/build/projects")
@@ -314,6 +354,7 @@ def test_authenticated_user_cannot_claim_another_users_projects():
     )
     assert create_res.status_code == 200
     project_id = create_res.json()["project_id"]
+    client.post(f"/v1/build/projects/{project_id}/prototype-scaffold/confirm")
     client.post(f"/v1/build/projects/{project_id}/approve")
 
     claimed_user_id = f"user-claimed-{uuid4().hex[:8]}"

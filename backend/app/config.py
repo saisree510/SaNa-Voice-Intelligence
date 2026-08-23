@@ -38,7 +38,9 @@ class Settings(BaseSettings):
     # DeepCode coding-agent settings
     DEEPCODE_ENABLED: bool = False
     DEEPCODE_BINARY_PATH: str = "deepcode"
-    DEEPCODE_CONNECTION: str = "openrouter"   # deepcode provider name to use
+    DEEPCODE_CONNECTION: str = "openrouter"   # deepcode provider (connection id) to use
+    DEEPCODE_PROVIDER_TEMPLATE: str = "openrouter"  # `deepcode provider set --template`
+    DEEPCODE_API_KEY_ENV: str = "OPENROUTER_API_KEY"  # env var deepcode reads the LLM key from
     BUILD_RUN_TIMEOUT_SECONDS: int = 600      # 10 minutes per run
     BUILD_RUN_MAX_OUTPUT_BYTES: int = 2_000_000  # 2 MB stdout cap
 

@@ -1,17 +1,24 @@
 # Railway service configuration — Soul Backend
 #
 # Persistent volume for build workspaces:
-#   Railway mounts /app/build_workspaces as a durable volume.
+#   Railway mounts /data/sana-builds as a durable volume.
 #   This path survives redeploys and service restarts.
-#   The BUILD_STORAGE_ROOT environment variable must be set to /app/build_workspaces
+#   The BUILD_STORAGE_ROOT environment variable must be set to /data/sana-builds
 #   in the Railway service environment settings.
 #
 # DeepCode settings (set in Railway environment):
 #   DEEPCODE_ENABLED=true
-#   DEEPCODE_CONNECTION=openrouter   (or your preferred provider)
-#   DEEPCODE_BINARY_PATH=deepcode    (must be installed in the container image)
+#   DEEPCODE_CONNECTION=openrouter        (connection id; matches `deepcode provider set` below)
+#   DEEPCODE_BINARY_PATH=deepcode         (installed via the deepcode-hku pyproject dependency)
+#   DEEPCODE_PROVIDER_TEMPLATE=openrouter (deepcode provider catalog template)
+#   DEEPCODE_API_KEY_ENV=OPENROUTER_API_KEY
+#   OPENROUTER_API_KEY=<the actual OpenRouter API key DeepCode uses for its own coding>
 #   BUILD_RUN_TIMEOUT_SECONDS=600
 #   BUILD_RUN_MAX_OUTPUT_BYTES=2000000
+#
+# On every process start, app.services.deepcode_provider_setup registers the
+# DeepCode connection (`deepcode init` + `deepcode provider set`) because
+# ~/.deepcode lives outside the persistent volume and does not survive redeploys.
 
 [deploy]
 healthcheckPath = "/health"
@@ -20,5 +27,5 @@ restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 3
 
 [[volumes]]
-mountPath = "/app/build_workspaces"
+mountPath = "/data/sana-builds"
 name = "soul-build-workspaces"
