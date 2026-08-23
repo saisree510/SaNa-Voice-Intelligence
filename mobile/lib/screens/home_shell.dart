@@ -13,6 +13,8 @@ import '../services/build_projects_service.dart';
 import '../services/build_stream_service.dart';
 import '../services/conversation_service.dart';
 import '../ui/sana_theme.dart';
+import '../widgets/architecture_canvas_panel.dart';
+import '../widgets/build_component_overlay.dart';
 import '../widgets/build_stream_viewer.dart';
 import '../widgets/sana_orb_view.dart';
 
@@ -703,12 +705,46 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
                       ),
                       if (_showStreamView) ...[
                         const SizedBox(height: 24),
-                        SizedBox(
-                          height: 400,
-                          child: BuildStreamViewer(
-                            events: service.buildStreamEvents,
-                            isStreaming: service.isStreaming,
-                            onClose: () => setState(() => _showStreamView = false),
+                        _ProjectSection(
+                          title: 'Real-time Build Progress',
+                          child: SizedBox(
+                            height: 500,
+                            child: Column(
+                              children: [
+                                // Canvas with component overlay
+                                Expanded(
+                                  flex: 2,
+                                  child: Stack(
+                                    children: [
+                                      ArchitectureCanvasPanel(
+                                        isFullscreen: false,
+                                      ),
+                                      Positioned(
+                                        right: 16,
+                                        top: 16,
+                                        bottom: 16,
+                                        width: 250,
+                                        child: BuildComponentOverlay(
+                                          componentStatuses:
+                                              service.canvasIntegration.componentStatus,
+                                          isBuilding: service.isStreaming,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+                                // Build events log
+                                Expanded(
+                                  child: BuildStreamViewer(
+                                    events: service.buildStreamEvents,
+                                    isStreaming: service.isStreaming,
+                                    onClose: () =>
+                                        setState(() => _showStreamView = false),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ],

@@ -6,6 +6,7 @@ import 'package:logging/logging.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'auth_service.dart';
+import 'build_canvas_integration_service.dart';
 import 'build_stream_service.dart';
 import 'token_service.dart';
 import 'download_file.dart';
@@ -146,6 +147,8 @@ class BuildProjectsService extends ChangeNotifier {
 
   final AuthService _authService;
   final BuildStreamService _streamService = BuildStreamService();
+  final BuildCanvasIntegrationService _canvasIntegration =
+      BuildCanvasIntegrationService(componentPatterns: {});
   String? _activeOwnerId;
 
   List<BuildProjectSummary> _projects = const [];
@@ -162,6 +165,7 @@ class BuildProjectsService extends ChangeNotifier {
   String? get activeResumeProjectId => _activeResumeProjectId;
   String? get activeBuildProjectId => _activeBuildProjectId;
   List<BuildStreamEvent> get buildStreamEvents => _buildStreamEvents;
+  BuildCanvasIntegrationService get canvasIntegration => _canvasIntegration;
   String? get errorMessage => _errorMessage;
   bool get hasBackend => TokenService().backendUrl.isNotEmpty;
   bool get isStreaming => _activeBuildProjectId != null;
@@ -502,6 +506,7 @@ class BuildProjectsService extends ChangeNotifier {
       }
 
       _isLoading = false;
+      _canvasIntegration.initialize(['component-1', 'component-2', 'component-3']);
       notifyListeners();
 
       // Then stream the build
@@ -511,10 +516,12 @@ class BuildProjectsService extends ChangeNotifier {
         token: _authService.accessToken!,
         onEvent: (event) {
           _buildStreamEvents = [..._buildStreamEvents, event];
+          _canvasIntegration.processBuildEvent(event);
           notifyListeners();
           if (event.isComplete || event.isError) {
             _activeBuildProjectId = null;
             Future.delayed(const Duration(seconds: 2), () {
+              _canvasIntegration.reset();
               fetchProjects();
             });
           }
@@ -522,6 +529,7 @@ class BuildProjectsService extends ChangeNotifier {
         onError: (error) {
           _errorMessage = error;
           _activeBuildProjectId = null;
+          _canvasIntegration.reset();
           notifyListeners();
         },
       );
