@@ -13,12 +13,14 @@ class ArchitectureCanvasController extends ChangeNotifier {
   int _appliedOperations = 0;
   int _totalOperations = 0;
   String? _lastError;
+  bool _isReadOnly = false;
 
   bool get isReady => _isReady;
   String get status => _status;
   int get appliedOperations => _appliedOperations;
   int get totalOperations => _totalOperations;
   String? get lastError => _lastError;
+  bool get isReadOnly => _isReadOnly;
 
   void bindMessageSender(ArchitectureCanvasMessageSender sender) {
     _sendMessage = sender;
@@ -76,6 +78,11 @@ class ArchitectureCanvasController extends ChangeNotifier {
 
   void reject(String reason) {
     _lastError = reason;
+    notifyListeners();
+  }
+
+  void setReadOnly(bool readOnly) {
+    _isReadOnly = readOnly;
     notifyListeners();
   }
 }

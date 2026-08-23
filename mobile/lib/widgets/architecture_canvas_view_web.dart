@@ -117,7 +117,7 @@ class _ArchitectureCanvasViewState extends State<ArchitectureCanvasView> {
         break;
       case 'soul.canvas.node_moved':
         final payload = data['payload'];
-        if (payload is Map) {
+        if (payload is Map && !widget.controller!.isReadOnly) {
           final componentId = payload['componentId'] as String?;
           final x = payload['x'] as num?;
           final y = payload['y'] as num?;
@@ -129,11 +129,13 @@ class _ArchitectureCanvasViewState extends State<ArchitectureCanvasView> {
               }
             }));
           }
+        } else if (widget.controller!.isReadOnly) {
+          _postToCanvas('soul.canvas.rejected', {'reason': 'Canvas is in read-only mode during build execution'});
         }
         break;
       case 'soul.canvas.node_edited':
         final payload = data['payload'];
-        if (payload is Map) {
+        if (payload is Map && !widget.controller!.isReadOnly) {
           final componentId = payload['componentId'] as String?;
           final name = payload['name'] as String?;
           final technology = payload['technology'] as String?;
@@ -144,6 +146,8 @@ class _ArchitectureCanvasViewState extends State<ArchitectureCanvasView> {
               'technology': technology,
             }));
           }
+        } else if (widget.controller!.isReadOnly) {
+          _postToCanvas('soul.canvas.rejected', {'reason': 'Canvas is in read-only mode during build execution'});
         }
         break;
       case 'soul.canvas.node_deleted':

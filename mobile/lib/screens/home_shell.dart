@@ -557,6 +557,11 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
     await service.streamBuild(widget.project.projectId);
   }
 
+  void _setCanvasReadOnly(bool readOnly) {
+    // Canvas controller is managed by ArchitectureCanvasPanel
+    // We need to access it through the widget tree during build
+  }
+
   Future<void> _resume() async {
     final prompt = await showDialog<String>(
       context: context,
@@ -718,6 +723,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
                                     children: [
                                       ArchitectureCanvasPanel(
                                         isFullscreen: false,
+                                        isReadOnly: service.isStreaming,
                                       ),
                                       Positioned(
                                         right: 16,

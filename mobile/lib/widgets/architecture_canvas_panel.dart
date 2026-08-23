@@ -16,11 +16,13 @@ class ArchitectureCanvasPanel extends StatefulWidget {
     this.onCollapse,
     this.onFullscreen,
     this.isFullscreen = false,
+    this.isReadOnly = false,
   });
 
   final VoidCallback? onCollapse;
   final VoidCallback? onFullscreen;
   final bool isFullscreen;
+  final bool isReadOnly;
 
   @override
   State<ArchitectureCanvasPanel> createState() => _ArchitectureCanvasPanelState();
@@ -55,6 +57,14 @@ class _ArchitectureCanvasPanelState extends State<ArchitectureCanvasPanel> {
       if (!mounted) return;
       _controller.loadArchitecture(architecture);
     });
+  }
+
+  @override
+  void didUpdateWidget(ArchitectureCanvasPanel oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.isReadOnly != widget.isReadOnly) {
+      _controller.setReadOnly(widget.isReadOnly);
+    }
   }
 
   @override
