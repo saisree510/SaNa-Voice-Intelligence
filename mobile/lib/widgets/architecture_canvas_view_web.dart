@@ -5,8 +5,10 @@ import 'dart:convert';
 import 'dart:html' as html;
 import 'dart:ui_web' as ui_web;
 
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import '../services/architecture_service.dart';
 import 'architecture_canvas_controller.dart';
 
 class ArchitectureCanvasView extends StatefulWidget {
@@ -112,6 +114,73 @@ class _ArchitectureCanvasViewState extends State<ArchitectureCanvasView> {
       case 'soul.canvas.rejected':
         final payload = data['payload'];
         widget.controller?.reject(payload is Map ? payload['reason'] as String? ?? 'rejected' : 'rejected');
+        break;
+      case 'soul.canvas.node_moved':
+        final payload = data['payload'];
+        if (payload is Map) {
+          final componentId = payload['componentId'] as String?;
+          final x = payload['x'] as num?;
+          final y = payload['y'] as num?;
+          if (componentId != null && x != null && y != null) {
+            unawaited(Provider.of<ArchitectureService>(context, listen: false).submitCanvasOperation('update_node', {
+              'component_id': componentId,
+              'metadata': {
+                'position': {'x': x.toDouble(), 'y': y.toDouble()}
+              }
+            }));
+          }
+        }
+        break;
+      case 'soul.canvas.node_edited':
+        final payload = data['payload'];
+        if (payload is Map) {
+          final componentId = payload['componentId'] as String?;
+          final name = payload['name'] as String?;
+          final technology = payload['technology'] as String?;
+          if (componentId != null && name != null) {
+            unawaited(Provider.of<ArchitectureService>(context, listen: false).submitCanvasOperation('update_node', {
+              'component_id': componentId,
+              'name': name,
+              'technology': technology,
+            }));
+          }
+        }
+        break;
+      case 'soul.canvas.node_deleted':
+        final payload = data['payload'];
+        if (payload is Map) {
+          final componentId = payload['componentId'] as String?;
+          final name = payload['name'] as String? ?? 'this component';
+          if (componentId != null) {
+            unawaited(showDialog<bool>(
+              context: context,
+              builder: (dialogCtx) => AlertDialog(
+                title: const Text('Delete Component'),
+                content: Text('Are you sure you want to delete component "$name"? This cannot be undone.'),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(dialogCtx).pop(false),
+                    child: const Text('Cancel'),
+                  ),
+                  TextButton(
+                    onPressed: () => Navigator.of(dialogCtx).pop(true),
+                    style: TextButton.styleFrom(foregroundColor: Colors.red),
+                    child: const Text('Delete'),
+                  ),
+                ],
+              ),
+            ).then((confirmed) {
+              if (confirmed == true) {
+                unawaited(
+                    Provider.of<ArchitectureService>(context, listen: false).submitCanvasOperation('delete_node', {
+                  'component_id': componentId,
+                }));
+              } else {
+                widget.controller?.resendArchitecture();
+              }
+            }));
+          }
+        }
         break;
       default:
         _postToCanvas('soul.canvas.rejected', {'reason': 'unsupported_type', 'type': data['type']});

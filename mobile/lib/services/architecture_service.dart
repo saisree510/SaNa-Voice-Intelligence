@@ -7,6 +7,7 @@ import 'package:logging/logging.dart';
 import 'auth_service.dart';
 import 'token_service.dart';
 import 'architecture_websocket_client.dart';
+import 'package:uuid/uuid.dart';
 
 class ArchitectureCanvasData {
   ArchitectureCanvasData({
@@ -285,6 +286,67 @@ class ArchitectureService extends ChangeNotifier {
   void dispose() {
     disconnectFromCanvasStream();
     super.dispose();
+  }
+
+  Future<void> submitCanvasOperation(
+    String operationType,
+    Map<String, dynamic> operationPayload,
+  ) async {
+    final activeArch = _latestArchitecture;
+    if (activeArch == null) return;
+
+    final baseVersion = activeArch.blueprint['version'] as int? ?? 1;
+    final nextSeq = baseVersion + 1;
+    final idempotencyKey = const Uuid().v4();
+    final operationId = 'op-${operationType.replaceAll('_', '-')}-${const Uuid().v4().substring(0, 8)}';
+
+    final operation = {
+      'operation_id': operationId,
+      'architecture_id': activeArch.architectureId,
+      'base_version': baseVersion,
+      'operation_type': operationType,
+      'actor': 'user',
+      'payload': operationPayload,
+    };
+
+    final message = {
+      'type': 'canvas_operation',
+      'sequence_number': nextSeq,
+      'idempotency_key': idempotencyKey,
+      'operation': operation,
+    };
+
+    if (_wsClient != null) {
+      _logger.info('Submitting canvas operation via WebSocket: $operationType');
+      try {
+        _wsClient!.send(message);
+        return;
+      } catch (e) {
+        _logger.warning('Failed to send canvas operation via WebSocket: $e. Falling back to HTTP POST.');
+      }
+    }
+
+    final backendUrl = TokenService().backendUrl;
+    if (backendUrl.isEmpty) return;
+
+    _logger.info('Submitting canvas operation via HTTP POST: $operationType');
+    try {
+      final response = await http.post(
+        Uri.parse('$backendUrl/v1/architectures/${activeArch.architectureId}/events'),
+        headers: _headers(),
+        body: jsonEncode({
+          'sequence_number': nextSeq,
+          'idempotency_key': idempotencyKey,
+          'operation': operation,
+        }),
+      );
+
+      if (response.statusCode != 200 && response.statusCode != 201) {
+        _logger.warning('Failed to append canvas event via HTTP POST (${response.statusCode}): ${response.body}');
+      }
+    } catch (e, st) {
+      _logger.severe('Error appending canvas event via HTTP POST: $e', e, st);
+    }
   }
 
   int _displayScore(ArchitectureCanvasData architecture) =>

@@ -11,6 +11,9 @@ const positions = {
 const size = { width: 220, height: 96 };
 
 function positionFor(component, index) {
+  if (component.metadata?.position && typeof component.metadata.position.x === "number" && typeof component.metadata.position.y === "number") {
+    return component.metadata.position;
+  }
   return positions[component.id] ?? {
     x: 120 + (index % 4) * 340,
     y: 220 + Math.floor(index / 4) * 160,

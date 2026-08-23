@@ -31,6 +31,11 @@ class ArchitectureWebSocketClientImpl implements ArchitectureWebSocketClient {
   void close() {
     _socket.close();
   }
+
+  @override
+  void send(Map<String, dynamic> data) {
+    _socket.send(jsonEncode(data));
+  }
 }
 
 ArchitectureWebSocketClient createWebSocketClient(

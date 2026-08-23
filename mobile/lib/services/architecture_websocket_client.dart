@@ -9,4 +9,5 @@ abstract class ArchitectureWebSocketClient {
       createWebSocketClient(url, onEvent: onEvent, onError: onError);
 
   void close();
+  void send(Map<String, dynamic> data);
 }

@@ -177,6 +177,79 @@ function CanvasProof() {
   const fitToContent = () =>
     apiRef.current?.scrollToContent(elementsRef.current, { fitToContent: true, animate: !reducedMotionRef.current });
 
+  const debounceTimerRef = useRef(null);
+
+  const syncManualChanges = (currentElements) => {
+    if (!blueprint || !isEmbedded) return;
+    
+    // Check for deletion
+    const currentElementIds = new Set(currentElements.map((el) => el.id));
+    for (const component of (blueprint.components || [])) {
+      if (!currentElementIds.has(`node-${component.id}`)) {
+        postToParent("soul.canvas.node_deleted", {
+          componentId: component.id,
+          name: component.name,
+        });
+        return; // handle one deletion at a time
+      }
+    }
+
+    // Check for movements or edits
+    for (const component of (blueprint.components || [])) {
+      const rect = currentElements.find((el) => el.id === `node-${component.id}`);
+      if (rect) {
+        const currentPos = component.metadata?.position;
+        const newX = Math.round(rect.x);
+        const newY = Math.round(rect.y);
+        
+        if (!currentPos || Math.round(currentPos.x) !== newX || Math.round(currentPos.y) !== newY) {
+          postToParent("soul.canvas.node_moved", {
+            componentId: component.id,
+            x: newX,
+            y: newY,
+          });
+          return; // sync one movement at a time
+        }
+      }
+
+      const label = currentElements.find((el) => el.id === `label-${component.id}`);
+      if (label) {
+        const subtitle = component.technology || component.type || "";
+        const defaultText = subtitle ? `${component.name}\n${subtitle}` : component.name;
+        if (label.text && label.text !== defaultText) {
+          const lines = label.text.split("\n");
+          const newName = lines[0]?.trim() || component.name;
+          const newTech = lines[1]?.trim() || null;
+          postToParent("soul.canvas.node_edited", {
+            componentId: component.id,
+            name: newName,
+            technology: newTech,
+          });
+          return; // sync one edit at a time
+        }
+      }
+    }
+  };
+
+  const handleCanvasChange = (currentElements, appState) => {
+    if (!isEmbedded) return;
+    if (
+      appState.draggingElement ||
+      appState.editingElement ||
+      appState.resizingElement ||
+      appState.multiElement
+    ) {
+      return;
+    }
+
+    if (debounceTimerRef.current) {
+      window.clearTimeout(debounceTimerRef.current);
+    }
+    debounceTimerRef.current = window.setTimeout(() => {
+      syncManualChanges(currentElements);
+    }, 800);
+  };
+
   return (
     <main className={`canvas-proof${isEmbedded ? " is-embedded" : ""}`}>
       {!isEmbedded && <header className="canvas-header">
@@ -210,6 +283,7 @@ function CanvasProof() {
               viewBackgroundColor: "#fdfcff",
             },
           }}
+          onChange={handleCanvasChange}
           UIOptions={{ canvasActions: { loadScene: false, saveToActiveFile: false, export: false } }}
         />
       </section>
