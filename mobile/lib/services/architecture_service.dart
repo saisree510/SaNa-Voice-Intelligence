@@ -20,6 +20,10 @@ class ArchitectureCanvasData {
   final Map<String, dynamic> blueprint;
   final List<Map<String, dynamic>> operations;
 
+  int get componentCount => (blueprint['components'] as List? ?? const []).length;
+  int get connectionCount => (blueprint['connections'] as List? ?? const []).length;
+  bool get isDisplayable => componentCount >= 2 || connectionCount >= 1;
+
   Map<String, Object?> toCanvasPayload() => {
         'architectureId': architectureId,
         'title': title,
@@ -139,12 +143,25 @@ class ArchitectureService extends ChangeNotifier {
         return;
       }
 
-      records.sort((a, b) {
-        final aDate = DateTime.tryParse(a['updated_at'] as String? ?? '') ?? DateTime.fromMillisecondsSinceEpoch(0);
-        final bDate = DateTime.tryParse(b['updated_at'] as String? ?? '') ?? DateTime.fromMillisecondsSinceEpoch(0);
+      final architectures = records.map(ArchitectureCanvasData.fromJson).where((item) => item.isDisplayable).toList();
+      if (architectures.isEmpty) {
+        _latestArchitecture = null;
+        return;
+      }
+
+      architectures.sort((a, b) {
+        final complexityCompare = _displayScore(b).compareTo(_displayScore(a));
+        if (complexityCompare != 0) return complexityCompare;
+
+        final aSource = records.firstWhere((record) => record['architecture_id'] == a.architectureId);
+        final bSource = records.firstWhere((record) => record['architecture_id'] == b.architectureId);
+        final aDate =
+            DateTime.tryParse(aSource['updated_at'] as String? ?? '') ?? DateTime.fromMillisecondsSinceEpoch(0);
+        final bDate =
+            DateTime.tryParse(bSource['updated_at'] as String? ?? '') ?? DateTime.fromMillisecondsSinceEpoch(0);
         return bDate.compareTo(aDate);
       });
-      _latestArchitecture = ArchitectureCanvasData.fromJson(records.first);
+      _latestArchitecture = architectures.first;
     } catch (error, stackTrace) {
       _logger.warning('Failed to fetch latest architecture: $error', error, stackTrace);
       _latestArchitecture = null;
@@ -154,4 +171,7 @@ class ArchitectureService extends ChangeNotifier {
       notifyListeners();
     }
   }
+
+  int _displayScore(ArchitectureCanvasData architecture) =>
+      architecture.componentCount + architecture.connectionCount * 2;
 }

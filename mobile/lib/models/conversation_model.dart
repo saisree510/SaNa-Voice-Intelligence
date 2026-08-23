@@ -37,12 +37,8 @@ class ConversationSession {
       userId: map['user_id'] as String? ?? 'local_user',
       title: map['title'] as String? ?? 'Conversation',
       mode: map['mode'] as String? ?? 'general',
-      createdAt: map['created_at'] != null
-          ? DateTime.parse(map['created_at'] as String)
-          : DateTime.now(),
-      updatedAt: map['updated_at'] != null
-          ? DateTime.parse(map['updated_at'] as String)
-          : DateTime.now(),
+      createdAt: map['created_at'] != null ? DateTime.parse(map['created_at'] as String) : DateTime.now(),
+      updatedAt: map['updated_at'] != null ? DateTime.parse(map['updated_at'] as String) : DateTime.now(),
       previewText: map['preview_text'] as String?,
     );
   }
@@ -92,9 +88,7 @@ class PersistedMessage {
       content: map['content'] as String? ?? '',
       source: map['source'] as String? ?? 'text',
       idempotencyKey: map['idempotency_key'] as String?,
-      createdAt: map['created_at'] != null
-          ? DateTime.parse(map['created_at'] as String)
-          : DateTime.now(),
+      createdAt: map['created_at'] != null ? DateTime.parse(map['created_at'] as String) : DateTime.now(),
     );
   }
 

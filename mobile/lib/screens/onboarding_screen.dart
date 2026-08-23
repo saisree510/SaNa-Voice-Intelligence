@@ -87,8 +87,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     final authService = context.read<AuthService>();
     final appCtrl = context.read<AppCtrl>();
     final userName = _userNameCtrl.text.trim();
-    final assistantName =
-        _assistantNameCtrl.text.trim().isEmpty ? 'Soul' : _assistantNameCtrl.text.trim();
+    final assistantName = _assistantNameCtrl.text.trim().isEmpty ? 'Soul' : _assistantNameCtrl.text.trim();
 
     try {
       // Disconnect voice session if still connected from onboarding

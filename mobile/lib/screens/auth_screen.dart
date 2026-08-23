@@ -185,9 +185,8 @@ class _AuthScreenState extends State<AuthScreen> {
                               : SanaColors.surface,
                         ),
                         foregroundColor: WidgetStateProperty.resolveWith(
-                          (states) => states.contains(WidgetState.selected)
-                              ? SanaColors.lavender
-                              : SanaColors.fgSecondary,
+                          (states) =>
+                              states.contains(WidgetState.selected) ? SanaColors.lavender : SanaColors.fgSecondary,
                         ),
                       ),
                     ),

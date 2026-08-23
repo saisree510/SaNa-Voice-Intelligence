@@ -52,10 +52,10 @@ class SanaOrbView extends StatelessWidget {
                 final agentState = agentParticipant?.agentState;
 
                 final orbState = resolveSanaOrbState(
-                  connectionState: appCtrl.isSessionStarting &&
-                          session.connectionState == sdk.ConnectionState.disconnected
-                      ? sdk.ConnectionState.connecting
-                      : session.connectionState,
+                  connectionState:
+                      appCtrl.isSessionStarting && session.connectionState == sdk.ConnectionState.disconnected
+                          ? sdk.ConnectionState.connecting
+                          : session.connectionState,
                   sessionHasError: session.error != null,
                   agentHasError: session.agent.error != null,
                   agentIsPending: session.agent.isPending,
