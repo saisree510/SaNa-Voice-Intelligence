@@ -187,18 +187,6 @@ function CanvasProof() {
   const syncManualChanges = (currentElements) => {
     if (!blueprint || !isEmbedded) return;
     
-    // Check for deletion
-    const currentElementIds = new Set(currentElements.map((el) => el.id));
-    for (const component of (blueprint.components || [])) {
-      if (!currentElementIds.has(`node-${component.id}`)) {
-        postToParent("soul.canvas.node_deleted", {
-          componentId: component.id,
-          name: component.name,
-        });
-        return; // handle one deletion at a time
-      }
-    }
-
     // Check for movements or edits
     for (const component of (blueprint.components || [])) {
       const rect = currentElements.find((el) => el.id === `node-${component.id}`);

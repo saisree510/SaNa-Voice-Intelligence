@@ -266,16 +266,16 @@ class ArchitectureService extends ChangeNotifier {
             _projectMatchScore(b, preferredProjectId).compareTo(_projectMatchScore(a, preferredProjectId));
         if (projectCompare != 0) return projectCompare;
 
-        final complexityCompare = _displayScore(b).compareTo(_displayScore(a));
-        if (complexityCompare != 0) return complexityCompare;
-
         final aSource = records.firstWhere((record) => record['architecture_id'] == a.architectureId);
         final bSource = records.firstWhere((record) => record['architecture_id'] == b.architectureId);
         final aDate =
             DateTime.tryParse(aSource['updated_at'] as String? ?? '') ?? DateTime.fromMillisecondsSinceEpoch(0);
         final bDate =
             DateTime.tryParse(bSource['updated_at'] as String? ?? '') ?? DateTime.fromMillisecondsSinceEpoch(0);
-        return bDate.compareTo(aDate);
+        final dateCompare = bDate.compareTo(aDate);
+        if (dateCompare != 0) return dateCompare;
+
+        return _displayScore(b).compareTo(_displayScore(a));
       });
       _latestArchitecture = architectures.first;
       if (_latestArchitecture != null) {

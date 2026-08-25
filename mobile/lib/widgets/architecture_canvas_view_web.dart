@@ -28,7 +28,6 @@ class _ArchitectureCanvasViewState extends State<ArchitectureCanvasView> {
   late final String _viewType = 'soul-architecture-canvas-${identityHashCode(this)}';
   html.IFrameElement? _iframe;
   StreamSubscription<html.MessageEvent>? _messageSubscription;
-  final Set<String> _pendingDeleteConfirmations = <String>{};
 
   @override
   void initState() {
@@ -154,45 +153,8 @@ class _ArchitectureCanvasViewState extends State<ArchitectureCanvasView> {
         }
         break;
       case 'soul.canvas.node_deleted':
-        final payload = data['payload'];
-        final controller = widget.controller;
-        if (controller != null && controller.isReadOnly) {
-          _postToCanvas('soul.canvas.rejected', {'reason': 'Canvas is in read-only mode during build execution'});
-        } else if (payload is Map) {
-          final componentId = payload['componentId'] as String?;
-          final name = payload['name'] as String? ?? 'this component';
-          if (componentId != null && !_pendingDeleteConfirmations.contains(componentId)) {
-            _pendingDeleteConfirmations.add(componentId);
-            unawaited(showDialog<bool>(
-              context: context,
-              builder: (dialogCtx) => AlertDialog(
-                title: const Text('Delete Component'),
-                content: Text('Are you sure you want to delete component "$name"? This cannot be undone.'),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.of(dialogCtx).pop(false),
-                    child: const Text('Cancel'),
-                  ),
-                  TextButton(
-                    onPressed: () => Navigator.of(dialogCtx).pop(true),
-                    style: TextButton.styleFrom(foregroundColor: Colors.red),
-                    child: const Text('Delete'),
-                  ),
-                ],
-              ),
-            ).then((confirmed) {
-              _pendingDeleteConfirmations.remove(componentId);
-              if (confirmed == true) {
-                unawaited(
-                    Provider.of<ArchitectureService>(context, listen: false).submitCanvasOperation('delete_node', {
-                  'component_id': componentId,
-                }));
-              } else {
-                widget.controller?.resendArchitecture();
-              }
-            }).whenComplete(() => _pendingDeleteConfirmations.remove(componentId)));
-          }
-        }
+        _postToCanvas('soul.canvas.rejected', {'reason': 'Component deletion is disabled in the embedded canvas.'});
+        widget.controller?.resendArchitecture();
         break;
       case 'soul.canvas.snapshot_ready':
         final payload = data['payload'];
