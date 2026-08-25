@@ -27,7 +27,7 @@ logger = logging.getLogger("backend.workspace_runner")
 _active_processes: dict[str, asyncio.subprocess.Process] = {}
 
 # Allowlisted env keys forwarded to the child process
-_ENV_ALLOWLIST = {
+_BASE_ENV_ALLOWLIST = {
     "PATH",
     "HOME",
     "USER",
@@ -47,12 +47,19 @@ _ENV_ALLOWLIST = {
     "XDG_DATA_HOME",
     # Disable sandboxing for DeepCode in containers
     "DEEPCODE_SANDBOX",
+    "DEEPCODE_TRUST_WORKSPACE",
+    "DEEPCODE_WORK_LOCALLY",
 }
 
 
 def _safe_env() -> dict[str, str]:
     """Return a credential-free environment safe to pass to the child process."""
-    return {k: v for k, v in os.environ.items() if k in _ENV_ALLOWLIST}
+    env_allowlist = set(_BASE_ENV_ALLOWLIST)
+    if settings.DEEPCODE_API_KEY_ENV:
+        # DeepCode provider setup stores only the env-var name; the CLI needs
+        # that exact key during `deepcode exec` to call the configured provider.
+        env_allowlist.add(settings.DEEPCODE_API_KEY_ENV)
+    return {k: v for k, v in os.environ.items() if k in env_allowlist}
 
 
 def _verify_workspace(workspace_path: str) -> str:

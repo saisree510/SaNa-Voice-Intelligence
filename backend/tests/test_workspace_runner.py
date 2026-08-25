@@ -7,7 +7,7 @@ import tempfile
 
 import pytest
 
-from app.services.workspace_runner import _verify_workspace
+from app.services.workspace_runner import _safe_env, _verify_workspace
 from app.config import settings
 
 
@@ -43,3 +43,20 @@ def test_verify_workspace_accepts_root_itself():
     """The trusted root itself is a valid workspace."""
     result = _verify_workspace(settings.BUILD_STORAGE_ROOT)
     assert os.path.isabs(result)
+
+
+def test_safe_env_forwards_deepcode_runtime_controls(monkeypatch):
+    """DeepCode subprocess receives only the provider key and sandbox controls it needs."""
+    monkeypatch.setenv("DEEPCODE_SANDBOX", "0")
+    monkeypatch.setenv("DEEPCODE_TRUST_WORKSPACE", "1")
+    monkeypatch.setenv("DEEPCODE_WORK_LOCALLY", "1")
+    monkeypatch.setenv(settings.DEEPCODE_API_KEY_ENV, "test-provider-key")
+    monkeypatch.setenv("SUPABASE_SERVICE_ROLE_KEY", "must-not-leak")
+
+    env = _safe_env()
+
+    assert env["DEEPCODE_SANDBOX"] == "0"
+    assert env["DEEPCODE_TRUST_WORKSPACE"] == "1"
+    assert env["DEEPCODE_WORK_LOCALLY"] == "1"
+    assert env[settings.DEEPCODE_API_KEY_ENV] == "test-provider-key"
+    assert "SUPABASE_SERVICE_ROLE_KEY" not in env

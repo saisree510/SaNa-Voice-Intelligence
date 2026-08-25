@@ -84,6 +84,17 @@ This is not a restart. The verified Flutter, FastAPI, Supabase and LiveKit imple
 | C8 - Snapshots, replay and exports | Complete | Automated canvas snapshots are captured and stored in Supabase under `canvas_snapshots` whenever a diagram drawing animation reaches completion. Floating controls overlay with modern glassmorphism styling is added in the top-right corner of the canvas container, providing export functions: Export PNG (using Excalidraw's blob exporter), Export JSON (raw blueprint specification), and Export Mermaid (components and connections formatted as graph TD syntax). Play/pause/replay and speed selectors are supported and fully responsive. || C9 - Approval and canvas-to-build handoff | Complete | Locking blueprints into approved immutable versions linked to DeepCode builds is fully supported. Added `project_id` to `UpdateArchitectureRequest` patch schema. Implemented `createProject` and `approveProject` in `BuildProjectsService` to handle project planning and workspace generation. Implemented `approveArchitectureBlueprint` in `ArchitectureService` to post approved versions and patch architecture links. Integrated "Approve & Build" and "Open Build" contextual navigation buttons in the visual canvas header overlay. All 17 Flutter tests and 40 FastAPI backend tests pass cleanly. |
 
 
+### Implementation status update: Phase D
+
+**Updated:** 2026-08-25
+**Overall Phase D status:** In progress. Railway currently reports `coding_provider: deepcode`, `deepcode_provider_registered: true` and no provider-registration error, so the backend can find and configure the DeepCode CLI. The remaining Railway-first checkpoint is verifying an actual deployed `deepcode exec` build can write files into the mounted workspace.
+
+| Subphase | Status | Verified outcome |
+|---|---|---|
+| D1-D5 - DeepCode runtime foundation | Complete | The backend includes provider-neutral coding-agent models, a DeepCode runtime adapter, safe workspace execution, approval-gated build execution, SSE progress streaming and provider labels that distinguish real DeepCode from Prototype Scaffold. |
+| D6 - Railway DeepCode runtime passthrough | In progress | `workspace_runner` now forwards the configured DeepCode provider API-key environment variable plus `DEEPCODE_SANDBOX`, `DEEPCODE_TRUST_WORKSPACE` and `DEEPCODE_WORK_LOCALLY` into the `deepcode exec` subprocess while continuing to block unrelated secrets such as the Supabase service-role key. `pytest-asyncio` is now declared so async backend tests execute under the configured pytest `asyncio_mode`. Local backend verification passed with 59 tests using a repo-local pytest temp directory. Production still needs Railway redeploy and one browser build attempt with log review to confirm DeepCode can write generated files in `/data/sana-builds`. |
+
+
 ### Version history
 
 | Version | Date | Purpose |
