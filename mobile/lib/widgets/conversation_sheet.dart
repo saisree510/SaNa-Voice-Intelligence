@@ -57,6 +57,8 @@ class _ConversationSheetState extends State<ConversationSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final canvasActivityIndex = widget.showCanvasActivityCards ? _latestCanvasActivityIndex() : -1;
+
     return ListView.builder(
       controller: _controller,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
@@ -70,7 +72,7 @@ class _ConversationSheetState extends State<ConversationSheet> {
             crossAxisAlignment: turn.isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
             children: [
               ConversationTurnBubble(turn: turn),
-              if (widget.showCanvasActivityCards && _shouldShowCanvasActivity(turn)) ...[
+              if (index == canvasActivityIndex) ...[
                 const SizedBox(height: 8),
                 CanvasActivityCard(onViewCanvas: widget.onViewCanvas),
               ],
@@ -81,16 +83,17 @@ class _ConversationSheetState extends State<ConversationSheet> {
     );
   }
 
+  int _latestCanvasActivityIndex() {
+    for (var index = widget.turns.length - 1; index >= 0; index--) {
+      if (_shouldShowCanvasActivity(widget.turns[index])) return index;
+    }
+    return -1;
+  }
+
   bool _shouldShowCanvasActivity(ConversationTurn turn) {
     if (turn.isUser || !turn.isFinal) return false;
     final text = turn.text.toLowerCase();
-    return text.contains('architecture') ||
-        text.contains('blueprint') ||
-        text.contains('canvas') ||
-        text.contains('plan') ||
-        text.contains('approve') ||
-        text.contains('generated the files') ||
-        text.contains('ready for download');
+    return text.contains('architecture') || text.contains('blueprint') || text.contains('canvas');
   }
 }
 

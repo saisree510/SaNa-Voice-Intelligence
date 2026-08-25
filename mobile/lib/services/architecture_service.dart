@@ -552,7 +552,7 @@ class ArchitectureService extends ChangeNotifier {
         return false;
       }
 
-      await fetchLatestArchitecture();
+      await fetchArchitectureById(activeArch.architectureId);
       return true;
     } catch (e, st) {
       _logger.severe('Failed to approve architecture blueprint: $e', e, st);

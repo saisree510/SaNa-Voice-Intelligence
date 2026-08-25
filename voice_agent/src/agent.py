@@ -134,15 +134,20 @@ def _safe_architecture_id(text: str, *, prefix: str = "arch") -> str:
 
 def _infer_overview_components(specification: str) -> list[dict[str, str]]:
     text = specification.lower()
-    components: list[dict[str, str]] = [{"id": "frontend", "name": "Flutter Web", "type": "frontend"}]
-    if any(term in text for term in ("api", "backend", "server", "fastapi", "database", "auth", "build")):
-        components.append({"id": "api", "name": "FastAPI Backend", "type": "service"})
+    backend_requested = any(term in text for term in ("api", "backend", "server", "fastapi", "endpoint"))
+    components: list[dict[str, str]] = [
+        {"id": "frontend", "name": "Project UI", "type": "frontend", "technology": "HTML/CSS/JavaScript"},
+        {
+            "id": "api",
+            "name": "FastAPI Backend" if backend_requested else "Application Logic",
+            "type": "service",
+            "technology": "Python" if backend_requested else "Browser JavaScript",
+        },
+    ]
     if any(term in text for term in ("database", "data", "store", "save", "persist", "supabase", "login", "auth")):
         components.append({"id": "database", "name": "Supabase PostgreSQL", "type": "database"})
     if any(term in text for term in ("ai", "agent", "voice", "livekit", "llm", "speech")):
         components.append({"id": "agent", "name": "Soul Voice Agent", "type": "agent"})
-    if len(components) == 1:
-        components.append({"id": "api", "name": "Application Logic", "type": "service"})
     return components
 
 
@@ -597,7 +602,8 @@ You are Soul, a decisive, precise Tech Lead and Build Orchestrator. You are curr
 YOUR MANDATORY BEHAVIOR FOR EVERY SINGLE TURN:
 - HELP THE USER DEFINE CLEAR PROJECT REQUIREMENTS, SPECIFICATIONS, AND ARCHITECTURE PLANS.
 - Sound like an approachable, decisive tech lead in a working session: refer naturally to earlier decisions and move the discussion forward one concrete choice at a time.
-- When the user asks to create, show, draw, map, or update an architecture/canvas/technical plan, call create_overview_architecture_tool with a concise title and the finalized specification before saying it is available on the canvas.
+- When the user asks to build or create a project/app, call create_build_project_plan_tool with a concise title and finalized specification; that tool also creates the linked live architecture canvas.
+- When the user asks only to show, draw, map, or update an architecture/canvas/technical plan, call create_overview_architecture_tool with a concise title and the finalized specification before saying it is available on the canvas.
 - EXPLICIT APPROVAL GATE: NEVER TRIGGER CODE EXECUTION OR FILE MUTATION AUTOMATICALLY. ALWAYS PRESENT THE PLAN CLEARLY AND ASK FOR THE USER'S EXPLICIT APPROVAL ("Are you ready to approve and execute this plan?").
 - WHEN BUILD EXECUTION FINISHES, SUMMARIZE THE GENERATED FILES AND VERIFICATION RESULTS IN 2 TO 3 CLEAR, DIRECT SENTENCES.
 - If asked what mode you are in, answer clearly: "I am in Build Mode."
@@ -670,12 +676,38 @@ async def my_agent(ctx: JobContext):
 
     @llm.function_tool
     async def create_build_project_plan_tool(title: str, specification: str) -> str:
-        return await create_build_project_plan(
+        plan_result = await create_build_project_plan(
             title,
             specification,
             request_user_id=current_build_user_id,
             request_user_email=current_build_user_email,
         )
+        project_match = re.search(r"Project created successfully with ID ([A-Za-z0-9_-]+)", plan_result)
+        project_id = project_match.group(1) if project_match else None
+        if not project_id:
+            return plan_result
+
+        async def on_created_callback(arch_id: str):
+            try:
+                payload = json.dumps({
+                    "type": "architecture_created",
+                    "architecture_id": arch_id,
+                })
+                if ctx.room.local_participant:
+                    await ctx.room.local_participant.publish_data(payload.encode("utf-8"))
+                    logger.info(f"Published architecture_created packet to LiveKit room for {arch_id}")
+            except Exception as pe:
+                logger.warning(f"Failed to publish architecture_created room packet: {pe}")
+
+        architecture_result = await create_overview_architecture(
+            title=f"{title} Architecture",
+            specification=specification,
+            request_user_id=current_build_user_id,
+            request_user_email=current_build_user_email,
+            project_id=project_id,
+            on_created=on_created_callback,
+        )
+        return f"{plan_result} {architecture_result}"
 
     @llm.function_tool
     async def approve_and_execute_build_project_tool(project_id: Optional[str] = None) -> str:

@@ -208,12 +208,14 @@ class AgentScreen extends StatelessWidget {
                       onTap: () => ctx.read<AppCtrl>().messageFocusNode.unfocus(),
                       child: Consumer<ConversationTimeline>(
                         builder: (context, timeline, _) {
+                          final activeArchitectureId = ctx.watch<AppCtrl>().activeArchitectureId;
                           if (!timeline.hasTurns) {
                             return const _AgentStatusPlaceholder();
                           }
                           return ConversationSheet(
                             turns: timeline.turns,
-                            showCanvasActivityCards: ctx.watch<AppCtrl>().conversationMode == ConversationMode.build,
+                            showCanvasActivityCards: ctx.watch<AppCtrl>().conversationMode == ConversationMode.build &&
+                                activeArchitectureId != null,
                             onViewCanvas: viewCanvas,
                           );
                         },
@@ -349,9 +351,12 @@ class _ConversationCanvasWorkspaceState extends State<_ConversationCanvasWorkspa
                             () => _showCanvas(tabController: DefaultTabController.maybeOf(tabContext)),
                           ),
                         ),
-                        const Padding(
+                        Padding(
                           padding: EdgeInsets.fromLTRB(16, 0, 16, 8),
-                          child: ArchitectureCanvasPanel(),
+                          child: ArchitectureCanvasPanel(
+                            architectureId: appCtrl.activeArchitectureId,
+                            requireExplicitArchitecture: true,
+                          ),
                         ),
                       ],
                     ),
@@ -369,6 +374,8 @@ class _ConversationCanvasWorkspaceState extends State<_ConversationCanvasWorkspa
                   return _CanvasFocusMode(
                     onBackToConversation: _showConversation,
                     canvas: ArchitectureCanvasPanel(
+                      architectureId: appCtrl.activeArchitectureId,
+                      requireExplicitArchitecture: true,
                       isFullscreen: true,
                       onFullscreen: _showConversation,
                     ),
@@ -401,6 +408,8 @@ class _ConversationCanvasWorkspaceState extends State<_ConversationCanvasWorkspa
                       ),
                       Expanded(
                         child: ArchitectureCanvasPanel(
+                          architectureId: appCtrl.activeArchitectureId,
+                          requireExplicitArchitecture: true,
                           onCollapse: _toggleCanvasCollapsed,
                           onFullscreen: _toggleCanvasFullscreen,
                         ),

@@ -726,6 +726,10 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
                                   child: Stack(
                                     children: [
                                       ArchitectureCanvasPanel(
+                                        architectureId: detail.architectureId ?? widget.project.architectureId,
+                                        preferredProjectId: widget.project.projectId,
+                                        autoLoadLatest:
+                                            detail.architectureId == null && widget.project.architectureId == null,
                                         isFullscreen: false,
                                         isReadOnly: service.isStreaming,
                                       ),

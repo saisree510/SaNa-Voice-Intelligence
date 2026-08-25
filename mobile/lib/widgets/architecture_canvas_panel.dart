@@ -15,12 +15,20 @@ class ArchitectureCanvasPanel extends StatefulWidget {
     super.key,
     this.onCollapse,
     this.onFullscreen,
+    this.architectureId,
+    this.preferredProjectId,
+    this.autoLoadLatest = false,
+    this.requireExplicitArchitecture = false,
     this.isFullscreen = false,
     this.isReadOnly = false,
   });
 
   final VoidCallback? onCollapse;
   final VoidCallback? onFullscreen;
+  final String? architectureId;
+  final String? preferredProjectId;
+  final bool autoLoadLatest;
+  final bool requireExplicitArchitecture;
   final bool isFullscreen;
   final bool isReadOnly;
 
@@ -38,7 +46,7 @@ class _ArchitectureCanvasPanelState extends State<ArchitectureCanvasPanel> {
     _controller.setReadOnly(widget.isReadOnly);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      unawaited(context.read<ArchitectureService>().fetchLatestArchitecture());
+      _loadRequestedArchitecture();
     });
   }
 
@@ -52,6 +60,7 @@ class _ArchitectureCanvasPanelState extends State<ArchitectureCanvasPanel> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     final architecture = context.watch<ArchitectureService>().latestArchitecture;
+    if (!_canDisplayArchitecture(architecture)) return;
     final architectureKey = architecture == null
         ? null
         : '${architecture.architectureId}:${architecture.operations.length}:${architecture.componentCount}:${architecture.connectionCount}';
@@ -69,39 +78,130 @@ class _ArchitectureCanvasPanelState extends State<ArchitectureCanvasPanel> {
     if (oldWidget.isReadOnly != widget.isReadOnly) {
       _controller.setReadOnly(widget.isReadOnly);
     }
+    if (oldWidget.architectureId != widget.architectureId ||
+        oldWidget.preferredProjectId != widget.preferredProjectId ||
+        oldWidget.autoLoadLatest != widget.autoLoadLatest) {
+      _loadedArchitectureKey = null;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        _loadRequestedArchitecture();
+      });
+    }
+  }
+
+  void _loadRequestedArchitecture() {
+    final service = context.read<ArchitectureService>();
+    final architectureId = widget.architectureId;
+    if (architectureId != null && architectureId.isNotEmpty) {
+      unawaited(service.fetchArchitectureById(architectureId));
+    } else if (widget.autoLoadLatest) {
+      unawaited(service.fetchLatestArchitecture(preferredProjectId: widget.preferredProjectId));
+    }
+  }
+
+  bool _canDisplayArchitecture(ArchitectureCanvasData? architecture) {
+    if (architecture == null) return false;
+    final requestedArchitectureId = widget.architectureId;
+    if (requestedArchitectureId != null && requestedArchitectureId.isNotEmpty) {
+      return architecture.architectureId == requestedArchitectureId;
+    }
+    if (widget.requireExplicitArchitecture) return false;
+    final preferredProjectId = widget.preferredProjectId;
+    if (preferredProjectId != null && preferredProjectId.isNotEmpty) {
+      return architecture.projectId == preferredProjectId;
+    }
+    return widget.autoLoadLatest;
   }
 
   @override
-  Widget build(BuildContext context) => DecoratedBox(
-        decoration: BoxDecoration(
-          color: SanaColors.pureWhite,
-          border: Border.all(color: SanaColors.outline),
-          borderRadius: BorderRadius.circular(22),
-          boxShadow: [
-            BoxShadow(
-              color: SanaColors.lavenderDeep.withValues(alpha: 0.10),
-              blurRadius: 30,
-              offset: const Offset(0, 16),
+  Widget build(BuildContext context) {
+    final architecture = context.watch<ArchitectureService>().latestArchitecture;
+    final canDisplayArchitecture = _canDisplayArchitecture(architecture);
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: SanaColors.pureWhite,
+        border: Border.all(color: SanaColors.outline),
+        borderRadius: BorderRadius.circular(22),
+        boxShadow: [
+          BoxShadow(
+            color: SanaColors.lavenderDeep.withValues(alpha: 0.10),
+            blurRadius: 30,
+            offset: const Offset(0, 16),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: const BorderRadius.all(Radius.circular(22)),
+        child: Column(
+          children: [
+            _CanvasHeader(
+              controller: _controller,
+              onCollapse: widget.onCollapse,
+              onFullscreen: widget.onFullscreen,
+              isFullscreen: widget.isFullscreen,
+            ),
+            Expanded(
+              child: canDisplayArchitecture
+                  ? ArchitectureCanvasView(controller: _controller)
+                  : _EmptyCanvasState(
+                      isLoading: context.watch<ArchitectureService>().isLoading,
+                      errorMessage: context.watch<ArchitectureService>().errorMessage,
+                    ),
             ),
           ],
         ),
-        child: ClipRRect(
-          borderRadius: const BorderRadius.all(Radius.circular(22)),
-          child: Column(
-            children: [
-              _CanvasHeader(
-                controller: _controller,
-                onCollapse: widget.onCollapse,
-                onFullscreen: widget.onFullscreen,
-                isFullscreen: widget.isFullscreen,
-              ),
-              Expanded(
-                child: ArchitectureCanvasView(controller: _controller),
-              ),
-            ],
+      ),
+    );
+  }
+}
+
+class _EmptyCanvasState extends StatelessWidget {
+  const _EmptyCanvasState({
+    required this.isLoading,
+    this.errorMessage,
+  });
+
+  final bool isLoading;
+  final String? errorMessage;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    final message = errorMessage ??
+        (isLoading
+            ? 'Loading the active architecture...'
+            : 'No live architecture is linked to this conversation yet. Ask Soul to design the architecture first.');
+
+    return ColoredBox(
+      color: SanaColors.pureWhite,
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 420),
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (isLoading) ...[
+                  const CircularProgressIndicator(color: SanaColors.lavender),
+                  const SizedBox(height: 18),
+                ] else ...[
+                  const Icon(Icons.account_tree_outlined, color: SanaColors.lavender, size: 36),
+                  const SizedBox(height: 14),
+                ],
+                Text(
+                  message,
+                  textAlign: TextAlign.center,
+                  style: textTheme.bodyMedium?.copyWith(color: SanaColors.fgSecondary),
+                ),
+              ],
+            ),
           ),
         ),
-      );
+      ),
+    );
+  }
 }
 
 class _CanvasHeader extends StatelessWidget {

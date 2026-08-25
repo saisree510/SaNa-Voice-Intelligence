@@ -93,6 +93,7 @@ class AppCtrl extends ChangeNotifier {
   late final ConversationTimeline conversationTimeline = ConversationTimeline(session);
 
   String? activeConversationId;
+  String? activeArchitectureId;
   ConversationService? _conversationService;
   ArchitectureService? _architectureService;
   sdk.EventsListener<sdk.RoomEvent>? _roomListener;
@@ -288,6 +289,8 @@ class AppCtrl extends ChangeNotifier {
         if (payload is Map && payload['type'] == 'architecture_created') {
           final archId = payload['architecture_id'] as String;
           _logger.info('Received architecture_created packet for $archId');
+          activeArchitectureId = archId;
+          notifyListeners();
           if (_architectureService != null) {
             unawaited(_architectureService!.fetchArchitectureById(archId));
           }
@@ -544,6 +547,7 @@ class AppCtrl extends ChangeNotifier {
     }
 
     activeConversationId = null;
+    activeArchitectureId = null;
     _restoredMessages = const [];
     _restoreRetriesScheduledForConversationId = null;
     session.restoreMessageHistory(const []);
