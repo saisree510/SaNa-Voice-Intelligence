@@ -107,6 +107,7 @@ class AppCtrl extends ChangeNotifier {
   void bindConversationService(ConversationService service) {
     _conversationService = service;
     conversationTimeline.onFinalTurn = (turn) {
+      _captureArchitectureIdFromTurn(turn);
       if (activeConversationId != null && _conversationService != null) {
         final role = turn.role == ConversationRole.user ? 'user' : 'assistant';
         final source = turn.source == ConversationSource.voice ? 'voice' : 'text';
@@ -120,6 +121,18 @@ class AppCtrl extends ChangeNotifier {
         ));
       }
     };
+  }
+
+  void _captureArchitectureIdFromTurn(ConversationTurn turn) {
+    if (turn.role == ConversationRole.user || !turn.isFinal) return;
+    final match = RegExp(r'Architecture ID:\s*([A-Za-z][A-Za-z0-9_-]{0,63})').firstMatch(turn.text);
+    final architectureId = match?.group(1);
+    if (architectureId == null || architectureId == activeArchitectureId) return;
+    activeArchitectureId = architectureId;
+    if (_architectureService != null) {
+      unawaited(_architectureService!.fetchArchitectureById(architectureId));
+    }
+    notifyListeners();
   }
 
   Future<void> ensureActiveConversation() async {

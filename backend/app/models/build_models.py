@@ -31,7 +31,7 @@ class BuildSpec(BaseModel):
         """Stable SHA-256 of the blueprint JSON for approval-mismatch detection."""
         if self.blueprint is None:
             return None
-        blueprint_json = self.blueprint.model_dump_json(sort_keys=True)
+        blueprint_json = json.dumps(self.blueprint.model_dump(mode="json"), sort_keys=True)
         return hashlib.sha256(blueprint_json.encode()).hexdigest()
 
     def to_prompt(self) -> str:
@@ -54,14 +54,14 @@ class BuildSpec(BaseModel):
         if self.blueprint is not None:
             lines += [
                 "## Approved Architecture Blueprint",
-                f"Architecture: {self.blueprint.title}",
+                f"Architecture: {self.blueprint.architecture_id}",
                 f"Version: {self.blueprint.version}",
                 "",
                 "### Components",
             ]
             for comp in self.blueprint.components:
-                tech = comp.metadata.get("technology", "unspecified") if comp.metadata else "unspecified"
-                lines.append(f"- **{comp.name}** ({comp.component_type}) — technology: {tech}")
+                tech = comp.technology or "unspecified"
+                lines.append(f"- **{comp.name}** ({comp.type}) — technology: {tech}")
 
             if self.blueprint.connections:
                 lines += ["", "### Connections"]

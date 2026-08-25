@@ -355,11 +355,13 @@ async def create_build_project_plan(title: str, specification: str, *, request_u
         with urllib.request.urlopen(req, timeout=5) as resp:
             data = json.loads(resp.read().decode("utf-8"))
             pid = data.get("project_id")
+            architecture_id = data.get("architecture_id")
             summary = data.get("plan_summary")
             actual_workspace = data.get("workspace_path") or requested_workspace or "backend-managed workspace"
+            architecture_text = f" Architecture ID: {architecture_id}." if architecture_id else ""
             return (
                 f"Project created successfully with ID {pid}. "
-                f"Workspace: {actual_workspace}. Plan Summary: {summary}"
+                f"Workspace: {actual_workspace}.{architecture_text} Plan Summary: {summary}"
             )
     except Exception as e:
         logger.warning(f"Error calling create_build_project_plan backend endpoint: {e}")
@@ -684,30 +686,23 @@ async def my_agent(ctx: JobContext):
         )
         project_match = re.search(r"Project created successfully with ID ([A-Za-z0-9_-]+)", plan_result)
         project_id = project_match.group(1) if project_match else None
-        if not project_id:
-            return plan_result
+        architecture_match = re.search(r"Architecture ID: ([A-Za-z0-9_-]+)", plan_result)
+        architecture_id = architecture_match.group(1) if architecture_match else None
 
-        async def on_created_callback(arch_id: str):
+        if architecture_id:
             try:
                 payload = json.dumps({
                     "type": "architecture_created",
-                    "architecture_id": arch_id,
+                    "architecture_id": architecture_id,
+                    "project_id": project_id,
                 })
                 if ctx.room.local_participant:
                     await ctx.room.local_participant.publish_data(payload.encode("utf-8"))
-                    logger.info(f"Published architecture_created packet to LiveKit room for {arch_id}")
+                    logger.info(f"Published architecture_created packet to LiveKit room for {architecture_id}")
             except Exception as pe:
                 logger.warning(f"Failed to publish architecture_created room packet: {pe}")
 
-        architecture_result = await create_overview_architecture(
-            title=f"{title} Architecture",
-            specification=specification,
-            request_user_id=current_build_user_id,
-            request_user_email=current_build_user_email,
-            project_id=project_id,
-            on_created=on_created_callback,
-        )
-        return f"{plan_result} {architecture_result}"
+        return plan_result
 
     @llm.function_tool
     async def approve_and_execute_build_project_tool(project_id: Optional[str] = None) -> str:

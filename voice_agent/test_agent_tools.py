@@ -85,6 +85,7 @@ async def test_voice_agent_remote_backend_omits_local_workspace(monkeypatch):
             return json.dumps(
                 {
                     "project_id": "proj-remote01",
+                    "architecture_id": "arch-remote01",
                     "plan_summary": "Awaiting approval.",
                     "workspace_path": "/data/sana-builds/remote_project",
                 }
@@ -101,6 +102,7 @@ async def test_voice_agent_remote_backend_omits_local_workspace(monkeypatch):
 
     assert captured["url"].endswith("/v1/build/projects")
     assert "workspace_path" not in captured["body"]
+    assert "Architecture ID: arch-remote01" in result
     assert "/data/sana-builds/remote_project" in result
 
 

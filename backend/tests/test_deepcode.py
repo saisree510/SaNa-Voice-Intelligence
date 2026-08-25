@@ -151,12 +151,25 @@ def test_create_project_and_approval_gate():
     assert create_res.status_code == 200
     project_data = create_res.json()
     project_id = project_data["project_id"]
+    architecture_id = project_data["architecture_id"]
     assert project_data["status"] == "plan_generated"
     assert "Awaiting explicit user approval" in project_data["plan_summary"]
+    assert architecture_id
+
+    architecture_res = client.get(f"/v1/architectures/{architecture_id}")
+    assert architecture_res.status_code == 200
+    architecture_data = architecture_res.json()
+    assert architecture_data["project_id"] == project_id
+    blueprint = architecture_data["current_blueprint"]
+    assert blueprint["project_id"] == project_id
+    assert [component["name"] for component in blueprint["components"][:2]] == ["Project UI", "Application Logic"]
+    assert blueprint["connections"][0]["source_id"] == "frontend"
+    assert blueprint["connections"][0]["target_id"] == "logic"
 
     get_res = client.get(f"/v1/build/projects/{project_id}")
     assert get_res.status_code == 200
     assert get_res.json()["status"] == "plan_generated"
+    assert get_res.json()["architecture_id"] == architecture_id
 
     confirm_res = client.post(f"/v1/build/projects/{project_id}/prototype-scaffold/confirm")
     assert confirm_res.status_code == 200

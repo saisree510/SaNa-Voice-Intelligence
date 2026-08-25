@@ -19,6 +19,8 @@ from app.adapters.deepcode_runtime_adapter import DeepCodeRuntimeAdapter
 from app.adapters.deepcode_adapter import PrototypeScaffoldAdapter
 from app.auth.auth_bearer import AuthenticatedUser, get_current_user, user_id_aliases
 from app.config import settings
+from app.models.architecture_models import ArchitectureConnection, ArchitectureSpec, BlueprintStatus
+from app.models.architecture_storage_models import ArchitectureRecord
 from app.models.build_models import BuildSpec, BuildRunEvent
 from app.models.deepcode_models import (
     BuildFileModel,
@@ -28,7 +30,7 @@ from app.models.deepcode_models import (
     DeepCodeSession,
 )
 from app.services.build_project_store import BuildProjectStore, SupabaseBuildProjectStore
-from app.services.architecture_store import ArchitectureStore, SupabaseArchitectureStore
+from app.services.architecture_store import ArchitectureStore, SupabaseArchitectureStore, new_architecture_id
 
 logger = logging.getLogger("backend.build_router")
 router = APIRouter(prefix="/v1/build", tags=["Build Mode"])
@@ -89,6 +91,91 @@ def _linked_blueprint(project: BuildProjectModel, current_user: AuthenticatedUse
         logger.warning("Build project %s references architecture owned by another user", project.project_id)
         return None
     return architecture.current_blueprint
+
+
+def _build_project_blueprint(
+    *,
+    architecture_id: str,
+    project_id: str,
+    title: str,
+    specification: str,
+) -> ArchitectureSpec:
+    text = specification.lower()
+    backend_requested = any(term in text for term in ("api", "backend", "server", "fastapi", "endpoint"))
+    uses_data = any(term in text for term in ("database", "data", "store", "save", "persist", "supabase", "login", "auth"))
+    uses_ai = any(term in text for term in ("ai", "agent", "voice", "livekit", "llm", "speech"))
+
+    components = [
+        {
+            "id": "frontend",
+            "name": "Project UI",
+            "type": "frontend",
+            "technology": "HTML/CSS/JavaScript",
+            "metadata": {"source": "build_project"},
+        },
+        {
+            "id": "logic",
+            "name": "FastAPI Backend" if backend_requested else "Application Logic",
+            "type": "service",
+            "technology": "Python" if backend_requested else "Browser JavaScript",
+            "metadata": {"source": "build_project"},
+        },
+    ]
+    connections = [
+        ArchitectureConnection(
+            id="frontend-logic",
+            source_id="frontend",
+            target_id="logic",
+            protocol="User actions",
+        )
+    ]
+
+    if uses_data:
+        components.append(
+            {
+                "id": "data",
+                "name": "Project Data Store",
+                "type": "database",
+                "technology": "Supabase/PostgreSQL",
+                "metadata": {"source": "build_project"},
+            }
+        )
+        connections.append(
+            ArchitectureConnection(
+                id="logic-data",
+                source_id="logic",
+                target_id="data",
+                protocol="Data access",
+            )
+        )
+
+    if uses_ai:
+        components.append(
+            {
+                "id": "ai",
+                "name": "AI Assistant",
+                "type": "agent",
+                "technology": "LLM",
+                "metadata": {"source": "build_project"},
+            }
+        )
+        connections.append(
+            ArchitectureConnection(
+                id="frontend-ai",
+                source_id="frontend",
+                target_id="ai",
+                protocol="Conversation",
+            )
+        )
+
+    return ArchitectureSpec(
+        architecture_id=architecture_id,
+        project_id=project_id,
+        version=1,
+        status=BlueprintStatus.DRAFT,
+        components=components,
+        connections=connections,
+    )
 
 
 class CreateSessionRequest(BaseModel):
@@ -472,6 +559,22 @@ async def create_build_project(
         project_id=project_id,
     )
     timestamp = datetime.utcnow().isoformat()
+    architecture_id = new_architecture_id()
+    blueprint = _build_project_blueprint(
+        architecture_id=architecture_id,
+        project_id=project_id,
+        title=request.title,
+        specification=request.specification,
+    )
+    architecture_store.create_architecture(
+        ArchitectureRecord(
+            architecture_id=architecture_id,
+            user_id=current_user.id,
+            title=f"{request.title} Architecture",
+            project_id=project_id,
+            current_blueprint=blueprint,
+        )
+    )
 
     project = BuildProjectModel(
         project_id=project_id,
@@ -485,6 +588,7 @@ async def create_build_project(
             'Awaiting explicit user approval before execution.'
         ),
         session_id=session.session_id,
+        architecture_id=architecture_id,
         created_at=timestamp,
         updated_at=timestamp,
     )

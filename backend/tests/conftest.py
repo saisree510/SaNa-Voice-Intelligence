@@ -45,8 +45,6 @@ def isolated_security_environment(tmp_path, monkeypatch):
         BuildProjectStore(trusted_root=str(tmp_path / "builds")),
     )
     monkeypatch.setattr(build_router, "deepcode_adapter", DeepCodeAdapter())
-    monkeypatch.setattr(
-        architectures_router,
-        "architecture_store",
-        ArchitectureStore(trusted_root=str(tmp_path / "architectures")),
-    )
+    architecture_store = ArchitectureStore(trusted_root=str(tmp_path / "architectures"))
+    monkeypatch.setattr(architectures_router, "architecture_store", architecture_store)
+    monkeypatch.setattr(build_router, "architecture_store", architecture_store)
