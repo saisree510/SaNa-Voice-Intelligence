@@ -11,7 +11,6 @@ import '../models/sana_orb_state.dart';
 import '../services/architecture_service.dart';
 import '../services/auth_service.dart';
 import '../services/build_projects_service.dart';
-import '../services/build_stream_service.dart';
 import '../services/conversation_service.dart';
 import '../ui/sana_theme.dart';
 import '../widgets/architecture_canvas_panel.dart';
@@ -556,8 +555,12 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
     final buildService = context.read<BuildProjectsService>();
     final archService = context.read<ArchitectureService>();
 
-    // Ensure latest architecture is loaded before streaming
-    await archService.fetchLatestArchitecture();
+    final architectureId = _detail?.architectureId ?? widget.project.architectureId;
+    if (architectureId != null && architectureId.isNotEmpty) {
+      await archService.fetchArchitectureById(architectureId);
+    } else {
+      await archService.fetchLatestArchitecture(preferredProjectId: widget.project.projectId);
+    }
 
     setState(() => _showStreamView = true);
     await buildService.streamBuild(widget.project.projectId);
@@ -732,8 +735,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
                                         bottom: 16,
                                         width: 250,
                                         child: BuildComponentOverlay(
-                                          componentStatuses:
-                                              service.canvasIntegration.componentStatus,
+                                          componentStatuses: service.canvasIntegration.componentStatus,
                                           isBuilding: service.isStreaming,
                                         ),
                                       ),
@@ -746,8 +748,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
                                   child: BuildStreamViewer(
                                     events: service.buildStreamEvents,
                                     isStreaming: service.isStreaming,
-                                    onClose: () =>
-                                        setState(() => _showStreamView = false),
+                                    onClose: () => setState(() => _showStreamView = false),
                                   ),
                                 ),
                               ],

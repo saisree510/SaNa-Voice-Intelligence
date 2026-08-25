@@ -26,7 +26,7 @@ class ArchitectureCanvasData {
 
   int get componentCount => (blueprint['components'] as List? ?? const []).length;
   int get connectionCount => (blueprint['connections'] as List? ?? const []).length;
-  bool get isDisplayable => componentCount >= 2 || connectionCount >= 1;
+  bool get isDisplayable => componentCount >= 1 || connectionCount >= 1;
 
   Map<String, Object?> toCanvasPayload() => {
         'architectureId': architectureId,
@@ -99,6 +99,47 @@ class ArchitectureCanvasData {
           });
         }
       }
+    } else if (operationType == 'update_node') {
+      final componentId = payload['component_id'] as String?;
+      if (componentId != null) {
+        final currentComponents = List<Map<String, dynamic>>.from(
+          (blueprint['components'] as List? ?? const []).map((e) => Map<String, dynamic>.from(e as Map)),
+        );
+        blueprint['components'] = [
+          for (final component in currentComponents)
+            if (component['id'] == componentId)
+              {
+                ...component,
+                if (payload['name'] != null) 'name': payload['name'],
+                if (payload['type'] != null) 'type': payload['type'],
+                if (payload['type'] != null) 'component_type': payload['type'],
+                if (payload['technology'] != null) 'technology': payload['technology'],
+                if (payload['metadata'] != null) 'metadata': payload['metadata'],
+              }
+            else
+              component,
+        ];
+      }
+    } else if (operationType == 'delete_node') {
+      final componentId = payload['component_id'] as String?;
+      if (componentId != null) {
+        final currentComponents = List<Map<String, dynamic>>.from(
+          (blueprint['components'] as List? ?? const []).map((e) => Map<String, dynamic>.from(e as Map)),
+        );
+        final currentConnections = List<Map<String, dynamic>>.from(
+          (blueprint['connections'] as List? ?? const []).map((e) => Map<String, dynamic>.from(e as Map)),
+        );
+        blueprint['components'] = currentComponents.where((component) => component['id'] != componentId).toList();
+        blueprint['connections'] = currentConnections
+            .where((connection) =>
+                connection['source_id'] != componentId &&
+                connection['target_id'] != componentId &&
+                connection['sourceId'] != componentId &&
+                connection['targetId'] != componentId)
+            .toList();
+        operations.removeWhere(
+            (operation) => operation['componentId'] == componentId || operation['component_id'] == componentId);
+      }
     } else if (operationType == 'connect_nodes') {
       final connection = payload['connection'] as Map<String, dynamic>?;
       if (connection != null && connection['id'] != null) {
@@ -113,6 +154,16 @@ class ArchitectureCanvasData {
             'connectionId': connection['id'],
           });
         }
+      }
+    } else if (operationType == 'disconnect_nodes') {
+      final connectionId = payload['connection_id'] as String?;
+      if (connectionId != null) {
+        final currentConnections = List<Map<String, dynamic>>.from(
+          (blueprint['connections'] as List? ?? const []).map((e) => Map<String, dynamic>.from(e as Map)),
+        );
+        blueprint['connections'] = currentConnections.where((connection) => connection['id'] != connectionId).toList();
+        operations.removeWhere(
+            (operation) => operation['connectionId'] == connectionId || operation['connection_id'] == connectionId);
       }
     }
   }
@@ -133,6 +184,7 @@ class ArchitectureService extends ChangeNotifier {
   bool _isLoading = false;
   String? _errorMessage;
   ArchitectureWebSocketClient? _wsClient;
+  String? _connectedArchitectureId;
 
   ArchitectureCanvasData? get latestArchitecture => _latestArchitecture;
   bool get isLoading => _isLoading;
@@ -160,10 +212,11 @@ class ArchitectureService extends ChangeNotifier {
     return headers;
   }
 
-  Future<void> fetchLatestArchitecture() async {
+  Future<void> fetchLatestArchitecture({String? preferredProjectId}) async {
     if (_activeOwnerId == null || _authService.accessToken == null) {
       _latestArchitecture = null;
       _errorMessage = 'A valid Supabase session is required to load architecture.';
+      disconnectFromCanvasStream();
       notifyListeners();
       return;
     }
@@ -172,6 +225,7 @@ class ArchitectureService extends ChangeNotifier {
     if (backendUrl.isEmpty) {
       _latestArchitecture = null;
       _errorMessage = 'Backend URL is not configured for this build.';
+      disconnectFromCanvasStream();
       notifyListeners();
       return;
     }
@@ -196,16 +250,22 @@ class ArchitectureService extends ChangeNotifier {
       final records = decoded.whereType<Map<String, dynamic>>().toList();
       if (records.isEmpty) {
         _latestArchitecture = null;
+        disconnectFromCanvasStream();
         return;
       }
 
       final architectures = records.map(ArchitectureCanvasData.fromJson).where((item) => item.isDisplayable).toList();
       if (architectures.isEmpty) {
         _latestArchitecture = null;
+        disconnectFromCanvasStream();
         return;
       }
 
       architectures.sort((a, b) {
+        final projectCompare =
+            _projectMatchScore(b, preferredProjectId).compareTo(_projectMatchScore(a, preferredProjectId));
+        if (projectCompare != 0) return projectCompare;
+
         final complexityCompare = _displayScore(b).compareTo(_displayScore(a));
         if (complexityCompare != 0) return complexityCompare;
 
@@ -231,6 +291,60 @@ class ArchitectureService extends ChangeNotifier {
     }
   }
 
+  Future<void> fetchArchitectureById(String architectureId) async {
+    if (_activeOwnerId == null || _authService.accessToken == null) {
+      _latestArchitecture = null;
+      _errorMessage = 'A valid Supabase session is required to load architecture.';
+      disconnectFromCanvasStream();
+      notifyListeners();
+      return;
+    }
+
+    final backendUrl = TokenService().backendUrl;
+    if (backendUrl.isEmpty) {
+      _latestArchitecture = null;
+      _errorMessage = 'Backend URL is not configured for this build.';
+      disconnectFromCanvasStream();
+      notifyListeners();
+      return;
+    }
+
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final response = await http.get(
+        Uri.parse('$backendUrl/v1/architectures/$architectureId'),
+        headers: _headers(),
+      );
+
+      if (response.statusCode != 200) {
+        _latestArchitecture = null;
+        _errorMessage = 'Failed to load architecture (${response.statusCode}).';
+        disconnectFromCanvasStream();
+        return;
+      }
+
+      final architecture = ArchitectureCanvasData.fromJson(jsonDecode(response.body) as Map<String, dynamic>);
+      if (!architecture.isDisplayable) {
+        _latestArchitecture = null;
+        disconnectFromCanvasStream();
+        return;
+      }
+      _latestArchitecture = architecture;
+      connectToCanvasStream(architecture.architectureId);
+    } catch (error, stackTrace) {
+      _logger.warning('Failed to fetch architecture $architectureId: $error', error, stackTrace);
+      _latestArchitecture = null;
+      _errorMessage = 'Failed to load architecture.';
+      disconnectFromCanvasStream();
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
   String _wsUrl(String architectureId) {
     final backendUrl = TokenService().backendUrl;
     final parsed = Uri.parse(backendUrl);
@@ -248,10 +362,10 @@ class ArchitectureService extends ChangeNotifier {
   }
 
   void connectToCanvasStream(String architectureId) {
-    if (_wsClient != null) {
-      // Don't reconnect if we are already connected to the same architecture ID
+    if (_wsClient != null && _connectedArchitectureId == architectureId) {
       return;
     }
+    disconnectFromCanvasStream();
     if (_activeOwnerId == null || _authService.accessToken == null) return;
 
     final url = _wsUrl(architectureId);
@@ -273,6 +387,7 @@ class ArchitectureService extends ChangeNotifier {
           _logger.warning('Canvas WebSocket stream error: $err');
         },
       );
+      _connectedArchitectureId = architectureId;
     } catch (e) {
       _logger.warning('Failed to establish canvas WebSocket connection: $e');
     }
@@ -284,6 +399,7 @@ class ArchitectureService extends ChangeNotifier {
       _wsClient!.close();
       _wsClient = null;
     }
+    _connectedArchitectureId = null;
   }
 
   @override
@@ -450,4 +566,9 @@ class ArchitectureService extends ChangeNotifier {
 
   int _displayScore(ArchitectureCanvasData architecture) =>
       architecture.componentCount + architecture.connectionCount * 2;
+
+  int _projectMatchScore(ArchitectureCanvasData architecture, String? preferredProjectId) {
+    if (preferredProjectId == null || preferredProjectId.isEmpty) return 0;
+    return architecture.projectId == preferredProjectId ? 1 : 0;
+  }
 }

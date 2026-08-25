@@ -28,6 +28,7 @@ from app.models.deepcode_models import (
     DeepCodeSession,
 )
 from app.services.build_project_store import BuildProjectStore, SupabaseBuildProjectStore
+from app.services.architecture_store import ArchitectureStore, SupabaseArchitectureStore
 
 logger = logging.getLogger("backend.build_router")
 router = APIRouter(prefix="/v1/build", tags=["Build Mode"])
@@ -63,10 +64,31 @@ project_store = (
     if settings.SUPABASE_URL and settings.SUPABASE_SERVICE_ROLE_KEY
     else BuildProjectStore(trusted_root=settings.BUILD_STORAGE_ROOT)
 )
+architecture_store = (
+    SupabaseArchitectureStore(
+        supabase_url=settings.SUPABASE_URL,
+        service_role_key=settings.SUPABASE_SERVICE_ROLE_KEY,
+    )
+    if settings.SUPABASE_URL and settings.SUPABASE_SERVICE_ROLE_KEY
+    else ArchitectureStore(trusted_root=settings.BUILD_STORAGE_ROOT)
+)
 
 
 def build_project_store_name() -> str:
     return 'supabase' if isinstance(project_store, SupabaseBuildProjectStore) else 'local_json_fallback'
+
+
+def _linked_blueprint(project: BuildProjectModel, current_user: AuthenticatedUser):
+    if not project.architecture_id:
+        return None
+    architecture = architecture_store.get_architecture(project.architecture_id)
+    if architecture is None:
+        logger.warning("Build project %s references missing architecture %s", project.project_id, project.architecture_id)
+        return None
+    if architecture.user_id not in user_id_aliases(current_user.id):
+        logger.warning("Build project %s references architecture owned by another user", project.project_id)
+        return None
+    return architecture.current_blueprint
 
 
 class CreateSessionRequest(BaseModel):
@@ -546,6 +568,7 @@ async def _approve_and_execute_project_model(
         project_id=project.project_id,
         architecture_id=project.architecture_id,
         architecture_version=project.blueprint_version,
+        blueprint=_linked_blueprint(project, current_user),
         specification=project.specification,
         workspace_path=project.workspace_path,
         approved_by=current_user.id,
@@ -699,7 +722,7 @@ async def stream_build_execution(
             project_id=project.project_id,
             architecture_id=getattr(project, 'architecture_id', None),
             architecture_version=getattr(project, 'blueprint_version', None),
-            blueprint=None,
+            blueprint=_linked_blueprint(project, current_user),
             specification=project.specification,
             acceptance_criteria=getattr(project, 'acceptance_criteria', []),
             technical_stack=getattr(project, 'technical_stack', {}),

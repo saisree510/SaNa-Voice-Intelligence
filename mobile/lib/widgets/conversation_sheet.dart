@@ -27,8 +27,9 @@ class _ConversationSheetState extends State<ConversationSheet> {
   @override
   void didUpdateWidget(covariant ConversationSheet oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.turns.length != oldWidget.turns.length ||
-        (widget.turns.isNotEmpty && oldWidget.turns.isNotEmpty && widget.turns.last != oldWidget.turns.last)) {
+    final hasChanged = widget.turns.length != oldWidget.turns.length ||
+        (widget.turns.isNotEmpty && oldWidget.turns.isNotEmpty && widget.turns.last != oldWidget.turns.last);
+    if (hasChanged && _shouldAutoScroll(oldWidget)) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!_controller.hasClients) return;
         unawaited(
@@ -40,6 +41,12 @@ class _ConversationSheetState extends State<ConversationSheet> {
         );
       });
     }
+  }
+
+  bool _shouldAutoScroll(ConversationSheet oldWidget) {
+    if (oldWidget.turns.isEmpty || !_controller.hasClients) return true;
+    final distanceFromBottom = _controller.position.maxScrollExtent - _controller.offset;
+    return distanceFromBottom < 96;
   }
 
   @override

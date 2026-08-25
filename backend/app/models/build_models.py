@@ -39,6 +39,13 @@ class BuildSpec(BaseModel):
         lines: list[str] = [
             "# Soul Build Mode — Approved Execution",
             "",
+            "You are generating a complete, runnable project for the user.",
+            "Write real source files, not only an explanation or markdown plan.",
+            "Do not leave placeholder TODOs for core requested behavior.",
+            "Prefer a small, coherent implementation over many disconnected files.",
+            "Include a README with run instructions, architecture notes, and any known limitations.",
+            "If tests are practical for the chosen stack, include at least one smoke test or validation script.",
+            "",
             f"## Project specification",
             self.specification,
             "",
@@ -89,6 +96,7 @@ class BuildSpec(BaseModel):
             "## Workspace",
             f"All files must be written inside: `{self.workspace_path}`",
             "Do not write files outside this directory.",
+            "When complete, leave the workspace containing the final app files only, plus useful docs/tests.",
         ]
 
         return "\n".join(lines)

@@ -24,8 +24,8 @@ class BuildComponentOverlay extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: SanaColors.darkGray.withOpacity(0.95),
-        border: Border.all(color: SanaColors.gray, width: 0.5),
+        color: SanaColors.surfaceElevated.withValues(alpha: 0.95),
+        border: Border.all(color: SanaColors.outline, width: 0.5),
         borderRadius: BorderRadius.circular(8),
       ),
       padding: const EdgeInsets.all(12),
@@ -95,8 +95,8 @@ class _ComponentStatusCard extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: SanaColors.nearBlack.withOpacity(0.5),
-        border: Border.all(color: color.withOpacity(0.5), width: 1),
+        color: SanaColors.surface.withValues(alpha: 0.75),
+        border: Border.all(color: color.withValues(alpha: 0.5), width: 1),
         borderRadius: BorderRadius.circular(6),
       ),
       padding: const EdgeInsets.all(8),
@@ -119,7 +119,7 @@ class _ComponentStatusCard extends StatelessWidget {
               Text(
                 status.status.toUpperCase(),
                 style: textTheme.labelSmall?.copyWith(
-                  color: color.withOpacity(0.7),
+                  color: color.withValues(alpha: 0.7),
                   fontSize: 10,
                 ),
               ),
@@ -147,7 +147,7 @@ class _ComponentStatusCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
-                color: Colors.red.withOpacity(0.1),
+                color: Colors.red.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(4),
               ),
               child: Text(

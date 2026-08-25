@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
@@ -21,6 +22,7 @@ class BuildProjectSummary {
     this.planSummary,
     this.latestResult,
     this.provider = 'prototype_scaffold',
+    this.architectureId,
   });
 
   final String projectId;
@@ -30,6 +32,7 @@ class BuildProjectSummary {
   final DateTime updatedAt;
   final String? planSummary;
   final String? latestResult;
+  final String? architectureId;
 
   /// "deepcode" | "prototype_scaffold" — which coding agent produced this project.
   final String provider;
@@ -57,6 +60,7 @@ class BuildProjectSummary {
       planSummary: json['plan_summary'] as String?,
       latestResult: json['result_summary'] as String?,
       provider: json['provider'] as String? ?? 'prototype_scaffold',
+      architectureId: json['architecture_id'] as String?,
     );
   }
 }
@@ -105,6 +109,7 @@ class BuildProjectDetail extends BuildProjectSummary {
     super.planSummary,
     super.latestResult,
     super.provider,
+    super.architectureId,
     required this.specification,
     required this.generatedFiles,
     required this.runs,
@@ -125,6 +130,7 @@ class BuildProjectDetail extends BuildProjectSummary {
       updatedAt: DateTime.tryParse(json['updated_at'] as String? ?? '') ?? DateTime.now(),
       planSummary: json['plan_summary'] as String?,
       provider: json['provider'] as String? ?? 'prototype_scaffold',
+      architectureId: json['architecture_id'] as String?,
       specification: json['specification'] as String? ?? '',
       generatedFiles: files
           .whereType<Map<String, dynamic>>()
@@ -147,8 +153,7 @@ class BuildProjectsService extends ChangeNotifier {
 
   final AuthService _authService;
   final BuildStreamService _streamService = BuildStreamService();
-  final BuildCanvasIntegrationService _canvasIntegration =
-      BuildCanvasIntegrationService(componentPatterns: {});
+  final BuildCanvasIntegrationService _canvasIntegration = BuildCanvasIntegrationService(componentPatterns: {});
   String? _activeOwnerId;
 
   List<BuildProjectSummary> _projects = const [];
@@ -503,10 +508,10 @@ class BuildProjectsService extends ChangeNotifier {
           notifyListeners();
           if (event.isComplete || event.isError) {
             _activeBuildProjectId = null;
-            Future.delayed(const Duration(seconds: 2), () {
+            unawaited(Future.delayed(const Duration(seconds: 2), () {
               _canvasIntegration.reset();
-              fetchProjects();
-            });
+              unawaited(fetchProjects());
+            }));
           }
         },
         onError: (error) {

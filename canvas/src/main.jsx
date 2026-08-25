@@ -31,6 +31,7 @@ function CanvasProof() {
   const operationsRef = useRef(mockOperations);
   const reducedMotionRef = useRef(false);
   const stepRef = useRef(0);
+  const programmaticUpdateRef = useRef(false);
   const isEmbedded = new URLSearchParams(window.location.search).get("embed") === "1";
 
   useEffect(() => {
@@ -118,7 +119,11 @@ function CanvasProof() {
 
   useEffect(() => {
     elementsRef.current = elements;
+    programmaticUpdateRef.current = true;
     apiRef.current?.updateScene({ elements });
+    window.setTimeout(() => {
+      programmaticUpdateRef.current = false;
+    }, 250);
   }, [elements]);
 
   useEffect(() => {
@@ -233,6 +238,7 @@ function CanvasProof() {
 
   const handleCanvasChange = (currentElements, appState) => {
     if (!isEmbedded) return;
+    if (programmaticUpdateRef.current) return;
     if (
       appState.draggingElement ||
       appState.editingElement ||

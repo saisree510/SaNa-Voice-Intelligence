@@ -24,8 +24,8 @@ class BuildStreamViewer extends StatelessWidget {
 
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: SanaColors.darkGray,
-        border: Border.all(color: SanaColors.gray, width: 0.5),
+        color: SanaColors.surfaceElevated,
+        border: Border.all(color: SanaColors.outline, width: 0.5),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
@@ -115,10 +115,12 @@ class _BuildEventTile extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 8),
       child: DecoratedBox(
         decoration: BoxDecoration(
-          color: SanaColors.nearBlack.withOpacity(0.4),
-          border: Border.left(
-            color: color,
-            width: 3,
+          color: SanaColors.surface.withValues(alpha: 0.7),
+          border: Border(
+            left: BorderSide(
+              color: color,
+              width: 3,
+            ),
           ),
           borderRadius: BorderRadius.circular(4),
         ),
@@ -148,7 +150,7 @@ class _BuildEventTile extends StatelessWidget {
                     Text(
                       time,
                       style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                            color: Colors.grey,
+                            color: SanaColors.fgMuted,
                           ),
                     ),
                 ],
@@ -159,7 +161,7 @@ class _BuildEventTile extends StatelessWidget {
                   child: Text(
                     event.message,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Colors.grey[300],
+                          color: SanaColors.fgSecondary,
                         ),
                     maxLines: 3,
                     overflow: TextOverflow.ellipsis,

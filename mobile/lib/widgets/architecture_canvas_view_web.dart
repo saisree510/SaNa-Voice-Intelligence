@@ -28,6 +28,7 @@ class _ArchitectureCanvasViewState extends State<ArchitectureCanvasView> {
   late final String _viewType = 'soul-architecture-canvas-${identityHashCode(this)}';
   html.IFrameElement? _iframe;
   StreamSubscription<html.MessageEvent>? _messageSubscription;
+  final Set<String> _pendingDeleteConfirmations = <String>{};
 
   @override
   void initState() {
@@ -117,7 +118,8 @@ class _ArchitectureCanvasViewState extends State<ArchitectureCanvasView> {
         break;
       case 'soul.canvas.node_moved':
         final payload = data['payload'];
-        if (payload is Map && !widget.controller!.isReadOnly) {
+        final controller = widget.controller;
+        if (payload is Map && controller != null && !controller.isReadOnly) {
           final componentId = payload['componentId'] as String?;
           final x = payload['x'] as num?;
           final y = payload['y'] as num?;
@@ -129,13 +131,14 @@ class _ArchitectureCanvasViewState extends State<ArchitectureCanvasView> {
               }
             }));
           }
-        } else if (widget.controller!.isReadOnly) {
+        } else if (controller != null && controller.isReadOnly) {
           _postToCanvas('soul.canvas.rejected', {'reason': 'Canvas is in read-only mode during build execution'});
         }
         break;
       case 'soul.canvas.node_edited':
         final payload = data['payload'];
-        if (payload is Map && !widget.controller!.isReadOnly) {
+        final controller = widget.controller;
+        if (payload is Map && controller != null && !controller.isReadOnly) {
           final componentId = payload['componentId'] as String?;
           final name = payload['name'] as String?;
           final technology = payload['technology'] as String?;
@@ -146,18 +149,20 @@ class _ArchitectureCanvasViewState extends State<ArchitectureCanvasView> {
               'technology': technology,
             }));
           }
-        } else if (widget.controller!.isReadOnly) {
+        } else if (controller != null && controller.isReadOnly) {
           _postToCanvas('soul.canvas.rejected', {'reason': 'Canvas is in read-only mode during build execution'});
         }
         break;
       case 'soul.canvas.node_deleted':
         final payload = data['payload'];
-        if (widget.controller!.isReadOnly) {
+        final controller = widget.controller;
+        if (controller != null && controller.isReadOnly) {
           _postToCanvas('soul.canvas.rejected', {'reason': 'Canvas is in read-only mode during build execution'});
         } else if (payload is Map) {
           final componentId = payload['componentId'] as String?;
           final name = payload['name'] as String? ?? 'this component';
-          if (componentId != null) {
+          if (componentId != null && !_pendingDeleteConfirmations.contains(componentId)) {
+            _pendingDeleteConfirmations.add(componentId);
             unawaited(showDialog<bool>(
               context: context,
               builder: (dialogCtx) => AlertDialog(
@@ -176,6 +181,7 @@ class _ArchitectureCanvasViewState extends State<ArchitectureCanvasView> {
                 ],
               ),
             ).then((confirmed) {
+              _pendingDeleteConfirmations.remove(componentId);
               if (confirmed == true) {
                 unawaited(
                     Provider.of<ArchitectureService>(context, listen: false).submitCanvasOperation('delete_node', {
@@ -184,7 +190,7 @@ class _ArchitectureCanvasViewState extends State<ArchitectureCanvasView> {
               } else {
                 widget.controller?.resendArchitecture();
               }
-            }));
+            }).whenComplete(() => _pendingDeleteConfirmations.remove(componentId)));
           }
         }
         break;

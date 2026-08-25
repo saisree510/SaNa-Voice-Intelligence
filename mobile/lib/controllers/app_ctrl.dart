@@ -289,7 +289,7 @@ class AppCtrl extends ChangeNotifier {
           final archId = payload['architecture_id'] as String;
           _logger.info('Received architecture_created packet for $archId');
           if (_architectureService != null) {
-            unawaited(_architectureService!.fetchLatestArchitecture());
+            unawaited(_architectureService!.fetchArchitectureById(archId));
           }
         }
       } catch (e, st) {

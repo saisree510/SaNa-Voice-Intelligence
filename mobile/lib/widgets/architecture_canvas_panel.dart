@@ -30,11 +30,12 @@ class ArchitectureCanvasPanel extends StatefulWidget {
 
 class _ArchitectureCanvasPanelState extends State<ArchitectureCanvasPanel> {
   late final ArchitectureCanvasController _controller = ArchitectureCanvasController();
-  ArchitectureCanvasData? _loadedArchitecture;
+  String? _loadedArchitectureKey;
 
   @override
   void initState() {
     super.initState();
+    _controller.setReadOnly(widget.isReadOnly);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       unawaited(context.read<ArchitectureService>().fetchLatestArchitecture());
@@ -51,8 +52,11 @@ class _ArchitectureCanvasPanelState extends State<ArchitectureCanvasPanel> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     final architecture = context.watch<ArchitectureService>().latestArchitecture;
-    if (architecture == null || identical(architecture, _loadedArchitecture)) return;
-    _loadedArchitecture = architecture;
+    final architectureKey = architecture == null
+        ? null
+        : '${architecture.architectureId}:${architecture.operations.length}:${architecture.componentCount}:${architecture.connectionCount}';
+    if (architecture == null || architectureKey == _loadedArchitectureKey) return;
+    _loadedArchitectureKey = architectureKey;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       _controller.loadArchitecture(architecture);
