@@ -116923,12 +116923,11 @@ if(q!=null){this.Kx(q)
 return}p=A.bD("Project created successfully with ID\\s+([A-Za-z][A-Za-z0-9_-]{0,63})",!1,!1).hq(s)
 o=p==null?null:p.b[1]
 if(o!=null&&this.e===B.m0)this.Ee(o)},
-Kx(a){var s,r=this
-if(a===r.ay)return
+Kx(a){var s,r=this,q=r.ay
 r.ay=a
 s=r.CW
 if(s!=null)s.rU(a)
-r.L()},
+if(a!==q)r.L()},
 Ee(a){return this.avT(a)},
 avT(a){var s=0,r=A.m(t.H),q,p=this,o,n,m
 var $async$Ee=A.i(function(b,c){if(b===1)return A.j(c,r)
