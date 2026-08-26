@@ -559,6 +559,25 @@ async def create_build_project(
         project_id=project_id,
     )
     timestamp = datetime.utcnow().isoformat()
+    # Persist the project first: architectures.project_id is a Supabase foreign
+    # key to build_projects.project_id, so the linked row cannot come first.
+    project = BuildProjectModel(
+        project_id=project_id,
+        user_id=current_user.id,
+        title=request.title,
+        specification=request.specification,
+        workspace_path=workspace_path,
+        status='plan_generated',
+        plan_summary=(
+            f"Implementation Plan generated for '{request.title}'. "
+            'Awaiting explicit user approval before execution.'
+        ),
+        session_id=session.session_id,
+        created_at=timestamp,
+        updated_at=timestamp,
+    )
+    project_store.upsert_project(project)
+
     architecture_id: Optional[str] = None
     try:
         candidate_architecture_id = new_architecture_id()
@@ -581,25 +600,9 @@ async def create_build_project(
     except Exception:
         logger.exception("Failed to create linked architecture for BuildProject %s", project_id)
 
-    project = BuildProjectModel(
-        project_id=project_id,
-        user_id=current_user.id,
-        title=request.title,
-        specification=request.specification,
-        workspace_path=workspace_path,
-        status='plan_generated',
-        plan_summary=(
-            f"Implementation Plan generated for '{request.title}'. "
-            'Awaiting explicit user approval before execution.'
-        ),
-        session_id=session.session_id,
-        architecture_id=architecture_id,
-        created_at=timestamp,
-        updated_at=timestamp,
-    )
-
-    project_store.upsert_project(project)
     if architecture_id:
+        project.architecture_id = architecture_id
+        project_store.upsert_project(project)
         try:
             architecture = architecture_store.get_architecture(architecture_id)
             if architecture is not None:

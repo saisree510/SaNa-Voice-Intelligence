@@ -8,6 +8,7 @@ from fastapi.testclient import TestClient
 from app.config import settings
 from app.main import app
 from app.routers import build_router
+from app.services.architecture_store import ArchitectureStore
 from conftest import DEFAULT_USER_ID, auth_headers
 
 client = TestClient(app)
@@ -198,6 +199,28 @@ def test_create_project_and_approval_gate():
     assert any(p.is_dir() and p.name == "src" for p in Path(workspace_path).iterdir())
     assert any(p.is_dir() and p.name == "tests" for p in Path(workspace_path).iterdir())
     assert len(approve_data["events"]) >= 2
+
+
+def test_project_is_persisted_before_linked_architecture(monkeypatch):
+    class OrderingArchitectureStore(ArchitectureStore):
+        def create_architecture(self, record):
+            assert build_router.project_store.get_project(record.project_id) is not None
+            return super().create_architecture(record)
+
+    store = OrderingArchitectureStore(trusted_root=_workspace("architecture_order"))
+    monkeypatch.setattr(build_router, "architecture_store", store)
+
+    response = client.post(
+        "/v1/build/projects",
+        json={
+            "title": "Architecture ordering check",
+            "specification": "Build a simple web application",
+            "workspace_path": _workspace("architecture_order_project"),
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.json()["architecture_id"]
 
 
 def test_approval_blocked_until_scaffold_confirmed():
