@@ -281,6 +281,68 @@ async def create_overview_architecture(
         )
 
 
+@llm.function_tool
+async def update_overview_architecture(
+    architecture_id: str,
+    title: str,
+    specification: str,
+    *,
+    request_user_id: Optional[str] = None,
+    request_user_email: Optional[str] = None,
+) -> str:
+    """Replace a draft Blueprint with the latest agreed project architecture."""
+    configured_backend_url = get_backend_url()
+    backend_url = configured_backend_url or "http://127.0.0.1:8000"
+    try:
+        headers = build_backend_headers(
+            request_user_id=request_user_id,
+            request_user_email=request_user_email,
+        )
+        get_request = urllib.request.Request(
+            f"{backend_url}/v1/architectures/{architecture_id}",
+            headers=headers,
+            method="GET",
+        )
+        with urllib.request.urlopen(get_request, timeout=8) as response:
+            existing = json.loads(response.read().decode("utf-8"))
+
+        current = existing.get("current_blueprint") or {}
+        components = _infer_overview_components(specification)
+        operations = _build_architecture_operations(architecture_id, components)
+        connections = [
+            item["operation"]["payload"]["connection"]
+            for item in operations
+            if item["operation"]["operation_type"] == "connect_nodes"
+        ]
+        blueprint = {
+            "architecture_id": architecture_id,
+            "project_id": existing.get("project_id"),
+            "version": current.get("version", 1),
+            "status": "draft",
+            "components": components,
+            "connections": connections,
+        }
+        patch_request = urllib.request.Request(
+            f"{backend_url}/v1/architectures/{architecture_id}",
+            data=json.dumps({
+                "title": f"{title} Architecture",
+                "current_blueprint": blueprint,
+            }).encode("utf-8"),
+            headers=headers,
+            method="PATCH",
+        )
+        with urllib.request.urlopen(patch_request, timeout=8):
+            pass
+
+        return (
+            f"Architecture Blueprint updated with ID {architecture_id}. "
+            f"It now reflects {len(components)} components for the latest plan."
+        )
+    except Exception as error:
+        logger.warning(f"Error updating overview architecture: {error}")
+        return f"I could not update the live architecture for '{title}'. Please retry the change."
+
+
 
 def normalize_restored_messages(
     messages: Any,
@@ -329,7 +391,14 @@ def build_restored_chat_context(
 
 
 @llm.function_tool
-async def create_build_project_plan(title: str, specification: str, *, request_user_id: Optional[str] = None, request_user_email: Optional[str] = None) -> str:
+async def create_build_project_plan(
+    title: str,
+    specification: str,
+    *,
+    request_user_id: Optional[str] = None,
+    request_user_email: Optional[str] = None,
+    architecture_id: Optional[str] = None,
+) -> str:
     """Draft a new build project plan and return the project ID and generated plan summary."""
     configured_backend_url = get_backend_url()
     backend_url = configured_backend_url or "http://127.0.0.1:8000"
@@ -342,6 +411,8 @@ async def create_build_project_plan(title: str, specification: str, *, request_u
             "title": title,
             "specification": specification,
         }
+        if architecture_id:
+            payload["architecture_id"] = architecture_id
         if requested_workspace:
             payload["workspace_path"] = requested_workspace
 
@@ -604,8 +675,9 @@ You are Soul, a decisive, precise Tech Lead and Build Orchestrator. You are curr
 YOUR MANDATORY BEHAVIOR FOR EVERY SINGLE TURN:
 - HELP THE USER DEFINE CLEAR PROJECT REQUIREMENTS, SPECIFICATIONS, AND ARCHITECTURE PLANS.
 - Sound like an approachable, decisive tech lead in a working session: refer naturally to earlier decisions and move the discussion forward one concrete choice at a time.
-- When the user asks to build or create a project/app, call create_build_project_plan_tool with a concise title and finalized specification; that tool also creates the linked live architecture canvas.
-- When the user asks only to show, draw, map, or update an architecture/canvas/technical plan, call create_overview_architecture_tool with a concise title and the finalized specification before saying it is available on the canvas.
+- As soon as the user gives a concrete project idea, call create_overview_architecture_tool before asking the next clarification. This starts the live draft canvas during planning, not after the final plan.
+- Whenever a user decision materially changes the project scope, technology, data, authentication, AI or voice requirements, call create_overview_architecture_tool again with the latest complete specification. It updates the same live draft canvas.
+- Once requirements are finalized, call create_build_project_plan_tool with the concise title and finalized specification. It links the existing live draft architecture to the Build Project; do not create a second architecture.
 - EXPLICIT APPROVAL GATE: NEVER TRIGGER CODE EXECUTION OR FILE MUTATION AUTOMATICALLY. ALWAYS PRESENT THE PLAN CLEARLY AND ASK FOR THE USER'S EXPLICIT APPROVAL ("Are you ready to approve and execute this plan?").
 - WHEN BUILD EXECUTION FINISHES, SUMMARIZE THE GENERATED FILES AND VERIFICATION RESULTS IN 2 TO 3 CLEAR, DIRECT SENTENCES.
 - If asked what mode you are in, answer clearly: "I am in Build Mode."
@@ -675,6 +747,8 @@ async def my_agent(ctx: JobContext):
     greeting_spoken = False
     current_build_user_id: Optional[str] = None
     current_build_user_email: Optional[str] = None
+    active_draft_architecture_id: Optional[str] = None
+    restored_conversation_id: Optional[str] = None
 
     @llm.function_tool
     async def create_build_project_plan_tool(title: str, specification: str) -> str:
@@ -683,6 +757,7 @@ async def my_agent(ctx: JobContext):
             specification,
             request_user_id=current_build_user_id,
             request_user_email=current_build_user_email,
+            architecture_id=active_draft_architecture_id,
         )
         project_match = re.search(r"Project created successfully with ID ([A-Za-z0-9_-]+)", plan_result)
         project_id = project_match.group(1) if project_match else None
@@ -714,6 +789,8 @@ async def my_agent(ctx: JobContext):
 
     @llm.function_tool
     async def create_overview_architecture_tool(title: str, specification: str, conversation_id: Optional[str] = None, project_id: Optional[str] = None) -> str:
+        nonlocal active_draft_architecture_id
+
         async def on_created_callback(arch_id: str):
             try:
                 payload = json.dumps({
@@ -726,15 +803,31 @@ async def my_agent(ctx: JobContext):
             except Exception as pe:
                 logger.warning(f"Failed to publish architecture_created room packet: {pe}")
 
-        return await create_overview_architecture(
+        if active_draft_architecture_id:
+            result = await update_overview_architecture(
+                active_draft_architecture_id,
+                title,
+                specification,
+                request_user_id=current_build_user_id,
+                request_user_email=current_build_user_email,
+            )
+            if result.startswith("Architecture Blueprint updated"):
+                await on_created_callback(active_draft_architecture_id)
+            return result
+
+        result = await create_overview_architecture(
             title,
             specification,
             request_user_id=current_build_user_id,
             request_user_email=current_build_user_email,
-            conversation_id=conversation_id,
+            conversation_id=conversation_id or restored_conversation_id,
             project_id=project_id,
             on_created=on_created_callback,
         )
+        match = re.search(r"Architecture Blueprint created with ID ([A-Za-z0-9_-]+)", result)
+        if match:
+            active_draft_architecture_id = match.group(1)
+        return result
 
 
     session = AgentSession(
@@ -756,7 +849,6 @@ async def my_agent(ctx: JobContext):
     )
 
     current_applied_mode = None
-    restored_conversation_id: Optional[str] = None
     restore_lock = asyncio.Lock()
 
     async def restore_conversation(payload: dict[str, Any]) -> None:

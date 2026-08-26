@@ -198,6 +198,7 @@ class CreateProjectRequest(BaseModel):
     title: str
     specification: str
     workspace_path: Optional[str] = None
+    architecture_id: Optional[str] = None
 
 
 class ApproveProjectResponse(BaseModel):
@@ -553,6 +554,14 @@ async def create_build_project(
     workspace_path = _validate_or_default_workspace(request, project_id, current_user)
     os.makedirs(workspace_path, exist_ok=True)
 
+    linked_draft = None
+    if request.architecture_id:
+        linked_draft = architecture_store.get_architecture(request.architecture_id)
+        if linked_draft is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Draft architecture not found')
+        if linked_draft.user_id not in user_id_aliases(current_user.id):
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail='Draft architecture belongs to another user')
+
     session = deepcode_adapter.create_session(
         workspace_path=workspace_path,
         user_id=current_user.id,
@@ -573,32 +582,44 @@ async def create_build_project(
             'Awaiting explicit user approval before execution.'
         ),
         session_id=session.session_id,
+        architecture_id=request.architecture_id,
         created_at=timestamp,
         updated_at=timestamp,
     )
     project_store.upsert_project(project)
 
-    architecture_id: Optional[str] = None
-    try:
-        candidate_architecture_id = new_architecture_id()
-        blueprint = _build_project_blueprint(
-            architecture_id=candidate_architecture_id,
-            project_id=project_id,
-            title=request.title,
-            specification=request.specification,
-        )
-        architecture_store.create_architecture(
-            ArchitectureRecord(
+    architecture_id: Optional[str] = request.architecture_id
+    if linked_draft is not None:
+        try:
+            linked_draft.project_id = project_id
+            linked_draft.current_blueprint.project_id = project_id
+            architecture_store.update_architecture(linked_draft)
+        except Exception:
+            logger.exception("Failed to link draft architecture %s to BuildProject %s", architecture_id, project_id)
+            project.architecture_id = None
+            architecture_id = None
+            project_store.upsert_project(project)
+    else:
+        try:
+            candidate_architecture_id = new_architecture_id()
+            blueprint = _build_project_blueprint(
                 architecture_id=candidate_architecture_id,
-                user_id=current_user.id,
-                title=f"{request.title} Architecture",
                 project_id=project_id,
-                current_blueprint=blueprint,
+                title=request.title,
+                specification=request.specification,
             )
-        )
-        architecture_id = candidate_architecture_id
-    except Exception:
-        logger.exception("Failed to create linked architecture for BuildProject %s", project_id)
+            architecture_store.create_architecture(
+                ArchitectureRecord(
+                    architecture_id=candidate_architecture_id,
+                    user_id=current_user.id,
+                    title=f"{request.title} Architecture",
+                    project_id=project_id,
+                    current_blueprint=blueprint,
+                )
+            )
+            architecture_id = candidate_architecture_id
+        except Exception:
+            logger.exception("Failed to create linked architecture for BuildProject %s", project_id)
 
     if architecture_id:
         project.architecture_id = architecture_id

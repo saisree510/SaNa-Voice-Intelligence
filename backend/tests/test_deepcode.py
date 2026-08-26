@@ -223,6 +223,41 @@ def test_project_is_persisted_before_linked_architecture(monkeypatch):
     assert response.json()["architecture_id"]
 
 
+def test_project_links_existing_draft_architecture():
+    architecture_id = "arch-existing-draft"
+    create_architecture = client.post(
+        "/v1/architectures",
+        json={
+            "title": "Existing Draft",
+            "blueprint": {
+                "architecture_id": architecture_id,
+                "version": 1,
+                "status": "draft",
+                "components": [],
+                "connections": [],
+            },
+        },
+    )
+    assert create_architecture.status_code == 200
+
+    project_response = client.post(
+        "/v1/build/projects",
+        json={
+            "title": "Linked Draft Project",
+            "specification": "Build a simple calculator",
+            "workspace_path": _workspace("linked_draft_project"),
+            "architecture_id": architecture_id,
+        },
+    )
+
+    assert project_response.status_code == 200
+    project = project_response.json()
+    assert project["architecture_id"] == architecture_id
+    architecture = client.get(f"/v1/architectures/{architecture_id}").json()
+    assert architecture["project_id"] == project["project_id"]
+    assert architecture["current_blueprint"]["project_id"] == project["project_id"]
+
+
 def test_approval_blocked_until_scaffold_confirmed():
     workspace_path = _workspace("scaffold_consent_gate")
     create_res = client.post(

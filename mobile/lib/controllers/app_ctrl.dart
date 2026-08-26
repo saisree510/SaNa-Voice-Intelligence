@@ -151,12 +151,12 @@ class AppCtrl extends ChangeNotifier {
   }
 
   void _activateArchitecture(String architectureId) {
-    if (architectureId == activeArchitectureId) return;
+    final changed = architectureId != activeArchitectureId;
     activeArchitectureId = architectureId;
     if (_architectureService != null) {
       unawaited(_architectureService!.fetchArchitectureById(architectureId));
     }
-    notifyListeners();
+    if (changed) notifyListeners();
   }
 
   Future<void> _recoverArchitectureFromProject(String projectId) async {
