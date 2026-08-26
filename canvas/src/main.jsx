@@ -346,7 +346,9 @@ function CanvasProof() {
             elements,
             appState: {
               gridSize: null,
-              viewBackgroundColor: "#fdfcff",
+              // The Soul dot pattern is supplied by the visible canvas layer.
+              // An opaque Excalidraw background hides it completely.
+              viewBackgroundColor: "transparent",
             },
           }}
           onChange={handleCanvasChange}

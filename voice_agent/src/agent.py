@@ -296,7 +296,7 @@ async def create_overview_architecture(
             f"Drew {len(components)} components and {accepted - len(components)} connections progressively: {component_names}."
         )
     except Exception as e:
-        logger.warning(f"Error creating overview architecture: {e}")
+        logger.exception("Error creating overview architecture title=%r backend=%s", title, backend_url)
         return (
             f"I could not create the live architecture for '{title}' through the configured backend. "
             "No canvas operations were saved. Please retry after verifying the backend and user session."
@@ -360,8 +360,13 @@ async def update_overview_architecture(
             f"Architecture Blueprint updated with ID {architecture_id}. "
             f"It now reflects {len(components)} components for the latest plan."
         )
-    except Exception as error:
-        logger.warning(f"Error updating overview architecture: {error}")
+    except Exception:
+        logger.exception(
+            "Error updating overview architecture id=%s title=%r backend=%s",
+            architecture_id,
+            title,
+            backend_url,
+        )
         return f"I could not update the live architecture for '{title}'. Please retry the change."
 
 
