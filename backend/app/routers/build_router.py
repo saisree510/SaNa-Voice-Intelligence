@@ -559,22 +559,27 @@ async def create_build_project(
         project_id=project_id,
     )
     timestamp = datetime.utcnow().isoformat()
-    architecture_id = new_architecture_id()
-    blueprint = _build_project_blueprint(
-        architecture_id=architecture_id,
-        project_id=project_id,
-        title=request.title,
-        specification=request.specification,
-    )
-    architecture_store.create_architecture(
-        ArchitectureRecord(
-            architecture_id=architecture_id,
-            user_id=current_user.id,
-            title=f"{request.title} Architecture",
+    architecture_id: Optional[str] = None
+    try:
+        candidate_architecture_id = new_architecture_id()
+        blueprint = _build_project_blueprint(
+            architecture_id=candidate_architecture_id,
             project_id=project_id,
-            current_blueprint=blueprint,
+            title=request.title,
+            specification=request.specification,
         )
-    )
+        architecture_store.create_architecture(
+            ArchitectureRecord(
+                architecture_id=candidate_architecture_id,
+                user_id=current_user.id,
+                title=f"{request.title} Architecture",
+                project_id=project_id,
+                current_blueprint=blueprint,
+            )
+        )
+        architecture_id = candidate_architecture_id
+    except Exception:
+        logger.exception("Failed to create linked architecture for BuildProject %s", project_id)
 
     project = BuildProjectModel(
         project_id=project_id,
@@ -594,11 +599,21 @@ async def create_build_project(
     )
 
     project_store.upsert_project(project)
+    if architecture_id:
+        try:
+            architecture = architecture_store.get_architecture(architecture_id)
+            if architecture is not None:
+                architecture.project_id = project_id
+                architecture.current_blueprint.project_id = project_id
+                architecture_store.update_architecture(architecture)
+        except Exception:
+            logger.exception("Failed to verify linked architecture %s for BuildProject %s", architecture_id, project_id)
     logger.info(
-        'Created BuildProject %s in trusted folder %s with workspace %s.',
+        'Created BuildProject %s in trusted folder %s with workspace %s and architecture %s.',
         project_id,
         project_store.trusted_folder(),
         workspace_path,
+        architecture_id or 'none',
     )
     return project
 
