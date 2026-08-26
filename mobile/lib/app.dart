@@ -69,6 +69,7 @@ class _AuthGateState extends State<AuthGate> {
       final appCtrl = context.read<AppCtrl>();
       appCtrl.bindConversationService(context.read<ConversationService>());
       appCtrl.bindArchitectureService(context.read<ArchitectureService>());
+      appCtrl.bindBuildProjectsService(context.read<BuildProjectsService>());
       final service = context.read<AuthService>();
       _boundAuthService = service;
       _lastUserId = service.userId;

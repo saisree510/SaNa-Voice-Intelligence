@@ -173,35 +173,54 @@ class _EmptyCanvasState extends StatelessWidget {
             ? 'Loading the active architecture...'
             : 'No live architecture is linked to this conversation yet. Ask Soul to design the architecture first.');
 
-    return ColoredBox(
-      color: SanaColors.pureWhite,
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 420),
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (isLoading) ...[
-                  const CircularProgressIndicator(color: SanaColors.lavender),
-                  const SizedBox(height: 18),
-                ] else ...[
-                  const Icon(Icons.account_tree_outlined, color: SanaColors.lavender, size: 36),
-                  const SizedBox(height: 14),
+    return CustomPaint(
+      painter: const _DottedWorkspacePainter(),
+      child: SizedBox.expand(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 420),
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (isLoading) ...[
+                    const CircularProgressIndicator(color: SanaColors.lavender),
+                    const SizedBox(height: 18),
+                  ] else ...[
+                    const Icon(Icons.account_tree_outlined, color: SanaColors.lavender, size: 36),
+                    const SizedBox(height: 14),
+                  ],
+                  Text(
+                    message,
+                    textAlign: TextAlign.center,
+                    style: textTheme.bodyMedium?.copyWith(color: SanaColors.fgSecondary),
+                  ),
                 ],
-                Text(
-                  message,
-                  textAlign: TextAlign.center,
-                  style: textTheme.bodyMedium?.copyWith(color: SanaColors.fgSecondary),
-                ),
-              ],
+              ),
             ),
           ),
         ),
       ),
     );
   }
+}
+
+class _DottedWorkspacePainter extends CustomPainter {
+  const _DottedWorkspacePainter();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()..color = SanaColors.lavenderDeep.withValues(alpha: 0.17);
+    for (var x = 12.0; x < size.width; x += 24) {
+      for (var y = 12.0; y < size.height; y += 24) {
+        canvas.drawCircle(Offset(x, y), 1.1, paint);
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _DottedWorkspacePainter oldDelegate) => false;
 }
 
 class _CanvasHeader extends StatelessWidget {

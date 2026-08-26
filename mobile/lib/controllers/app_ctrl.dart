@@ -16,6 +16,7 @@ import '../services/conversation_memory.dart';
 import '../services/conversation_service.dart';
 import '../services/token_service.dart';
 import '../services/architecture_service.dart';
+import '../services/build_projects_service.dart';
 
 final String homepageAgentTokenEndpoint = 'https://livekit.com/api/homepage-agent/token';
 
@@ -96,12 +97,17 @@ class AppCtrl extends ChangeNotifier {
   String? activeArchitectureId;
   ConversationService? _conversationService;
   ArchitectureService? _architectureService;
+  BuildProjectsService? _buildProjectsService;
   sdk.EventsListener<sdk.RoomEvent>? _roomListener;
   List<PersistedMessage> _restoredMessages = const [];
   String? _restoreRetriesScheduledForConversationId;
 
   void bindArchitectureService(ArchitectureService service) {
     _architectureService = service;
+  }
+
+  void bindBuildProjectsService(BuildProjectsService service) {
+    _buildProjectsService = service;
   }
 
   void bindConversationService(ConversationService service) {
@@ -127,12 +133,41 @@ class AppCtrl extends ChangeNotifier {
     if (turn.role == ConversationRole.user || !turn.isFinal) return;
     final match = RegExp(r'Architecture ID:\s*([A-Za-z][A-Za-z0-9_-]{0,63})').firstMatch(turn.text);
     final architectureId = match?.group(1);
-    if (architectureId == null || architectureId == activeArchitectureId) return;
+    if (architectureId != null) {
+      _activateArchitecture(architectureId);
+      return;
+    }
+
+    // Older deployed agents may report the project but not publish the linked
+    // architecture packet. Recover the authoritative link from the backend.
+    final projectMatch = RegExp(
+      r'Project created successfully with ID\s+([A-Za-z][A-Za-z0-9_-]{0,63})',
+      caseSensitive: false,
+    ).firstMatch(turn.text);
+    final projectId = projectMatch?.group(1);
+    if (projectId != null && conversationMode == ConversationMode.build) {
+      unawaited(_recoverArchitectureFromProject(projectId));
+    }
+  }
+
+  void _activateArchitecture(String architectureId) {
+    if (architectureId == activeArchitectureId) return;
     activeArchitectureId = architectureId;
     if (_architectureService != null) {
       unawaited(_architectureService!.fetchArchitectureById(architectureId));
     }
     notifyListeners();
+  }
+
+  Future<void> _recoverArchitectureFromProject(String projectId) async {
+    final detail = await _buildProjectsService?.fetchProject(projectId);
+    final architectureId = detail?.architectureId;
+    if (architectureId == null || architectureId.isEmpty) {
+      _logger.warning('Build project $projectId has no linked architecture yet.');
+      return;
+    }
+    _logger.info('Recovered linked architecture $architectureId from BuildProject $projectId');
+    _activateArchitecture(architectureId);
   }
 
   Future<void> ensureActiveConversation() async {
@@ -302,11 +337,7 @@ class AppCtrl extends ChangeNotifier {
         if (payload is Map && payload['type'] == 'architecture_created') {
           final archId = payload['architecture_id'] as String;
           _logger.info('Received architecture_created packet for $archId');
-          activeArchitectureId = archId;
-          notifyListeners();
-          if (_architectureService != null) {
-            unawaited(_architectureService!.fetchArchitectureById(archId));
-          }
+          _activateArchitecture(archId);
         }
       } catch (e, st) {
         _logger.warning('Error handling room data event: $e', e, st);
