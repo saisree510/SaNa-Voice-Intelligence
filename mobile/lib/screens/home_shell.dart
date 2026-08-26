@@ -654,18 +654,27 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
                       const SizedBox(height: 16),
                       _ProjectSection(
                         title: 'Architecture',
-                        child: Row(
-                          children: [
-                            const Icon(Icons.account_tree_outlined, color: SanaColors.lavender),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Text(
-                                'Architecture Blueprint and live canvas arrive in Phase C.',
-                                style: textTheme.bodyMedium?.copyWith(color: SanaColors.fgSecondary),
+                        child: (detail.architectureId ?? widget.project.architectureId) == null
+                            ? Row(
+                                children: [
+                                  const Icon(Icons.account_tree_outlined, color: SanaColors.lavender),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Text(
+                                      'No Architecture Blueprint is linked to this project yet.',
+                                      style: textTheme.bodyMedium?.copyWith(color: SanaColors.fgSecondary),
+                                    ),
+                                  ),
+                                ],
+                              )
+                            : SizedBox(
+                                height: 420,
+                                child: ArchitectureCanvasPanel(
+                                  architectureId: detail.architectureId ?? widget.project.architectureId,
+                                  requireExplicitArchitecture: true,
+                                  isReadOnly: true,
+                                ),
                               ),
-                            ),
-                          ],
-                        ),
                       ),
                       const SizedBox(height: 16),
                       _ProjectSection(

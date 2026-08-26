@@ -739,6 +739,9 @@ async def _approve_and_execute_project_model(
                 session_id=session.session_id,
             ))
 
+        if any(event.event_type == 'error' for event in build_run_events):
+            raise RuntimeError('Coding agent reported an error; refusing to mark the build as completed.')
+
         generated_files = _list_workspace_files(project.workspace_path)
         if not generated_files:
             raise RuntimeError(
@@ -908,6 +911,9 @@ async def stream_build_execution(
                     session_id=session.session_id,
                 )
                 events.append(legacy_event)
+
+            if any(event.event_type == 'error' for event in build_run_events):
+                raise RuntimeError('Coding agent reported an error; refusing to mark the build as completed.')
 
             generated_files = _list_workspace_files(project.workspace_path)
             if not generated_files:

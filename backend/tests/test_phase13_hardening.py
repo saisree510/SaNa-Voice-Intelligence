@@ -2,6 +2,7 @@ from pathlib import Path
 from fastapi.testclient import TestClient
 from app.main import app
 from app.routers import build_router
+from app.models.build_models import BuildRunEvent
 from conftest import auth_headers
 
 client = TestClient(app)
@@ -120,3 +121,43 @@ def test_project_approval_execution_flow():
         for turn in project["history"]
         for event in turn["events"]
     )
+
+
+def test_build_error_event_never_marks_existing_workspace_as_completed(monkeypatch):
+    """A runtime error must not archive stale files as a successful DeepCode build."""
+    class ErroringDeepCodeAdapter:
+        provider_label = "deepcode"
+
+        async def run(self, spec, run_id):
+            Path(spec.workspace_path).mkdir(parents=True, exist_ok=True)
+            (Path(spec.workspace_path) / "stale-scaffold.txt").write_text("old output")
+            yield BuildRunEvent(
+                run_id=run_id,
+                sequence=1,
+                event_type="error",
+                message="DeepCode could not write the requested project.",
+                provider=self.provider_label,
+            )
+
+        async def cancel(self, run_id):
+            return None
+
+    monkeypatch.setattr(build_router, "coding_adapter", ErroringDeepCodeAdapter())
+    headers = auth_headers(USER1)
+    create_resp = client.post(
+        "/v1/build/projects",
+        json={
+            "title": "Failed runtime must not complete",
+            "specification": "Create an app",
+            "workspace_path": _workspace(USER1, "failed_runtime_must_not_complete"),
+        },
+        headers=headers,
+    )
+    project_id = create_resp.json()["project_id"]
+
+    approve_resp = client.post(f"/v1/build/projects/{project_id}/approve", headers=headers)
+    assert approve_resp.status_code == 500
+
+    project = client.get(f"/v1/build/projects/{project_id}", headers=headers).json()
+    assert project["status"] == "failed"
+    assert project["generated_files"] == []

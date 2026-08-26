@@ -5,6 +5,7 @@ import urllib.request
 
 import pytest
 from src.agent import (
+    _infer_overview_components,
     approve_and_execute_build_project,
     build_backend_headers,
     create_build_project_plan,
@@ -34,6 +35,27 @@ def test_signed_participant_identity_overrides_editable_metadata():
 
     assert context["user_id"] == "real-user-id"
     assert context["mode"] == "build"
+
+
+def test_overview_architecture_uses_domain_components_for_fitness_workflow():
+    components = _infer_overview_components(
+        "Build a fitness studio app with Supabase auth and database, class booking, "
+        "Stripe subscriptions, email reminders, QR check-in, attendance analytics, "
+        "and dashboards for members, trainers, and owners."
+    )
+
+    component_ids = {component["id"] for component in components}
+    assert {
+        "frontend",
+        "api",
+        "database",
+        "auth",
+        "booking",
+        "payments",
+        "notifications",
+        "checkin",
+        "analytics",
+    }.issubset(component_ids)
 
 
 @pytest.mark.asyncio

@@ -135,8 +135,9 @@ def _safe_architecture_id(text: str, *, prefix: str = "arch") -> str:
 def _infer_overview_components(specification: str) -> list[dict[str, str]]:
     text = specification.lower()
     backend_requested = any(term in text for term in ("api", "backend", "server", "fastapi", "endpoint"))
+    web_technology = "Next.js" if "next.js" in text or "nextjs" in text else "Flutter Web" if "flutter" in text else "Web application"
     components: list[dict[str, str]] = [
-        {"id": "frontend", "name": "Project UI", "type": "frontend", "technology": "HTML/CSS/JavaScript"},
+        {"id": "frontend", "name": "Member, Trainer & Owner App", "type": "frontend", "technology": web_technology},
         {
             "id": "api",
             "name": "FastAPI Backend" if backend_requested else "Application Logic",
@@ -144,8 +145,21 @@ def _infer_overview_components(specification: str) -> list[dict[str, str]]:
             "technology": "Python" if backend_requested else "Browser JavaScript",
         },
     ]
+    uses_supabase = "supabase" in text
     if any(term in text for term in ("database", "data", "store", "save", "persist", "supabase", "login", "auth")):
-        components.append({"id": "database", "name": "Supabase PostgreSQL", "type": "database"})
+        components.append({"id": "database", "name": "Supabase PostgreSQL" if uses_supabase else "Application Database", "type": "database"})
+    if any(term in text for term in ("login", "auth", "account", "member", "trainer", "owner")):
+        components.append({"id": "auth", "name": "Supabase Auth" if uses_supabase else "Role-based Authentication", "type": "identity"})
+    if any(term in text for term in ("class", "booking", "schedule", "capacity", "reservation")):
+        components.append({"id": "booking", "name": "Class Booking &\nScheduling", "type": "domain_service"})
+    if any(term in text for term in ("stripe", "payment", "subscription", "revenue")):
+        components.append({"id": "payments", "name": "Stripe Billing &\nSubscriptions", "type": "external_service", "technology": "Stripe"})
+    if any(term in text for term in ("reminder", "notification", "email", "sms")):
+        components.append({"id": "notifications", "name": "Email Notifications", "type": "external_service"})
+    if any(term in text for term in ("qr", "check-in", "checkin", "no-show", "attendance")):
+        components.append({"id": "checkin", "name": "QR Check-in &\nAttendance", "type": "domain_service"})
+    if any(term in text for term in ("analytics", "dashboard", "trend", "fill rate", "report")):
+        components.append({"id": "analytics", "name": "Attendance & Revenue Analytics", "type": "analytics"})
     if any(term in text for term in ("ai", "agent", "voice", "livekit", "llm", "speech")):
         components.append({"id": "agent", "name": "Soul Voice Agent", "type": "agent"})
     return components
@@ -173,7 +187,15 @@ def _build_architecture_operations(architecture_id: str, components: list[dict[s
 
     for source, target, protocol in (
         ("frontend", "api", "HTTPS"),
+        ("frontend", "auth", "HTTPS"),
         ("api", "database", "SQL"),
+        ("api", "booking", "HTTPS"),
+        ("booking", "database", "SQL"),
+        ("api", "payments", "HTTPS"),
+        ("booking", "notifications", "HTTPS"),
+        ("api", "checkin", "HTTPS"),
+        ("checkin", "database", "SQL"),
+        ("database", "analytics", "SQL"),
         ("frontend", "agent", "LiveKit"),
         ("agent", "api", "HTTPS"),
     ):

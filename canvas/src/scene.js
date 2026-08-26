@@ -6,6 +6,12 @@ const positions = {
   api: { x: 460, y: 220 },
   database: { x: 800, y: 220 },
   agent: { x: 460, y: 380 },
+  auth: { x: 380, y: 80 },
+  booking: { x: 680, y: 220 },
+  payments: { x: 680, y: 420 },
+  notifications: { x: 980, y: 80 },
+  checkin: { x: 680, y: 620 },
+  analytics: { x: 980, y: 620 },
 };
 
 const size = { width: 220, height: 96 };
@@ -53,11 +59,15 @@ function connectionElements(connection, componentPositions) {
   const source = componentPositions.get(connection.source_id);
   const target = componentPositions.get(connection.target_id);
   if (!source || !target) return [];
-  const startX = source.x + size.width;
-  const startY = source.y + size.height / 2;
-  const endX = target.x;
-  const endY = target.y + size.height / 2;
+  const horizontal = Math.abs(target.x - source.x) >= Math.abs(target.y - source.y);
+  const flowsRight = target.x >= source.x;
+  const flowsDown = target.y >= source.y;
+  const startX = horizontal ? (flowsRight ? source.x + size.width : source.x) : source.x + size.width / 2;
+  const startY = horizontal ? source.y + size.height / 2 : (flowsDown ? source.y + size.height : source.y);
+  const endX = horizontal ? (flowsRight ? target.x : target.x + size.width) : target.x + size.width / 2;
+  const endY = horizontal ? target.y + size.height / 2 : (flowsDown ? target.y : target.y + size.height);
   const length = endX - startX;
+  const label = connection.protocol === "HTTPS" ? "" : connection.protocol || "";
 
   return convertToExcalidrawElements([
     {
@@ -72,16 +82,16 @@ function connectionElements(connection, componentPositions) {
       endArrowhead: "arrow",
       customData: { blueprintId: connection.id, role: "connection" },
     },
-    {
+    ...(label ? [{
       id: `edge-label-${connection.id}`,
       type: "text",
-      x: startX + length / 2 - 22,
-      y: startY - 34,
-      text: connection.protocol || "",
+      x: (startX + endX) / 2 - 18,
+      y: (startY + endY) / 2 - 24,
+      text: label,
       fontSize: 16,
       strokeColor: "#66507d",
       customData: { blueprintId: connection.id, role: "connection-label" },
-    },
+    }] : []),
   ]);
 }
 
