@@ -5,7 +5,9 @@ const positions = {
   frontend: { x: 120, y: 220 },
   api: { x: 460, y: 220 },
   database: { x: 800, y: 220 },
-  agent: { x: 460, y: 380 },
+  // Cross-cutting services live in a separate lane so their connections do
+  // not pass through the primary UI → API → data path.
+  agent: { x: 460, y: 40 },
   auth: { x: 380, y: 80 },
   booking: { x: 680, y: 220 },
   payments: { x: 680, y: 420 },
@@ -67,6 +69,21 @@ function connectionElements(connection, componentPositions) {
   const endX = horizontal ? (flowsRight ? target.x : target.x + size.width) : target.x + size.width / 2;
   const endY = horizontal ? target.y + size.height / 2 : (flowsDown ? target.y : target.y + size.height);
   const length = endX - startX;
+  const height = endY - startY;
+  const hasIntermediateNode = [...componentPositions.entries()].some(([id, position]) =>
+    id !== connection.source_id &&
+    id !== connection.target_id &&
+    position.x < Math.max(startX, endX) &&
+    position.x + size.width > Math.min(startX, endX) &&
+    position.y < Math.max(startY, endY) + size.height / 2 &&
+    position.y + size.height > Math.min(startY, endY) - size.height / 2,
+  );
+  // A long relationship never draws through an unrelated node. Route it in a
+  // separate lane with two elbows instead.
+  const detourY = Math.min(source.y, target.y) - 72;
+  const points = horizontal && hasIntermediateNode
+    ? [[0, 0], [0, detourY - startY], [length, detourY - startY], [length, height]]
+    : [[0, 0], [length, height]];
   const label = connection.protocol === "HTTPS" ? "" : connection.protocol || "";
 
   return convertToExcalidrawElements([
@@ -76,8 +93,8 @@ function connectionElements(connection, componentPositions) {
       x: startX,
       y: startY,
       width: length,
-      height: endY - startY,
-      points: [[0, 0], [length, endY - startY]],
+      height,
+      points,
       strokeColor: "#66507d",
       endArrowhead: "arrow",
       customData: { blueprintId: connection.id, role: "connection" },

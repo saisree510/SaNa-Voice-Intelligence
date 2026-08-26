@@ -186,6 +186,11 @@ class AppCtrl extends ChangeNotifier {
           mode: conversationMode.name,
         );
         activeConversationId = session.id;
+        // A canvas belongs to one conversation. Do not let a failed new
+        // architecture request display the previous conversation's Blueprint.
+        activeArchitectureId = null;
+        _architectureService?.disconnectFromCanvasStream();
+        notifyListeners();
       }
     }
   }
@@ -196,6 +201,8 @@ class AppCtrl extends ChangeNotifier {
   ) async {
     bindConversationService(service);
     activeConversationId = sessionModel.id as String;
+    activeArchitectureId = null;
+    _architectureService?.disconnectFromCanvasStream();
 
     // Restore conversation mode from past session
     if (sessionModel.mode != null) {
