@@ -1,0 +1,118 @@
+import 'dart:convert';
+import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+class LiveKitTokenResponse {
+  final String token;
+  final String url;
+  final String roomName;
+  final String participantIdentity;
+  final String mode;
+
+  LiveKitTokenResponse({
+    required this.token,
+    required this.url,
+    required this.roomName,
+    required this.participantIdentity,
+    required this.mode,
+  });
+
+  factory LiveKitTokenResponse.fromJson(Map<String, dynamic> json) {
+    return LiveKitTokenResponse(
+      token: json['token'] as String,
+      url: json['url'] as String,
+      roomName: json['room_name'] as String,
+      participantIdentity: json['participant_identity'] as String,
+      mode: json['mode'] as String? ?? 'general',
+    );
+  }
+}
+
+class LiveKitTokenException implements Exception {
+  const LiveKitTokenException(this.message);
+
+  final String message;
+
+  @override
+  String toString() => message;
+}
+
+class TokenService {
+  static const productionBackendUrl = 'https://sana-voice-intelligence-production.up.railway.app';
+
+  final String backendUrl;
+
+  TokenService({
+    String? backendUrl,
+  }) : backendUrl = backendUrl ?? _resolveBackendUrl();
+
+  static String _resolveBackendUrl() {
+    const configuredBackendUrl = String.fromEnvironment('SANA_BACKEND_URL');
+    if (configuredBackendUrl.isNotEmpty) {
+      return configuredBackendUrl.replaceFirst(RegExp(r'/+$'), '');
+    }
+    if (kIsWeb || kReleaseMode) {
+      return productionBackendUrl;
+    }
+    return 'http://192.168.1.204:8000';
+  }
+
+  Map<String, String> _headers() {
+    final headers = <String, String>{
+      'Content-Type': 'application/json',
+    };
+
+    try {
+      final accessToken = Supabase.instance.client.auth.currentSession?.accessToken;
+      if (accessToken != null && accessToken.isNotEmpty) {
+        headers['Authorization'] = 'Bearer $accessToken';
+      }
+    } catch (_) {
+      // Supabase may be unavailable in mock mode; omit auth header in that case.
+    }
+
+    return headers;
+  }
+
+  /// Fetches a user-scoped LiveKit token from the FastAPI backend endpoint `/v1/livekit/token`
+  Future<LiveKitTokenResponse?> fetchToken({
+    String mode = 'general',
+    String? roomName,
+  }) async {
+    try {
+      if (backendUrl.isEmpty) {
+        throw const LiveKitTokenException('Voice backend URL is not configured.');
+      }
+      final headers = _headers();
+
+      final uri = Uri.parse('$backendUrl/v1/livekit/token');
+      final response = await http.post(
+        uri,
+        headers: headers,
+        body: jsonEncode({
+          'mode': mode,
+          if (roomName != null) 'room_name': roomName,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body) as Map<String, dynamic>;
+        return LiveKitTokenResponse.fromJson(data);
+      } else {
+        throw LiveKitTokenException(
+          'LiveKit token request failed (${response.statusCode}).',
+        );
+      }
+    } on LiveKitTokenException {
+      rethrow;
+    } catch (e) {
+      if (kDebugMode) {
+        print('TokenService: Failed to fetch LiveKit token: $e');
+      }
+      throw const LiveKitTokenException(
+        'Unable to reach the voice backend. Please try again.',
+      );
+    }
+  }
+}

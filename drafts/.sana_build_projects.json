@@ -1,0 +1,4064 @@
+{
+  "proj-3d1cf852": {
+    "project_id": "proj-3d1cf852",
+    "user_id": "user-claimed-1000",
+    "title": "Test Voice Analytics Dashboard",
+    "specification": "Build a real-time dashboard widget for voice analytics",
+    "workspace_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\test_voice_analytics_dashboard",
+    "status": "completed",
+    "plan_summary": "Implementation Plan generated for 'Test Voice Analytics Dashboard'. Awaiting explicit user approval before execution.",
+    "session_id": "dc-sess-6867da52",
+    "history": [
+      {
+        "turn_id": "turn-829356bf",
+        "project_id": "proj-3d1cf852",
+        "session_id": "dc-sess-6867da52",
+        "prompt": "Build a real-time dashboard widget for voice analytics",
+        "status": "completed",
+        "events": [
+          {
+            "event_type": "step_start",
+            "timestamp": "2026-08-11T22:25:34.231823",
+            "message": "Starting DeepCode turn for session dc-sess-6867da52",
+            "details": {
+              "prompt": "Build a real-time dashboard widget for voice analytics",
+              "workspace": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\test_voice_analytics_dashboard"
+            }
+          },
+          {
+            "event_type": "file_edit",
+            "timestamp": "2026-08-11T22:25:34.335413",
+            "message": "Created spec file 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\test_voice_analytics_dashboard\\project_spec.md'",
+            "details": {
+              "step": {
+                "step_index": 1,
+                "action": "analyze_requirements",
+                "status": "completed",
+                "description": "Analyzed prompt: 'Build a real-time dashboard widget for voice analytics'",
+                "output": "Created physical spec file at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\test_voice_analytics_dashboard\\project_spec.md'"
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\test_voice_analytics_dashboard\\project_spec.md"
+            }
+          },
+          {
+            "event_type": "step_complete",
+            "timestamp": "2026-08-11T22:25:34.440675",
+            "message": "Scaffolded source file 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\test_voice_analytics_dashboard\\main.py'",
+            "details": {
+              "step": {
+                "step_index": 2,
+                "action": "execute_build",
+                "status": "completed",
+                "description": "Scaffolded source file at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\test_voice_analytics_dashboard\\main.py'",
+                "output": "Built project target successfully at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\test_voice_analytics_dashboard\\main.py'"
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\test_voice_analytics_dashboard\\main.py"
+            }
+          }
+        ],
+        "created_at": "2026-08-11T22:25:34.440795"
+      }
+    ],
+    "created_at": "2026-08-11T22:25:34.211193",
+    "updated_at": "2026-08-11T22:25:34.440747"
+  },
+  "proj-c4e4d033": {
+    "project_id": "proj-c4e4d033",
+    "user_id": "user-claimed-1000",
+    "title": "Test Voice Analytics Dashboard",
+    "specification": "Build a real-time dashboard widget for voice analytics",
+    "workspace_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\test_voice_analytics_dashboard",
+    "status": "completed",
+    "plan_summary": "Implementation Plan generated for 'Test Voice Analytics Dashboard'. Awaiting explicit user approval before execution.",
+    "session_id": "dc-sess-2595853f",
+    "history": [
+      {
+        "turn_id": "turn-584518b9",
+        "project_id": "proj-c4e4d033",
+        "session_id": "dc-sess-2595853f",
+        "prompt": "Build a real-time dashboard widget for voice analytics",
+        "status": "completed",
+        "events": [
+          {
+            "event_type": "step_start",
+            "timestamp": "2026-08-11T22:09:40.258837",
+            "message": "Starting DeepCode turn for session dc-sess-2595853f",
+            "details": {
+              "prompt": "Build a real-time dashboard widget for voice analytics",
+              "workspace": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\test_voice_analytics_dashboard"
+            }
+          },
+          {
+            "event_type": "file_edit",
+            "timestamp": "2026-08-11T22:09:40.414445",
+            "message": "Created spec file 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\test_voice_analytics_dashboard\\project_spec.md'",
+            "details": {
+              "step": {
+                "step_index": 1,
+                "action": "analyze_requirements",
+                "status": "completed",
+                "description": "Analyzed prompt: 'Build a real-time dashboard widget for voice analytics'",
+                "output": "Created physical spec file at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\test_voice_analytics_dashboard\\project_spec.md'"
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\test_voice_analytics_dashboard\\project_spec.md"
+            }
+          },
+          {
+            "event_type": "step_complete",
+            "timestamp": "2026-08-11T22:09:40.530233",
+            "message": "Scaffolded source file 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\test_voice_analytics_dashboard\\main.py'",
+            "details": {
+              "step": {
+                "step_index": 2,
+                "action": "execute_build",
+                "status": "completed",
+                "description": "Scaffolded source file at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\test_voice_analytics_dashboard\\main.py'",
+                "output": "Built project target successfully at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\test_voice_analytics_dashboard\\main.py'"
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\test_voice_analytics_dashboard\\main.py"
+            }
+          }
+        ],
+        "created_at": "2026-08-11T22:09:40.530369"
+      }
+    ],
+    "created_at": "2026-08-11T22:09:39.259647",
+    "updated_at": "2026-08-11T22:09:40.530317"
+  },
+  "proj-38c2864a": {
+    "project_id": "proj-38c2864a",
+    "user_id": "user-claimed-1000",
+    "title": "Test Voice Analytics Dashboard",
+    "specification": "Build a real-time dashboard widget for voice analytics",
+    "workspace_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\test_voice_analytics_dashboard",
+    "status": "completed",
+    "plan_summary": "Implementation Plan generated for 'Test Voice Analytics Dashboard'. Awaiting explicit user approval before execution.",
+    "session_id": "dc-sess-dd760d88",
+    "history": [
+      {
+        "turn_id": "turn-a701eaf2",
+        "project_id": "proj-38c2864a",
+        "session_id": "dc-sess-dd760d88",
+        "prompt": "Build a real-time dashboard widget for voice analytics",
+        "status": "completed",
+        "events": [
+          {
+            "event_type": "step_start",
+            "timestamp": "2026-08-11T22:08:42.163321",
+            "message": "Starting DeepCode turn for session dc-sess-dd760d88",
+            "details": {
+              "prompt": "Build a real-time dashboard widget for voice analytics",
+              "workspace": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\test_voice_analytics_dashboard"
+            }
+          },
+          {
+            "event_type": "file_edit",
+            "timestamp": "2026-08-11T22:08:42.270299",
+            "message": "Created spec file 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\test_voice_analytics_dashboard\\project_spec.md'",
+            "details": {
+              "step": {
+                "step_index": 1,
+                "action": "analyze_requirements",
+                "status": "completed",
+                "description": "Analyzed prompt: 'Build a real-time dashboard widget for voice analytics'",
+                "output": "Created physical spec file at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\test_voice_analytics_dashboard\\project_spec.md'"
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\test_voice_analytics_dashboard\\project_spec.md"
+            }
+          },
+          {
+            "event_type": "step_complete",
+            "timestamp": "2026-08-11T22:08:42.377401",
+            "message": "Scaffolded source file 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\test_voice_analytics_dashboard\\main.py'",
+            "details": {
+              "step": {
+                "step_index": 2,
+                "action": "execute_build",
+                "status": "completed",
+                "description": "Scaffolded source file at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\test_voice_analytics_dashboard\\main.py'",
+                "output": "Built project target successfully at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\test_voice_analytics_dashboard\\main.py'"
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\test_voice_analytics_dashboard\\main.py"
+            }
+          }
+        ],
+        "created_at": "2026-08-11T22:08:42.377528"
+      }
+    ],
+    "created_at": "2026-08-11T22:08:41.025751",
+    "updated_at": "2026-08-11T22:08:42.377479"
+  },
+  "proj-3adcb5dc": {
+    "project_id": "proj-3adcb5dc",
+    "user_id": "user-claimed-1000",
+    "title": "Latest Approval Build",
+    "specification": "Create a build that executes after a plain yes approval",
+    "workspace_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\latest_approval_build",
+    "status": "completed",
+    "plan_summary": "Implementation Plan generated for 'Latest Approval Build'. Awaiting explicit user approval before execution.",
+    "session_id": "dc-sess-53601aaa",
+    "history": [
+      {
+        "turn_id": "turn-59a8e73b",
+        "project_id": "proj-3adcb5dc",
+        "session_id": "dc-sess-53601aaa",
+        "prompt": "Create a build that executes after a plain yes approval",
+        "status": "completed",
+        "events": [
+          {
+            "event_type": "step_start",
+            "timestamp": "2026-08-11T21:56:29.788554",
+            "message": "Starting DeepCode turn for session dc-sess-53601aaa",
+            "details": {
+              "prompt": "Create a build that executes after a plain yes approval",
+              "workspace": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\latest_approval_build"
+            }
+          },
+          {
+            "event_type": "file_edit",
+            "timestamp": "2026-08-11T21:56:29.903574",
+            "message": "Created spec file 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\latest_approval_build\\project_spec.md'",
+            "details": {
+              "step": {
+                "step_index": 1,
+                "action": "analyze_requirements",
+                "status": "completed",
+                "description": "Analyzed prompt: 'Create a build that executes after a plain yes approval'",
+                "output": "Created physical spec file at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\latest_approval_build\\project_spec.md'"
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\latest_approval_build\\project_spec.md"
+            }
+          },
+          {
+            "event_type": "step_complete",
+            "timestamp": "2026-08-11T21:56:30.008706",
+            "message": "Scaffolded source file 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\latest_approval_build\\main.py'",
+            "details": {
+              "step": {
+                "step_index": 2,
+                "action": "execute_build",
+                "status": "completed",
+                "description": "Scaffolded source file at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\latest_approval_build\\main.py'",
+                "output": "Built project target successfully at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\latest_approval_build\\main.py'"
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\latest_approval_build\\main.py"
+            }
+          }
+        ],
+        "created_at": "2026-08-11T21:56:30.008836"
+      }
+    ],
+    "created_at": "2026-08-11T21:56:29.766045",
+    "updated_at": "2026-08-11T21:56:30.008787"
+  },
+  "proj-171f0937": {
+    "project_id": "proj-171f0937",
+    "user_id": "user-claimed-1000",
+    "title": "Test Voice Analytics Dashboard",
+    "specification": "Build a real-time dashboard widget for voice analytics",
+    "workspace_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\test_voice_analytics_dashboard",
+    "status": "completed",
+    "plan_summary": "Implementation Plan generated for 'Test Voice Analytics Dashboard'. Awaiting explicit user approval before execution.",
+    "session_id": "dc-sess-8cbed0c8",
+    "history": [
+      {
+        "turn_id": "turn-1a458afc",
+        "project_id": "proj-171f0937",
+        "session_id": "dc-sess-8cbed0c8",
+        "prompt": "Build a real-time dashboard widget for voice analytics",
+        "status": "completed",
+        "events": [
+          {
+            "event_type": "step_start",
+            "timestamp": "2026-08-11T21:56:29.508892",
+            "message": "Starting DeepCode turn for session dc-sess-8cbed0c8",
+            "details": {
+              "prompt": "Build a real-time dashboard widget for voice analytics",
+              "workspace": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\test_voice_analytics_dashboard"
+            }
+          },
+          {
+            "event_type": "file_edit",
+            "timestamp": "2026-08-11T21:56:29.622526",
+            "message": "Created spec file 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\test_voice_analytics_dashboard\\project_spec.md'",
+            "details": {
+              "step": {
+                "step_index": 1,
+                "action": "analyze_requirements",
+                "status": "completed",
+                "description": "Analyzed prompt: 'Build a real-time dashboard widget for voice analytics'",
+                "output": "Created physical spec file at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\test_voice_analytics_dashboard\\project_spec.md'"
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\test_voice_analytics_dashboard\\project_spec.md"
+            }
+          },
+          {
+            "event_type": "step_complete",
+            "timestamp": "2026-08-11T21:56:29.735719",
+            "message": "Scaffolded source file 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\test_voice_analytics_dashboard\\main.py'",
+            "details": {
+              "step": {
+                "step_index": 2,
+                "action": "execute_build",
+                "status": "completed",
+                "description": "Scaffolded source file at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\test_voice_analytics_dashboard\\main.py'",
+                "output": "Built project target successfully at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\test_voice_analytics_dashboard\\main.py'"
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\test_voice_analytics_dashboard\\main.py"
+            }
+          }
+        ],
+        "created_at": "2026-08-11T21:56:29.735848"
+      }
+    ],
+    "created_at": "2026-08-11T21:56:29.496495",
+    "updated_at": "2026-08-11T21:56:29.735800"
+  },
+  "proj-c75497cb": {
+    "project_id": "proj-c75497cb",
+    "user_id": "user-claimed-1000",
+    "title": "Latest Approval Build",
+    "specification": "Create a build that executes after a plain yes approval",
+    "workspace_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\latest_approval_build",
+    "status": "completed",
+    "plan_summary": "Implementation Plan generated for 'Latest Approval Build'. Awaiting explicit user approval before execution.",
+    "session_id": "dc-sess-7fd67d3a",
+    "history": [
+      {
+        "turn_id": "turn-091bec60",
+        "project_id": "proj-c75497cb",
+        "session_id": "dc-sess-7fd67d3a",
+        "prompt": "Create a build that executes after a plain yes approval",
+        "status": "completed",
+        "events": [
+          {
+            "event_type": "step_start",
+            "timestamp": "2026-08-11T21:42:00.908619",
+            "message": "Starting DeepCode turn for session dc-sess-7fd67d3a",
+            "details": {
+              "prompt": "Create a build that executes after a plain yes approval",
+              "workspace": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\latest_approval_build"
+            }
+          },
+          {
+            "event_type": "file_edit",
+            "timestamp": "2026-08-11T21:42:01.027741",
+            "message": "Created spec file 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\latest_approval_build\\project_spec.md'",
+            "details": {
+              "step": {
+                "step_index": 1,
+                "action": "analyze_requirements",
+                "status": "completed",
+                "description": "Analyzed prompt: 'Create a build that executes after a plain yes approval'",
+                "output": "Created physical spec file at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\latest_approval_build\\project_spec.md'"
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\latest_approval_build\\project_spec.md"
+            }
+          },
+          {
+            "event_type": "step_complete",
+            "timestamp": "2026-08-11T21:42:01.134195",
+            "message": "Scaffolded source file 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\latest_approval_build\\main.py'",
+            "details": {
+              "step": {
+                "step_index": 2,
+                "action": "execute_build",
+                "status": "completed",
+                "description": "Scaffolded source file at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\latest_approval_build\\main.py'",
+                "output": "Built project target successfully at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\latest_approval_build\\main.py'"
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\latest_approval_build\\main.py"
+            }
+          }
+        ],
+        "created_at": "2026-08-11T21:42:01.134305"
+      }
+    ],
+    "created_at": "2026-08-11T21:42:00.892039",
+    "updated_at": "2026-08-11T21:42:01.134260"
+  },
+  "proj-4781a19a": {
+    "project_id": "proj-4781a19a",
+    "user_id": "user-claimed-1000",
+    "title": "Test Voice Analytics Dashboard",
+    "specification": "Build a real-time dashboard widget for voice analytics",
+    "workspace_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\test_voice_analytics_dashboard",
+    "status": "completed",
+    "plan_summary": "Implementation Plan generated for 'Test Voice Analytics Dashboard'. Awaiting explicit user approval before execution.",
+    "session_id": "dc-sess-01fa765f",
+    "history": [
+      {
+        "turn_id": "turn-bc75f413",
+        "project_id": "proj-4781a19a",
+        "session_id": "dc-sess-01fa765f",
+        "prompt": "Build a real-time dashboard widget for voice analytics",
+        "status": "completed",
+        "events": [
+          {
+            "event_type": "step_start",
+            "timestamp": "2026-08-11T21:42:00.637621",
+            "message": "Starting DeepCode turn for session dc-sess-01fa765f",
+            "details": {
+              "prompt": "Build a real-time dashboard widget for voice analytics",
+              "workspace": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\test_voice_analytics_dashboard"
+            }
+          },
+          {
+            "event_type": "file_edit",
+            "timestamp": "2026-08-11T21:42:00.745067",
+            "message": "Created spec file 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\test_voice_analytics_dashboard\\project_spec.md'",
+            "details": {
+              "step": {
+                "step_index": 1,
+                "action": "analyze_requirements",
+                "status": "completed",
+                "description": "Analyzed prompt: 'Build a real-time dashboard widget for voice analytics'",
+                "output": "Created physical spec file at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\test_voice_analytics_dashboard\\project_spec.md'"
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\test_voice_analytics_dashboard\\project_spec.md"
+            }
+          },
+          {
+            "event_type": "step_complete",
+            "timestamp": "2026-08-11T21:42:00.863505",
+            "message": "Scaffolded source file 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\test_voice_analytics_dashboard\\main.py'",
+            "details": {
+              "step": {
+                "step_index": 2,
+                "action": "execute_build",
+                "status": "completed",
+                "description": "Scaffolded source file at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\test_voice_analytics_dashboard\\main.py'",
+                "output": "Built project target successfully at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\test_voice_analytics_dashboard\\main.py'"
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\test_voice_analytics_dashboard\\main.py"
+            }
+          }
+        ],
+        "created_at": "2026-08-11T21:42:00.863642"
+      }
+    ],
+    "created_at": "2026-08-11T21:42:00.631489",
+    "updated_at": "2026-08-11T21:42:00.863587"
+  },
+  "proj-b014efba": {
+    "project_id": "proj-b014efba",
+    "user_id": "user-claimed-1000",
+    "title": "Test Voice Analytics Dashboard",
+    "specification": "Build a real-time dashboard widget for voice analytics",
+    "workspace_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\test_voice_analytics_dashboard",
+    "status": "completed",
+    "plan_summary": "Implementation Plan generated for 'Test Voice Analytics Dashboard'. Awaiting explicit user approval before execution.",
+    "session_id": "dc-sess-b05f8390",
+    "history": [
+      {
+        "turn_id": "turn-ca28f7aa",
+        "project_id": "proj-b014efba",
+        "session_id": "dc-sess-b05f8390",
+        "prompt": "Build a real-time dashboard widget for voice analytics",
+        "status": "completed",
+        "events": [
+          {
+            "event_type": "step_start",
+            "timestamp": "2026-08-11T21:22:43.043783",
+            "message": "Starting DeepCode turn for session dc-sess-b05f8390",
+            "details": {
+              "prompt": "Build a real-time dashboard widget for voice analytics",
+              "workspace": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\test_voice_analytics_dashboard"
+            }
+          },
+          {
+            "event_type": "file_edit",
+            "timestamp": "2026-08-11T21:22:43.166206",
+            "message": "Created spec file 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\test_voice_analytics_dashboard\\project_spec.md'",
+            "details": {
+              "step": {
+                "step_index": 1,
+                "action": "analyze_requirements",
+                "status": "completed",
+                "description": "Analyzed prompt: 'Build a real-time dashboard widget for voice analytics'",
+                "output": "Created physical spec file at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\test_voice_analytics_dashboard\\project_spec.md'"
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\test_voice_analytics_dashboard\\project_spec.md"
+            }
+          },
+          {
+            "event_type": "step_complete",
+            "timestamp": "2026-08-11T21:22:43.277868",
+            "message": "Scaffolded source file 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\test_voice_analytics_dashboard\\main.py'",
+            "details": {
+              "step": {
+                "step_index": 2,
+                "action": "execute_build",
+                "status": "completed",
+                "description": "Scaffolded source file at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\test_voice_analytics_dashboard\\main.py'",
+                "output": "Built project target successfully at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\test_voice_analytics_dashboard\\main.py'"
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\test_voice_analytics_dashboard\\main.py"
+            }
+          }
+        ],
+        "created_at": "2026-08-11T21:22:43.280519"
+      }
+    ],
+    "created_at": "2026-08-11T21:22:43.004720",
+    "updated_at": "2026-08-11T21:22:43.278410"
+  },
+  "proj-63d51975": {
+    "project_id": "proj-63d51975",
+    "user_id": "user-claimed-1000",
+    "title": "Test Voice Analytics Dashboard",
+    "specification": "Build a real-time dashboard widget for voice analytics",
+    "workspace_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\test_voice_analytics_dashboard",
+    "status": "completed",
+    "plan_summary": "Implementation Plan generated for 'Test Voice Analytics Dashboard'. Awaiting explicit user approval before execution.",
+    "session_id": "dc-sess-f50de4f7",
+    "history": [
+      {
+        "turn_id": "turn-2320ebd8",
+        "project_id": "proj-63d51975",
+        "session_id": "dc-sess-f50de4f7",
+        "prompt": "Build a real-time dashboard widget for voice analytics",
+        "status": "completed",
+        "events": [
+          {
+            "event_type": "step_start",
+            "timestamp": "2026-08-11T21:14:05.259259",
+            "message": "Starting DeepCode turn for session dc-sess-f50de4f7",
+            "details": {
+              "prompt": "Build a real-time dashboard widget for voice analytics",
+              "workspace": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\test_voice_analytics_dashboard"
+            }
+          },
+          {
+            "event_type": "file_edit",
+            "timestamp": "2026-08-11T21:14:05.366399",
+            "message": "Created spec file 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\test_voice_analytics_dashboard\\project_spec.md'",
+            "details": {
+              "step": {
+                "step_index": 1,
+                "action": "analyze_requirements",
+                "status": "completed",
+                "description": "Analyzed prompt: 'Build a real-time dashboard widget for voice analytics'",
+                "output": "Created physical spec file at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\test_voice_analytics_dashboard\\project_spec.md'"
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\test_voice_analytics_dashboard\\project_spec.md"
+            }
+          },
+          {
+            "event_type": "step_complete",
+            "timestamp": "2026-08-11T21:14:05.473817",
+            "message": "Scaffolded source file 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\test_voice_analytics_dashboard\\main.py'",
+            "details": {
+              "step": {
+                "step_index": 2,
+                "action": "execute_build",
+                "status": "completed",
+                "description": "Scaffolded source file at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\test_voice_analytics_dashboard\\main.py'",
+                "output": "Built project target successfully at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\test_voice_analytics_dashboard\\main.py'"
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\test_voice_analytics_dashboard\\main.py"
+            }
+          }
+        ],
+        "created_at": "2026-08-11T21:14:05.473914"
+      }
+    ],
+    "created_at": "2026-08-11T21:14:05.252231",
+    "updated_at": "2026-08-11T21:14:05.473876"
+  },
+  "proj-55cc2c7f": {
+    "project_id": "proj-55cc2c7f",
+    "user_id": "user-claimed-1000",
+    "title": "Creative Calculator Module",
+    "specification": "A basic arithmetic calculator module implemented in Python. The project will include a core calculator class with methods for addition, subtraction, multiplication, and division. It will feature a command line interface for user interaction and a comprehensive suite of unit tests to ensure mathematical accuracy and error handling for division by zero.",
+    "workspace_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\creative_calculator_module",
+    "status": "completed",
+    "plan_summary": "Recovered local Build Mode project from workspace 'creative_calculator_module'.",
+    "session_id": "dc-sess-db267272",
+    "history": [],
+    "created_at": "2026-08-11T20:40:48.579088",
+    "updated_at": "2026-08-11T20:40:48.579088"
+  },
+  "proj-56c2a7ba": {
+    "project_id": "proj-56c2a7ba",
+    "user_id": "user-claimed-1000",
+    "title": "Flutter Realtime Dashboard",
+    "specification": "Build a dark mode voice control analytics dashboard",
+    "workspace_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\dashboard_app",
+    "status": "completed",
+    "plan_summary": "Implementation Plan generated for 'Flutter Realtime Dashboard'. Awaiting explicit user approval before execution.",
+    "session_id": "dc-sess-389ca37b",
+    "history": [
+      {
+        "turn_id": "turn-53e38214",
+        "project_id": "proj-56c2a7ba",
+        "session_id": "dc-sess-389ca37b",
+        "prompt": "Build a dark mode voice control analytics dashboard",
+        "status": "completed",
+        "events": [
+          {
+            "event_type": "step_start",
+            "timestamp": "2026-08-12T15:25:39.747092",
+            "message": "Starting DeepCode turn for session dc-sess-389ca37b",
+            "details": {
+              "prompt": "Build a dark mode voice control analytics dashboard",
+              "workspace": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\dashboard_app"
+            }
+          },
+          {
+            "event_type": "file_edit",
+            "timestamp": "2026-08-12T15:25:39.862247",
+            "message": "Created spec file 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\dashboard_app\\project_spec.md'",
+            "details": {
+              "step": {
+                "step_index": 1,
+                "action": "analyze_requirements",
+                "status": "completed",
+                "description": "Analyzed prompt: 'Build a dark mode voice control analytics dashboard'",
+                "output": "Created physical spec file at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\dashboard_app\\project_spec.md'"
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\dashboard_app\\project_spec.md"
+            }
+          },
+          {
+            "event_type": "step_complete",
+            "timestamp": "2026-08-12T15:25:39.970718",
+            "message": "Scaffolded source file 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\dashboard_app\\main.py'",
+            "details": {
+              "step": {
+                "step_index": 2,
+                "action": "execute_build",
+                "status": "completed",
+                "description": "Scaffolded source file at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\dashboard_app\\main.py'",
+                "output": "Built project target successfully at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\dashboard_app\\main.py'"
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\dashboard_app\\main.py"
+            }
+          }
+        ],
+        "created_at": "2026-08-12T15:25:39.970796"
+      }
+    ],
+    "created_at": "2026-08-12T15:25:39.729403",
+    "updated_at": "2026-08-12T15:25:39.970770"
+  },
+  "proj-dd056400": {
+    "project_id": "proj-dd056400",
+    "user_id": "user-claimed-1000",
+    "title": "Persistent AI Assistant",
+    "specification": "Build a CLI assistant",
+    "workspace_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant",
+    "status": "completed",
+    "plan_summary": "Implementation Plan generated for 'Persistent AI Assistant'. Awaiting explicit user approval before execution.",
+    "session_id": "dc-sess-accc594e",
+    "history": [
+      {
+        "turn_id": "turn-5a36d6bd",
+        "project_id": "proj-dd056400",
+        "session_id": "dc-sess-accc594e",
+        "prompt": "Build a CLI assistant",
+        "status": "completed",
+        "events": [
+          {
+            "event_type": "step_start",
+            "timestamp": "2026-08-12T15:25:40.056615",
+            "message": "Starting DeepCode turn for session dc-sess-accc594e",
+            "details": {
+              "prompt": "Build a CLI assistant",
+              "workspace": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant"
+            }
+          },
+          {
+            "event_type": "file_edit",
+            "timestamp": "2026-08-12T15:25:40.171657",
+            "message": "Created spec file 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\project_spec.md'",
+            "details": {
+              "step": {
+                "step_index": 1,
+                "action": "analyze_requirements",
+                "status": "completed",
+                "description": "Analyzed prompt: 'Build a CLI assistant'",
+                "output": "Created physical spec file at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\project_spec.md'"
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\project_spec.md"
+            }
+          },
+          {
+            "event_type": "step_complete",
+            "timestamp": "2026-08-12T15:25:40.285631",
+            "message": "Scaffolded source file 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\main.py'",
+            "details": {
+              "step": {
+                "step_index": 2,
+                "action": "execute_build",
+                "status": "completed",
+                "description": "Scaffolded source file at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\main.py'",
+                "output": "Built project target successfully at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\main.py'"
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\main.py"
+            }
+          }
+        ],
+        "created_at": "2026-08-12T15:25:40.285707"
+      },
+      {
+        "turn_id": "turn-b49c241f",
+        "project_id": "proj-dd056400",
+        "session_id": "dc-sess-accc594e",
+        "prompt": "Add voice logging module to CLI assistant",
+        "status": "completed",
+        "events": [
+          {
+            "event_type": "step_start",
+            "timestamp": "2026-08-12T15:25:40.430568",
+            "message": "Starting DeepCode turn for session dc-sess-accc594e",
+            "details": {
+              "prompt": "Add voice logging module to CLI assistant",
+              "workspace": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant"
+            }
+          },
+          {
+            "event_type": "file_edit",
+            "timestamp": "2026-08-12T15:25:40.536687",
+            "message": "Created spec file 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\project_spec.md'",
+            "details": {
+              "step": {
+                "step_index": 1,
+                "action": "analyze_requirements",
+                "status": "completed",
+                "description": "Analyzed prompt: 'Add voice logging module to CLI assistant'",
+                "output": "Created physical spec file at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\project_spec.md'"
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\project_spec.md"
+            }
+          },
+          {
+            "event_type": "step_complete",
+            "timestamp": "2026-08-12T15:25:40.643993",
+            "message": "Scaffolded source file 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\main.py'",
+            "details": {
+              "step": {
+                "step_index": 2,
+                "action": "execute_build",
+                "status": "completed",
+                "description": "Scaffolded source file at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\main.py'",
+                "output": "Built project target successfully at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\main.py'"
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\main.py"
+            }
+          }
+        ],
+        "created_at": "2026-08-12T15:25:40.644047"
+      }
+    ],
+    "created_at": "2026-08-12T15:25:40.017801",
+    "updated_at": "2026-08-12T15:25:40.644027"
+  },
+  "proj-fd7844b0": {
+    "project_id": "proj-fd7844b0",
+    "user_id": "user-claimed-1000",
+    "title": "Flutter Realtime Dashboard",
+    "specification": "Build a dark mode voice control analytics dashboard",
+    "workspace_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\dashboard_app",
+    "status": "completed",
+    "plan_summary": "Implementation Plan generated for 'Flutter Realtime Dashboard'. Awaiting explicit user approval before execution.",
+    "session_id": "dc-sess-0cc9c78d",
+    "history": [
+      {
+        "turn_id": "turn-61954d7e",
+        "project_id": "proj-fd7844b0",
+        "session_id": "dc-sess-0cc9c78d",
+        "prompt": "Build a dark mode voice control analytics dashboard",
+        "status": "completed",
+        "events": [
+          {
+            "event_type": "step_start",
+            "timestamp": "2026-08-12T22:14:41.683992",
+            "message": "Starting DeepCode turn for session dc-sess-0cc9c78d",
+            "details": {
+              "prompt": "Build a dark mode voice control analytics dashboard",
+              "workspace": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\dashboard_app"
+            }
+          },
+          {
+            "event_type": "file_edit",
+            "timestamp": "2026-08-12T22:14:41.800526",
+            "message": "Created spec file 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\dashboard_app\\project_spec.md'",
+            "details": {
+              "step": {
+                "step_index": 1,
+                "action": "analyze_requirements",
+                "status": "completed",
+                "description": "Analyzed prompt: 'Build a dark mode voice control analytics dashboard'",
+                "output": "Created physical spec file at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\dashboard_app\\project_spec.md'"
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\dashboard_app\\project_spec.md"
+            }
+          },
+          {
+            "event_type": "step_complete",
+            "timestamp": "2026-08-12T22:14:41.912171",
+            "message": "Scaffolded source file 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\dashboard_app\\main.py'",
+            "details": {
+              "step": {
+                "step_index": 2,
+                "action": "execute_build",
+                "status": "completed",
+                "description": "Scaffolded source file at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\dashboard_app\\main.py'",
+                "output": "Built project target successfully at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\dashboard_app\\main.py'"
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\dashboard_app\\main.py"
+            }
+          }
+        ],
+        "created_at": "2026-08-12T22:14:41.912410"
+      }
+    ],
+    "created_at": "2026-08-12T22:14:41.653967",
+    "updated_at": "2026-08-12T22:14:41.912389"
+  },
+  "proj-a240c8f2": {
+    "project_id": "proj-a240c8f2",
+    "user_id": "user-claimed-1000",
+    "title": "Persistent AI Assistant",
+    "specification": "Build a CLI assistant",
+    "workspace_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant",
+    "status": "completed",
+    "plan_summary": "Implementation Plan generated for 'Persistent AI Assistant'. Awaiting explicit user approval before execution.",
+    "session_id": "dc-sess-c8ae288d",
+    "history": [
+      {
+        "turn_id": "turn-b5d53ffd",
+        "project_id": "proj-a240c8f2",
+        "session_id": "dc-sess-c8ae288d",
+        "prompt": "Build a CLI assistant",
+        "status": "completed",
+        "events": [
+          {
+            "event_type": "step_start",
+            "timestamp": "2026-08-12T22:14:41.964260",
+            "message": "Starting DeepCode turn for session dc-sess-c8ae288d",
+            "details": {
+              "prompt": "Build a CLI assistant",
+              "workspace": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant"
+            }
+          },
+          {
+            "event_type": "file_edit",
+            "timestamp": "2026-08-12T22:14:42.068514",
+            "message": "Created spec file 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\project_spec.md'",
+            "details": {
+              "step": {
+                "step_index": 1,
+                "action": "analyze_requirements",
+                "status": "completed",
+                "description": "Analyzed prompt: 'Build a CLI assistant'",
+                "output": "Created physical spec file at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\project_spec.md'"
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\project_spec.md"
+            }
+          },
+          {
+            "event_type": "step_complete",
+            "timestamp": "2026-08-12T22:14:42.176267",
+            "message": "Scaffolded source file 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\main.py'",
+            "details": {
+              "step": {
+                "step_index": 2,
+                "action": "execute_build",
+                "status": "completed",
+                "description": "Scaffolded source file at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\main.py'",
+                "output": "Built project target successfully at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\main.py'"
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\main.py"
+            }
+          }
+        ],
+        "created_at": "2026-08-12T22:14:42.176497"
+      },
+      {
+        "turn_id": "turn-6930fe72",
+        "project_id": "proj-a240c8f2",
+        "session_id": "dc-sess-c8ae288d",
+        "prompt": "Add voice logging module to CLI assistant",
+        "status": "completed",
+        "events": [
+          {
+            "event_type": "step_start",
+            "timestamp": "2026-08-12T22:14:42.221335",
+            "message": "Starting DeepCode turn for session dc-sess-c8ae288d",
+            "details": {
+              "prompt": "Add voice logging module to CLI assistant",
+              "workspace": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant"
+            }
+          },
+          {
+            "event_type": "file_edit",
+            "timestamp": "2026-08-12T22:14:42.336253",
+            "message": "Created spec file 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\project_spec.md'",
+            "details": {
+              "step": {
+                "step_index": 1,
+                "action": "analyze_requirements",
+                "status": "completed",
+                "description": "Analyzed prompt: 'Add voice logging module to CLI assistant'",
+                "output": "Created physical spec file at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\project_spec.md'"
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\project_spec.md"
+            }
+          },
+          {
+            "event_type": "step_complete",
+            "timestamp": "2026-08-12T22:14:42.440449",
+            "message": "Scaffolded source file 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\main.py'",
+            "details": {
+              "step": {
+                "step_index": 2,
+                "action": "execute_build",
+                "status": "completed",
+                "description": "Scaffolded source file at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\main.py'",
+                "output": "Built project target successfully at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\main.py'"
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\main.py"
+            }
+          }
+        ],
+        "created_at": "2026-08-12T22:14:42.440624"
+      }
+    ],
+    "created_at": "2026-08-12T22:14:41.937321",
+    "updated_at": "2026-08-12T22:14:42.440507"
+  },
+  "proj-9f2aa01a": {
+    "project_id": "proj-9f2aa01a",
+    "user_id": "user-claimed-1000",
+    "title": "Flutter Realtime Dashboard",
+    "specification": "Build a dark mode voice control analytics dashboard",
+    "workspace_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\dashboard_app",
+    "status": "completed",
+    "plan_summary": "Implementation Plan generated for 'Flutter Realtime Dashboard'. Awaiting explicit user approval before execution.",
+    "session_id": "dc-sess-ce169194",
+    "history": [
+      {
+        "turn_id": "turn-f1cb0f19",
+        "project_id": "proj-9f2aa01a",
+        "session_id": "dc-sess-ce169194",
+        "prompt": "Build a dark mode voice control analytics dashboard",
+        "status": "completed",
+        "events": [
+          {
+            "event_type": "step_start",
+            "timestamp": "2026-08-12T22:39:32.922490",
+            "message": "Starting DeepCode turn for session dc-sess-ce169194",
+            "details": {
+              "prompt": "Build a dark mode voice control analytics dashboard",
+              "workspace": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\dashboard_app"
+            }
+          },
+          {
+            "event_type": "file_edit",
+            "timestamp": "2026-08-12T22:39:33.039866",
+            "message": "Created spec file 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\dashboard_app\\project_spec.md'",
+            "details": {
+              "step": {
+                "step_index": 1,
+                "action": "analyze_requirements",
+                "status": "completed",
+                "description": "Analyzed prompt: 'Build a dark mode voice control analytics dashboard'",
+                "output": "Created physical spec file at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\dashboard_app\\project_spec.md'"
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\dashboard_app\\project_spec.md"
+            }
+          },
+          {
+            "event_type": "step_complete",
+            "timestamp": "2026-08-12T22:39:33.151763",
+            "message": "Scaffolded source file 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\dashboard_app\\main.py'",
+            "details": {
+              "step": {
+                "step_index": 2,
+                "action": "execute_build",
+                "status": "completed",
+                "description": "Scaffolded source file at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\dashboard_app\\main.py'",
+                "output": "Built project target successfully at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\dashboard_app\\main.py'"
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\dashboard_app\\main.py"
+            }
+          }
+        ],
+        "created_at": "2026-08-12T22:39:33.152772"
+      }
+    ],
+    "created_at": "2026-08-12T22:39:32.853436",
+    "updated_at": "2026-08-12T22:39:33.152709"
+  },
+  "proj-dd5f738e": {
+    "project_id": "proj-dd5f738e",
+    "user_id": "user-claimed-1000",
+    "title": "Downloadable Build",
+    "specification": "Build a downloadable sample",
+    "workspace_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\downloadable_build",
+    "status": "completed",
+    "plan_summary": "Implementation Plan generated for 'Downloadable Build'. Awaiting explicit user approval before execution.",
+    "session_id": "dc-sess-508f4dd5",
+    "history": [
+      {
+        "turn_id": "turn-9cbb744f",
+        "project_id": "proj-dd5f738e",
+        "session_id": "dc-sess-508f4dd5",
+        "prompt": "Build a downloadable sample",
+        "status": "completed",
+        "events": [
+          {
+            "event_type": "step_start",
+            "timestamp": "2026-08-12T22:39:33.287999",
+            "message": "Starting DeepCode turn for session dc-sess-508f4dd5",
+            "details": {
+              "prompt": "Build a downloadable sample",
+              "workspace": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\downloadable_build"
+            }
+          },
+          {
+            "event_type": "file_edit",
+            "timestamp": "2026-08-12T22:39:33.398017",
+            "message": "Created spec file 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\downloadable_build\\project_spec.md'",
+            "details": {
+              "step": {
+                "step_index": 1,
+                "action": "analyze_requirements",
+                "status": "completed",
+                "description": "Analyzed prompt: 'Build a downloadable sample'",
+                "output": "Created physical spec file at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\downloadable_build\\project_spec.md'"
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\downloadable_build\\project_spec.md"
+            }
+          },
+          {
+            "event_type": "step_complete",
+            "timestamp": "2026-08-12T22:39:33.505590",
+            "message": "Scaffolded source file 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\downloadable_build\\main.py'",
+            "details": {
+              "step": {
+                "step_index": 2,
+                "action": "execute_build",
+                "status": "completed",
+                "description": "Scaffolded source file at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\downloadable_build\\main.py'",
+                "output": "Built project target successfully at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\downloadable_build\\main.py'"
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\downloadable_build\\main.py"
+            }
+          }
+        ],
+        "created_at": "2026-08-12T22:39:33.506195"
+      }
+    ],
+    "created_at": "2026-08-12T22:39:33.231688",
+    "updated_at": "2026-08-12T22:39:33.506145"
+  },
+  "proj-8777624a": {
+    "project_id": "proj-8777624a",
+    "user_id": "user-claimed-1000",
+    "title": "Persistent AI Assistant",
+    "specification": "Build a CLI assistant",
+    "workspace_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant",
+    "status": "completed",
+    "plan_summary": "Implementation Plan generated for 'Persistent AI Assistant'. Awaiting explicit user approval before execution.",
+    "session_id": "dc-sess-d6d0d80b",
+    "history": [
+      {
+        "turn_id": "turn-e98031cb",
+        "project_id": "proj-8777624a",
+        "session_id": "dc-sess-d6d0d80b",
+        "prompt": "Build a CLI assistant",
+        "status": "completed",
+        "events": [
+          {
+            "event_type": "step_start",
+            "timestamp": "2026-08-12T22:39:33.687610",
+            "message": "Starting DeepCode turn for session dc-sess-d6d0d80b",
+            "details": {
+              "prompt": "Build a CLI assistant",
+              "workspace": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant"
+            }
+          },
+          {
+            "event_type": "file_edit",
+            "timestamp": "2026-08-12T22:39:33.805964",
+            "message": "Created spec file 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\project_spec.md'",
+            "details": {
+              "step": {
+                "step_index": 1,
+                "action": "analyze_requirements",
+                "status": "completed",
+                "description": "Analyzed prompt: 'Build a CLI assistant'",
+                "output": "Created physical spec file at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\project_spec.md'"
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\project_spec.md"
+            }
+          },
+          {
+            "event_type": "step_complete",
+            "timestamp": "2026-08-12T22:39:33.916057",
+            "message": "Scaffolded source file 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\main.py'",
+            "details": {
+              "step": {
+                "step_index": 2,
+                "action": "execute_build",
+                "status": "completed",
+                "description": "Scaffolded source file at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\main.py'",
+                "output": "Built project target successfully at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\main.py'"
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\main.py"
+            }
+          }
+        ],
+        "created_at": "2026-08-12T22:39:33.917639"
+      },
+      {
+        "turn_id": "turn-cd2076d7",
+        "project_id": "proj-8777624a",
+        "session_id": "dc-sess-d6d0d80b",
+        "prompt": "Add voice logging module to CLI assistant",
+        "status": "completed",
+        "events": [
+          {
+            "event_type": "step_start",
+            "timestamp": "2026-08-12T22:39:34.024572",
+            "message": "Starting DeepCode turn for session dc-sess-d6d0d80b",
+            "details": {
+              "prompt": "Add voice logging module to CLI assistant",
+              "workspace": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant"
+            }
+          },
+          {
+            "event_type": "file_edit",
+            "timestamp": "2026-08-12T22:39:34.145920",
+            "message": "Created spec file 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\project_spec.md'",
+            "details": {
+              "step": {
+                "step_index": 1,
+                "action": "analyze_requirements",
+                "status": "completed",
+                "description": "Analyzed prompt: 'Add voice logging module to CLI assistant'",
+                "output": "Created physical spec file at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\project_spec.md'"
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\project_spec.md"
+            }
+          },
+          {
+            "event_type": "step_complete",
+            "timestamp": "2026-08-12T22:39:34.264237",
+            "message": "Scaffolded source file 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\main.py'",
+            "details": {
+              "step": {
+                "step_index": 2,
+                "action": "execute_build",
+                "status": "completed",
+                "description": "Scaffolded source file at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\main.py'",
+                "output": "Built project target successfully at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\main.py'"
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\main.py"
+            }
+          }
+        ],
+        "created_at": "2026-08-12T22:39:34.264311"
+      }
+    ],
+    "created_at": "2026-08-12T22:39:33.650882",
+    "updated_at": "2026-08-12T22:39:34.264282"
+  },
+  "proj-ce8e5bb4": {
+    "project_id": "proj-ce8e5bb4",
+    "user_id": "user-1000",
+    "title": "User 1 Confidential Project",
+    "specification": "Secrets and sensitive data",
+    "workspace_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\user1_confidential_project",
+    "status": "plan_generated",
+    "plan_summary": "Implementation Plan generated for 'User 1 Confidential Project'. Awaiting explicit user approval before execution.",
+    "session_id": "dc-sess-66d1e128",
+    "history": [],
+    "created_at": "2026-08-12T22:39:34.316895",
+    "updated_at": "2026-08-12T22:39:34.316895"
+  },
+  "proj-2ecdd456": {
+    "project_id": "proj-2ecdd456",
+    "user_id": "user-1000",
+    "title": "Phase 13 Test Calculator App",
+    "specification": "Create a calculator module",
+    "workspace_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\phase13_test_calculator_app",
+    "status": "completed",
+    "plan_summary": "Implementation Plan generated for 'Phase 13 Test Calculator App'. Awaiting explicit user approval before execution.",
+    "session_id": "dc-sess-28037cc2",
+    "history": [
+      {
+        "turn_id": "turn-2c050749",
+        "project_id": "proj-2ecdd456",
+        "session_id": "dc-sess-28037cc2",
+        "prompt": "Create a calculator module",
+        "status": "completed",
+        "events": [
+          {
+            "event_type": "step_start",
+            "timestamp": "2026-08-12T22:39:34.403776",
+            "message": "Starting DeepCode turn for session dc-sess-28037cc2",
+            "details": {
+              "prompt": "Create a calculator module",
+              "workspace": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\phase13_test_calculator_app"
+            }
+          },
+          {
+            "event_type": "file_edit",
+            "timestamp": "2026-08-12T22:39:34.609247",
+            "message": "Created spec file 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\phase13_test_calculator_app\\project_spec.md'",
+            "details": {
+              "step": {
+                "step_index": 1,
+                "action": "analyze_requirements",
+                "status": "completed",
+                "description": "Analyzed prompt: 'Create a calculator module'",
+                "output": "Created physical spec file at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\phase13_test_calculator_app\\project_spec.md'"
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\phase13_test_calculator_app\\project_spec.md"
+            }
+          },
+          {
+            "event_type": "step_complete",
+            "timestamp": "2026-08-12T22:39:34.716911",
+            "message": "Scaffolded source file 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\phase13_test_calculator_app\\main.py'",
+            "details": {
+              "step": {
+                "step_index": 2,
+                "action": "execute_build",
+                "status": "completed",
+                "description": "Scaffolded source file at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\phase13_test_calculator_app\\main.py'",
+                "output": "Built project target successfully at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\phase13_test_calculator_app\\main.py'"
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\phase13_test_calculator_app\\main.py"
+            }
+          }
+        ],
+        "created_at": "2026-08-12T22:39:34.717423"
+      }
+    ],
+    "created_at": "2026-08-12T22:39:34.370265",
+    "updated_at": "2026-08-12T22:39:34.717391"
+  },
+  "proj-30e635df": {
+    "project_id": "proj-30e635df",
+    "user_id": "user-claimed-1000",
+    "title": "Flutter Realtime Dashboard",
+    "specification": "Build a dark mode voice control analytics dashboard",
+    "workspace_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\dashboard_app",
+    "status": "completed",
+    "plan_summary": "Implementation Plan generated for 'Flutter Realtime Dashboard'. Awaiting explicit user approval before execution.",
+    "session_id": "dc-sess-4cecf22d",
+    "history": [
+      {
+        "turn_id": "turn-b81e176f",
+        "project_id": "proj-30e635df",
+        "session_id": "dc-sess-4cecf22d",
+        "prompt": "Build a dark mode voice control analytics dashboard",
+        "status": "completed",
+        "events": [
+          {
+            "event_type": "step_start",
+            "timestamp": "2026-08-12T23:00:38.518544",
+            "message": "Starting DeepCode turn for session dc-sess-4cecf22d",
+            "details": {
+              "prompt": "Build a dark mode voice control analytics dashboard",
+              "workspace": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\dashboard_app"
+            }
+          },
+          {
+            "event_type": "file_edit",
+            "timestamp": "2026-08-12T23:00:38.639047",
+            "message": "Created spec file 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\dashboard_app\\project_spec.md'",
+            "details": {
+              "step": {
+                "step_index": 1,
+                "action": "analyze_requirements",
+                "status": "completed",
+                "description": "Analyzed prompt: 'Build a dark mode voice control analytics dashboard'",
+                "output": "Created physical spec file at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\dashboard_app\\project_spec.md'"
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\dashboard_app\\project_spec.md"
+            }
+          },
+          {
+            "event_type": "step_complete",
+            "timestamp": "2026-08-12T23:00:38.744272",
+            "message": "Scaffolded source file 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\dashboard_app\\main.py'",
+            "details": {
+              "step": {
+                "step_index": 2,
+                "action": "execute_build",
+                "status": "completed",
+                "description": "Scaffolded source file at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\dashboard_app\\main.py'",
+                "output": "Built project target successfully at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\dashboard_app\\main.py'"
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\dashboard_app\\main.py"
+            }
+          }
+        ],
+        "created_at": "2026-08-12T23:00:38.744768"
+      }
+    ],
+    "created_at": "2026-08-12T23:00:38.472381",
+    "updated_at": "2026-08-12T23:00:38.744681"
+  },
+  "proj-9dc4d662": {
+    "project_id": "proj-9dc4d662",
+    "user_id": "user-claimed-1000",
+    "title": "Downloadable Build",
+    "specification": "Build a downloadable sample",
+    "workspace_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\downloadable_build",
+    "status": "completed",
+    "plan_summary": "Implementation Plan generated for 'Downloadable Build'. Awaiting explicit user approval before execution.",
+    "session_id": "dc-sess-04271242",
+    "history": [
+      {
+        "turn_id": "turn-d6fdf5f5",
+        "project_id": "proj-9dc4d662",
+        "session_id": "dc-sess-04271242",
+        "prompt": "Build a downloadable sample",
+        "status": "completed",
+        "events": [
+          {
+            "event_type": "step_start",
+            "timestamp": "2026-08-12T23:00:38.896776",
+            "message": "Starting DeepCode turn for session dc-sess-04271242",
+            "details": {
+              "prompt": "Build a downloadable sample",
+              "workspace": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\downloadable_build"
+            }
+          },
+          {
+            "event_type": "file_edit",
+            "timestamp": "2026-08-12T23:00:39.024677",
+            "message": "Created spec file 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\downloadable_build\\project_spec.md'",
+            "details": {
+              "step": {
+                "step_index": 1,
+                "action": "analyze_requirements",
+                "status": "completed",
+                "description": "Analyzed prompt: 'Build a downloadable sample'",
+                "output": "Created physical spec file at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\downloadable_build\\project_spec.md'"
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\downloadable_build\\project_spec.md"
+            }
+          },
+          {
+            "event_type": "step_complete",
+            "timestamp": "2026-08-12T23:00:39.136882",
+            "message": "Scaffolded source file 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\downloadable_build\\main.py'",
+            "details": {
+              "step": {
+                "step_index": 2,
+                "action": "execute_build",
+                "status": "completed",
+                "description": "Scaffolded source file at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\downloadable_build\\main.py'",
+                "output": "Built project target successfully at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\downloadable_build\\main.py'"
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\downloadable_build\\main.py"
+            }
+          }
+        ],
+        "created_at": "2026-08-12T23:00:39.137804"
+      }
+    ],
+    "created_at": "2026-08-12T23:00:38.828845",
+    "updated_at": "2026-08-12T23:00:39.137748"
+  },
+  "proj-4ff845cf": {
+    "project_id": "proj-4ff845cf",
+    "user_id": "user-claimed-1000",
+    "title": "Persistent AI Assistant",
+    "specification": "Build a CLI assistant",
+    "workspace_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant",
+    "status": "completed",
+    "plan_summary": "Implementation Plan generated for 'Persistent AI Assistant'. Awaiting explicit user approval before execution.",
+    "session_id": "dc-sess-b59dcfe0",
+    "history": [
+      {
+        "turn_id": "turn-20a06896",
+        "project_id": "proj-4ff845cf",
+        "session_id": "dc-sess-b59dcfe0",
+        "prompt": "Build a CLI assistant",
+        "status": "completed",
+        "events": [
+          {
+            "event_type": "step_start",
+            "timestamp": "2026-08-12T23:00:39.263369",
+            "message": "Starting DeepCode turn for session dc-sess-b59dcfe0",
+            "details": {
+              "prompt": "Build a CLI assistant",
+              "workspace": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant"
+            }
+          },
+          {
+            "event_type": "file_edit",
+            "timestamp": "2026-08-12T23:00:39.415794",
+            "message": "Created spec file 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\project_spec.md'",
+            "details": {
+              "step": {
+                "step_index": 1,
+                "action": "analyze_requirements",
+                "status": "completed",
+                "description": "Analyzed prompt: 'Build a CLI assistant'",
+                "output": "Created physical spec file at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\project_spec.md'"
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\project_spec.md"
+            }
+          },
+          {
+            "event_type": "step_complete",
+            "timestamp": "2026-08-12T23:00:39.521973",
+            "message": "Scaffolded source file 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\main.py'",
+            "details": {
+              "step": {
+                "step_index": 2,
+                "action": "execute_build",
+                "status": "completed",
+                "description": "Scaffolded source file at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\main.py'",
+                "output": "Built project target successfully at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\main.py'"
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\main.py"
+            }
+          }
+        ],
+        "created_at": "2026-08-12T23:00:39.522667"
+      },
+      {
+        "turn_id": "turn-d920b5c8",
+        "project_id": "proj-4ff845cf",
+        "session_id": "dc-sess-b59dcfe0",
+        "prompt": "Add voice logging module to CLI assistant",
+        "status": "completed",
+        "events": [
+          {
+            "event_type": "step_start",
+            "timestamp": "2026-08-12T23:00:39.578970",
+            "message": "Starting DeepCode turn for session dc-sess-b59dcfe0",
+            "details": {
+              "prompt": "Add voice logging module to CLI assistant",
+              "workspace": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant"
+            }
+          },
+          {
+            "event_type": "file_edit",
+            "timestamp": "2026-08-12T23:00:39.698560",
+            "message": "Created spec file 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\project_spec.md'",
+            "details": {
+              "step": {
+                "step_index": 1,
+                "action": "analyze_requirements",
+                "status": "completed",
+                "description": "Analyzed prompt: 'Add voice logging module to CLI assistant'",
+                "output": "Created physical spec file at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\project_spec.md'"
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\project_spec.md"
+            }
+          },
+          {
+            "event_type": "step_complete",
+            "timestamp": "2026-08-12T23:00:39.815906",
+            "message": "Scaffolded source file 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\main.py'",
+            "details": {
+              "step": {
+                "step_index": 2,
+                "action": "execute_build",
+                "status": "completed",
+                "description": "Scaffolded source file at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\main.py'",
+                "output": "Built project target successfully at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\main.py'"
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\main.py"
+            }
+          }
+        ],
+        "created_at": "2026-08-12T23:00:39.816134"
+      }
+    ],
+    "created_at": "2026-08-12T23:00:39.230934",
+    "updated_at": "2026-08-12T23:00:39.816084"
+  },
+  "proj-34972de9": {
+    "project_id": "proj-34972de9",
+    "user_id": "user-1000",
+    "title": "User 1 Confidential Project",
+    "specification": "Secrets and sensitive data",
+    "workspace_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\user1_confidential_project",
+    "status": "plan_generated",
+    "plan_summary": "Implementation Plan generated for 'User 1 Confidential Project'. Awaiting explicit user approval before execution.",
+    "session_id": "dc-sess-1540b189",
+    "history": [],
+    "created_at": "2026-08-12T23:00:39.871536",
+    "updated_at": "2026-08-12T23:00:39.871536"
+  },
+  "proj-5e9242df": {
+    "project_id": "proj-5e9242df",
+    "user_id": "user-1000",
+    "title": "Phase 13 Test Calculator App",
+    "specification": "Create a calculator module",
+    "workspace_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\phase13_test_calculator_app",
+    "status": "completed",
+    "plan_summary": "Implementation Plan generated for 'Phase 13 Test Calculator App'. Awaiting explicit user approval before execution.",
+    "session_id": "dc-sess-b93cc48e",
+    "history": [
+      {
+        "turn_id": "turn-b318805b",
+        "project_id": "proj-5e9242df",
+        "session_id": "dc-sess-b93cc48e",
+        "prompt": "Create a calculator module",
+        "status": "completed",
+        "events": [
+          {
+            "event_type": "step_start",
+            "timestamp": "2026-08-12T23:00:39.989397",
+            "message": "Starting DeepCode turn for session dc-sess-b93cc48e",
+            "details": {
+              "prompt": "Create a calculator module",
+              "workspace": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\phase13_test_calculator_app"
+            }
+          },
+          {
+            "event_type": "file_edit",
+            "timestamp": "2026-08-12T23:00:40.112588",
+            "message": "Created spec file 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\phase13_test_calculator_app\\project_spec.md'",
+            "details": {
+              "step": {
+                "step_index": 1,
+                "action": "analyze_requirements",
+                "status": "completed",
+                "description": "Analyzed prompt: 'Create a calculator module'",
+                "output": "Created physical spec file at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\phase13_test_calculator_app\\project_spec.md'"
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\phase13_test_calculator_app\\project_spec.md"
+            }
+          },
+          {
+            "event_type": "step_complete",
+            "timestamp": "2026-08-12T23:00:40.226638",
+            "message": "Scaffolded source file 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\phase13_test_calculator_app\\main.py'",
+            "details": {
+              "step": {
+                "step_index": 2,
+                "action": "execute_build",
+                "status": "completed",
+                "description": "Scaffolded source file at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\phase13_test_calculator_app\\main.py'",
+                "output": "Built project target successfully at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\phase13_test_calculator_app\\main.py'"
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\phase13_test_calculator_app\\main.py"
+            }
+          }
+        ],
+        "created_at": "2026-08-12T23:00:40.227101"
+      }
+    ],
+    "created_at": "2026-08-12T23:00:39.948709",
+    "updated_at": "2026-08-12T23:00:40.227068"
+  },
+  "proj-dc41f764": {
+    "project_id": "proj-dc41f764",
+    "user_id": "user-claimed-1000",
+    "title": "Flutter Realtime Dashboard",
+    "specification": "Build a dark mode voice control analytics dashboard",
+    "workspace_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\dashboard_app",
+    "status": "completed",
+    "plan_summary": "Implementation Plan generated for 'Flutter Realtime Dashboard'. Awaiting explicit user approval before execution.",
+    "session_id": "dc-sess-2a5d9398",
+    "history": [
+      {
+        "turn_id": "turn-586e21f8",
+        "project_id": "proj-dc41f764",
+        "session_id": "dc-sess-2a5d9398",
+        "prompt": "Build a dark mode voice control analytics dashboard",
+        "status": "completed",
+        "events": [
+          {
+            "event_type": "step_start",
+            "timestamp": "2026-08-12T23:20:38.515546",
+            "message": "Starting DeepCode turn for session dc-sess-2a5d9398",
+            "details": {
+              "prompt": "Build a dark mode voice control analytics dashboard",
+              "workspace": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\dashboard_app"
+            }
+          },
+          {
+            "event_type": "file_edit",
+            "timestamp": "2026-08-12T23:20:38.624041",
+            "message": "Created spec file 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\dashboard_app\\project_spec.md'",
+            "details": {
+              "step": {
+                "step_index": 1,
+                "action": "analyze_requirements",
+                "status": "completed",
+                "description": "Analyzed prompt: 'Build a dark mode voice control analytics dashboard'",
+                "output": "Created physical spec file at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\dashboard_app\\project_spec.md'"
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\dashboard_app\\project_spec.md"
+            }
+          },
+          {
+            "event_type": "step_complete",
+            "timestamp": "2026-08-12T23:20:38.734632",
+            "message": "Scaffolded source file 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\dashboard_app\\main.py'",
+            "details": {
+              "step": {
+                "step_index": 2,
+                "action": "execute_build",
+                "status": "completed",
+                "description": "Scaffolded source file at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\dashboard_app\\main.py'",
+                "output": "Built project target successfully at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\dashboard_app\\main.py'"
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\dashboard_app\\main.py"
+            }
+          }
+        ],
+        "created_at": "2026-08-12T23:20:38.735499"
+      }
+    ],
+    "created_at": "2026-08-12T23:20:38.431969",
+    "updated_at": "2026-08-12T23:20:38.735453"
+  },
+  "proj-63d5d976": {
+    "project_id": "proj-63d5d976",
+    "user_id": "user-claimed-1000",
+    "title": "Downloadable Build",
+    "specification": "Build a downloadable sample",
+    "workspace_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\downloadable_build",
+    "status": "completed",
+    "plan_summary": "Implementation Plan generated for 'Downloadable Build'. Awaiting explicit user approval before execution.",
+    "session_id": "dc-sess-c3b8e6cf",
+    "history": [
+      {
+        "turn_id": "turn-a35f4050",
+        "project_id": "proj-63d5d976",
+        "session_id": "dc-sess-c3b8e6cf",
+        "prompt": "Build a downloadable sample",
+        "status": "completed",
+        "events": [
+          {
+            "event_type": "step_start",
+            "timestamp": "2026-08-12T23:20:38.866641",
+            "message": "Starting DeepCode turn for session dc-sess-c3b8e6cf",
+            "details": {
+              "prompt": "Build a downloadable sample",
+              "workspace": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\downloadable_build"
+            }
+          },
+          {
+            "event_type": "file_edit",
+            "timestamp": "2026-08-12T23:20:38.972771",
+            "message": "Created spec file 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\downloadable_build\\project_spec.md'",
+            "details": {
+              "step": {
+                "step_index": 1,
+                "action": "analyze_requirements",
+                "status": "completed",
+                "description": "Analyzed prompt: 'Build a downloadable sample'",
+                "output": "Created physical spec file at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\downloadable_build\\project_spec.md'"
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\downloadable_build\\project_spec.md"
+            }
+          },
+          {
+            "event_type": "step_complete",
+            "timestamp": "2026-08-12T23:20:39.088782",
+            "message": "Scaffolded source file 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\downloadable_build\\main.py'",
+            "details": {
+              "step": {
+                "step_index": 2,
+                "action": "execute_build",
+                "status": "completed",
+                "description": "Scaffolded source file at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\downloadable_build\\main.py'",
+                "output": "Built project target successfully at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\downloadable_build\\main.py'"
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\downloadable_build\\main.py"
+            }
+          }
+        ],
+        "created_at": "2026-08-12T23:20:39.089469"
+      }
+    ],
+    "created_at": "2026-08-12T23:20:38.803338",
+    "updated_at": "2026-08-12T23:20:39.089418"
+  },
+  "proj-1391925a": {
+    "project_id": "proj-1391925a",
+    "user_id": "user-claimed-1000",
+    "title": "Persistent AI Assistant",
+    "specification": "Build a CLI assistant",
+    "workspace_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant",
+    "status": "completed",
+    "plan_summary": "Implementation Plan generated for 'Persistent AI Assistant'. Awaiting explicit user approval before execution.",
+    "session_id": "dc-sess-383f7f22",
+    "history": [
+      {
+        "turn_id": "turn-8912e930",
+        "project_id": "proj-1391925a",
+        "session_id": "dc-sess-383f7f22",
+        "prompt": "Build a CLI assistant",
+        "status": "completed",
+        "events": [
+          {
+            "event_type": "step_start",
+            "timestamp": "2026-08-12T23:20:39.244709",
+            "message": "Starting DeepCode turn for session dc-sess-383f7f22",
+            "details": {
+              "prompt": "Build a CLI assistant",
+              "workspace": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant"
+            }
+          },
+          {
+            "event_type": "file_edit",
+            "timestamp": "2026-08-12T23:20:39.357027",
+            "message": "Created spec file 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\project_spec.md'",
+            "details": {
+              "step": {
+                "step_index": 1,
+                "action": "analyze_requirements",
+                "status": "completed",
+                "description": "Analyzed prompt: 'Build a CLI assistant'",
+                "output": "Created physical spec file at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\project_spec.md'"
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\project_spec.md"
+            }
+          },
+          {
+            "event_type": "step_complete",
+            "timestamp": "2026-08-12T23:20:39.463147",
+            "message": "Scaffolded source file 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\main.py'",
+            "details": {
+              "step": {
+                "step_index": 2,
+                "action": "execute_build",
+                "status": "completed",
+                "description": "Scaffolded source file at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\main.py'",
+                "output": "Built project target successfully at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\main.py'"
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\main.py"
+            }
+          }
+        ],
+        "created_at": "2026-08-12T23:20:39.466446"
+      },
+      {
+        "turn_id": "turn-d480eee8",
+        "project_id": "proj-1391925a",
+        "session_id": "dc-sess-383f7f22",
+        "prompt": "Add voice logging module to CLI assistant",
+        "status": "completed",
+        "events": [
+          {
+            "event_type": "step_start",
+            "timestamp": "2026-08-12T23:20:39.543012",
+            "message": "Starting DeepCode turn for session dc-sess-383f7f22",
+            "details": {
+              "prompt": "Add voice logging module to CLI assistant",
+              "workspace": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant"
+            }
+          },
+          {
+            "event_type": "file_edit",
+            "timestamp": "2026-08-12T23:20:39.651970",
+            "message": "Created spec file 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\project_spec.md'",
+            "details": {
+              "step": {
+                "step_index": 1,
+                "action": "analyze_requirements",
+                "status": "completed",
+                "description": "Analyzed prompt: 'Add voice logging module to CLI assistant'",
+                "output": "Created physical spec file at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\project_spec.md'"
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\project_spec.md"
+            }
+          },
+          {
+            "event_type": "step_complete",
+            "timestamp": "2026-08-12T23:20:39.794165",
+            "message": "Scaffolded source file 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\main.py'",
+            "details": {
+              "step": {
+                "step_index": 2,
+                "action": "execute_build",
+                "status": "completed",
+                "description": "Scaffolded source file at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\main.py'",
+                "output": "Built project target successfully at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\main.py'"
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\main.py"
+            }
+          }
+        ],
+        "created_at": "2026-08-12T23:20:39.794286"
+      }
+    ],
+    "created_at": "2026-08-12T23:20:39.219679",
+    "updated_at": "2026-08-12T23:20:39.794240"
+  },
+  "proj-7ac42afe": {
+    "project_id": "proj-7ac42afe",
+    "user_id": "user-1000",
+    "title": "User 1 Confidential Project",
+    "specification": "Secrets and sensitive data",
+    "workspace_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\user1_confidential_project",
+    "status": "plan_generated",
+    "plan_summary": "Implementation Plan generated for 'User 1 Confidential Project'. Awaiting explicit user approval before execution.",
+    "session_id": "dc-sess-5d84b17f",
+    "history": [],
+    "created_at": "2026-08-12T23:20:39.878750",
+    "updated_at": "2026-08-12T23:20:39.878750"
+  },
+  "proj-6a497af8": {
+    "project_id": "proj-6a497af8",
+    "user_id": "user-1000",
+    "title": "Phase 13 Test Calculator App",
+    "specification": "Create a calculator module",
+    "workspace_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\phase13_test_calculator_app",
+    "status": "completed",
+    "plan_summary": "Implementation Plan generated for 'Phase 13 Test Calculator App'. Awaiting explicit user approval before execution.",
+    "session_id": "dc-sess-4db1444e",
+    "history": [
+      {
+        "turn_id": "turn-6e8769b6",
+        "project_id": "proj-6a497af8",
+        "session_id": "dc-sess-4db1444e",
+        "prompt": "Create a calculator module",
+        "status": "completed",
+        "events": [
+          {
+            "event_type": "step_start",
+            "timestamp": "2026-08-12T23:20:40.095635",
+            "message": "Starting DeepCode turn for session dc-sess-4db1444e",
+            "details": {
+              "prompt": "Create a calculator module",
+              "workspace": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\phase13_test_calculator_app"
+            }
+          },
+          {
+            "event_type": "file_edit",
+            "timestamp": "2026-08-12T23:20:40.206724",
+            "message": "Created spec file 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\phase13_test_calculator_app\\project_spec.md'",
+            "details": {
+              "step": {
+                "step_index": 1,
+                "action": "analyze_requirements",
+                "status": "completed",
+                "description": "Analyzed prompt: 'Create a calculator module'",
+                "output": "Created physical spec file at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\phase13_test_calculator_app\\project_spec.md'"
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\phase13_test_calculator_app\\project_spec.md"
+            }
+          },
+          {
+            "event_type": "step_complete",
+            "timestamp": "2026-08-12T23:20:40.344358",
+            "message": "Scaffolded source file 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\phase13_test_calculator_app\\main.py'",
+            "details": {
+              "step": {
+                "step_index": 2,
+                "action": "execute_build",
+                "status": "completed",
+                "description": "Scaffolded source file at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\phase13_test_calculator_app\\main.py'",
+                "output": "Built project target successfully at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\phase13_test_calculator_app\\main.py'"
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\phase13_test_calculator_app\\main.py"
+            }
+          }
+        ],
+        "created_at": "2026-08-12T23:20:40.345199"
+      }
+    ],
+    "created_at": "2026-08-12T23:20:40.060992",
+    "updated_at": "2026-08-12T23:20:40.345167"
+  },
+  "proj-e02965eb": {
+    "project_id": "proj-e02965eb",
+    "user_id": "user-claimed-1000",
+    "title": "Flutter Realtime Dashboard",
+    "specification": "Build a dark mode voice control analytics dashboard",
+    "workspace_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\dashboard_app",
+    "status": "completed",
+    "plan_summary": "Implementation Plan generated for 'Flutter Realtime Dashboard'. Awaiting explicit user approval before execution.",
+    "session_id": "dc-sess-0102ebeb",
+    "history": [
+      {
+        "turn_id": "turn-3fe5dc19",
+        "project_id": "proj-e02965eb",
+        "session_id": "dc-sess-0102ebeb",
+        "prompt": "Build a dark mode voice control analytics dashboard",
+        "status": "completed",
+        "events": [
+          {
+            "event_type": "step_start",
+            "timestamp": "2026-08-12T23:30:52.005727",
+            "message": "Starting DeepCode turn for session dc-sess-0102ebeb",
+            "details": {
+              "prompt": "Build a dark mode voice control analytics dashboard",
+              "workspace": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\dashboard_app"
+            }
+          },
+          {
+            "event_type": "file_edit",
+            "timestamp": "2026-08-12T23:30:52.121798",
+            "message": "Created spec file 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\dashboard_app\\project_spec.md'",
+            "details": {
+              "step": {
+                "step_index": 1,
+                "action": "analyze_requirements",
+                "status": "completed",
+                "description": "Analyzed prompt: 'Build a dark mode voice control analytics dashboard'",
+                "output": "Created physical spec file at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\dashboard_app\\project_spec.md'"
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\dashboard_app\\project_spec.md"
+            }
+          },
+          {
+            "event_type": "step_complete",
+            "timestamp": "2026-08-12T23:30:52.229462",
+            "message": "Scaffolded source file 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\dashboard_app\\main.py'",
+            "details": {
+              "step": {
+                "step_index": 2,
+                "action": "execute_build",
+                "status": "completed",
+                "description": "Scaffolded source file at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\dashboard_app\\main.py'",
+                "output": "Built project target successfully at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\dashboard_app\\main.py'"
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\dashboard_app\\main.py"
+            }
+          }
+        ],
+        "created_at": "2026-08-12T23:30:52.231028"
+      }
+    ],
+    "created_at": "2026-08-12T23:30:51.954903",
+    "updated_at": "2026-08-12T23:30:52.230951"
+  },
+  "proj-96f3d305": {
+    "project_id": "proj-96f3d305",
+    "user_id": "user-claimed-1000",
+    "title": "Downloadable Build",
+    "specification": "Build a downloadable sample",
+    "workspace_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\downloadable_build",
+    "status": "completed",
+    "plan_summary": "Implementation Plan generated for 'Downloadable Build'. Awaiting explicit user approval before execution.",
+    "session_id": "dc-sess-cae89521",
+    "history": [
+      {
+        "turn_id": "turn-f39fd599",
+        "project_id": "proj-96f3d305",
+        "session_id": "dc-sess-cae89521",
+        "prompt": "Build a downloadable sample",
+        "status": "completed",
+        "events": [
+          {
+            "event_type": "step_start",
+            "timestamp": "2026-08-12T23:30:52.360599",
+            "message": "Starting DeepCode turn for session dc-sess-cae89521",
+            "details": {
+              "prompt": "Build a downloadable sample",
+              "workspace": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\downloadable_build"
+            }
+          },
+          {
+            "event_type": "file_edit",
+            "timestamp": "2026-08-12T23:30:52.531401",
+            "message": "Created spec file 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\downloadable_build\\project_spec.md'",
+            "details": {
+              "step": {
+                "step_index": 1,
+                "action": "analyze_requirements",
+                "status": "completed",
+                "description": "Analyzed prompt: 'Build a downloadable sample'",
+                "output": "Created physical spec file at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\downloadable_build\\project_spec.md'"
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\downloadable_build\\project_spec.md"
+            }
+          },
+          {
+            "event_type": "step_complete",
+            "timestamp": "2026-08-12T23:30:52.638090",
+            "message": "Scaffolded source file 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\downloadable_build\\main.py'",
+            "details": {
+              "step": {
+                "step_index": 2,
+                "action": "execute_build",
+                "status": "completed",
+                "description": "Scaffolded source file at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\downloadable_build\\main.py'",
+                "output": "Built project target successfully at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\downloadable_build\\main.py'"
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\downloadable_build\\main.py"
+            }
+          }
+        ],
+        "created_at": "2026-08-12T23:30:52.638819"
+      }
+    ],
+    "created_at": "2026-08-12T23:30:52.318625",
+    "updated_at": "2026-08-12T23:30:52.638763"
+  },
+  "proj-cac0a2a7": {
+    "project_id": "proj-cac0a2a7",
+    "user_id": "user-claimed-1000",
+    "title": "Persistent AI Assistant",
+    "specification": "Build a CLI assistant",
+    "workspace_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant",
+    "status": "completed",
+    "plan_summary": "Implementation Plan generated for 'Persistent AI Assistant'. Awaiting explicit user approval before execution.",
+    "session_id": "dc-sess-a39c06d4",
+    "history": [
+      {
+        "turn_id": "turn-57d62c12",
+        "project_id": "proj-cac0a2a7",
+        "session_id": "dc-sess-a39c06d4",
+        "prompt": "Build a CLI assistant",
+        "status": "completed",
+        "events": [
+          {
+            "event_type": "step_start",
+            "timestamp": "2026-08-12T23:30:52.774824",
+            "message": "Starting DeepCode turn for session dc-sess-a39c06d4",
+            "details": {
+              "prompt": "Build a CLI assistant",
+              "workspace": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant"
+            }
+          },
+          {
+            "event_type": "file_edit",
+            "timestamp": "2026-08-12T23:30:52.901644",
+            "message": "Created spec file 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\project_spec.md'",
+            "details": {
+              "step": {
+                "step_index": 1,
+                "action": "analyze_requirements",
+                "status": "completed",
+                "description": "Analyzed prompt: 'Build a CLI assistant'",
+                "output": "Created physical spec file at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\project_spec.md'"
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\project_spec.md"
+            }
+          },
+          {
+            "event_type": "step_complete",
+            "timestamp": "2026-08-12T23:30:53.016481",
+            "message": "Scaffolded source file 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\main.py'",
+            "details": {
+              "step": {
+                "step_index": 2,
+                "action": "execute_build",
+                "status": "completed",
+                "description": "Scaffolded source file at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\main.py'",
+                "output": "Built project target successfully at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\main.py'"
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\main.py"
+            }
+          }
+        ],
+        "created_at": "2026-08-12T23:30:53.017258"
+      },
+      {
+        "turn_id": "turn-67d55cb1",
+        "project_id": "proj-cac0a2a7",
+        "session_id": "dc-sess-a39c06d4",
+        "prompt": "Add voice logging module to CLI assistant",
+        "status": "completed",
+        "events": [
+          {
+            "event_type": "step_start",
+            "timestamp": "2026-08-12T23:30:53.108896",
+            "message": "Starting DeepCode turn for session dc-sess-a39c06d4",
+            "details": {
+              "prompt": "Add voice logging module to CLI assistant",
+              "workspace": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant"
+            }
+          },
+          {
+            "event_type": "file_edit",
+            "timestamp": "2026-08-12T23:30:53.234901",
+            "message": "Created spec file 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\project_spec.md'",
+            "details": {
+              "step": {
+                "step_index": 1,
+                "action": "analyze_requirements",
+                "status": "completed",
+                "description": "Analyzed prompt: 'Add voice logging module to CLI assistant'",
+                "output": "Created physical spec file at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\project_spec.md'"
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\project_spec.md"
+            }
+          },
+          {
+            "event_type": "step_complete",
+            "timestamp": "2026-08-12T23:30:53.349402",
+            "message": "Scaffolded source file 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\main.py'",
+            "details": {
+              "step": {
+                "step_index": 2,
+                "action": "execute_build",
+                "status": "completed",
+                "description": "Scaffolded source file at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\main.py'",
+                "output": "Built project target successfully at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\main.py'"
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\main.py"
+            }
+          }
+        ],
+        "created_at": "2026-08-12T23:30:53.349527"
+      }
+    ],
+    "created_at": "2026-08-12T23:30:52.739981",
+    "updated_at": "2026-08-12T23:30:53.349494"
+  },
+  "proj-4362caa5": {
+    "project_id": "proj-4362caa5",
+    "user_id": "user-claimed-1000",
+    "title": "Legacy Claim Project",
+    "specification": "Build a project created before auth wiring",
+    "workspace_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\legacy_claim_project",
+    "status": "completed",
+    "plan_summary": "Implementation Plan generated for 'Legacy Claim Project'. Awaiting explicit user approval before execution.",
+    "session_id": "dc-sess-0867f850",
+    "history": [
+      {
+        "turn_id": "turn-80be50d4",
+        "project_id": "proj-4362caa5",
+        "session_id": "dc-sess-0867f850",
+        "prompt": "Build a project created before auth wiring",
+        "status": "completed",
+        "events": [
+          {
+            "event_type": "step_start",
+            "timestamp": "2026-08-12T23:30:53.459423",
+            "message": "Starting DeepCode turn for session dc-sess-0867f850",
+            "details": {
+              "prompt": "Build a project created before auth wiring",
+              "workspace": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\legacy_claim_project"
+            }
+          },
+          {
+            "event_type": "file_edit",
+            "timestamp": "2026-08-12T23:30:53.578932",
+            "message": "Created spec file 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\legacy_claim_project\\project_spec.md'",
+            "details": {
+              "step": {
+                "step_index": 1,
+                "action": "analyze_requirements",
+                "status": "completed",
+                "description": "Analyzed prompt: 'Build a project created before auth wiring'",
+                "output": "Created physical spec file at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\legacy_claim_project\\project_spec.md'"
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\legacy_claim_project\\project_spec.md"
+            }
+          },
+          {
+            "event_type": "step_complete",
+            "timestamp": "2026-08-12T23:30:53.689588",
+            "message": "Scaffolded source file 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\legacy_claim_project\\main.py'",
+            "details": {
+              "step": {
+                "step_index": 2,
+                "action": "execute_build",
+                "status": "completed",
+                "description": "Scaffolded source file at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\legacy_claim_project\\main.py'",
+                "output": "Built project target successfully at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\legacy_claim_project\\main.py'"
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\legacy_claim_project\\main.py"
+            }
+          }
+        ],
+        "created_at": "2026-08-12T23:30:53.690823"
+      }
+    ],
+    "created_at": "2026-08-12T23:30:53.423284",
+    "updated_at": "2026-08-12T23:30:53.690765"
+  },
+  "proj-2757a39a": {
+    "project_id": "proj-2757a39a",
+    "user_id": "user-1000",
+    "title": "User 1 Confidential Project",
+    "specification": "Secrets and sensitive data",
+    "workspace_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\user1_confidential_project",
+    "status": "plan_generated",
+    "plan_summary": "Implementation Plan generated for 'User 1 Confidential Project'. Awaiting explicit user approval before execution.",
+    "session_id": "dc-sess-83c10da8",
+    "history": [],
+    "created_at": "2026-08-12T23:30:54.528200",
+    "updated_at": "2026-08-12T23:30:54.528200"
+  },
+  "proj-d7ae25f4": {
+    "project_id": "proj-d7ae25f4",
+    "user_id": "user-1000",
+    "title": "Phase 13 Test Calculator App",
+    "specification": "Create a calculator module",
+    "workspace_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\phase13_test_calculator_app",
+    "status": "completed",
+    "plan_summary": "Implementation Plan generated for 'Phase 13 Test Calculator App'. Awaiting explicit user approval before execution.",
+    "session_id": "dc-sess-ed2e5631",
+    "history": [
+      {
+        "turn_id": "turn-8e7792e2",
+        "project_id": "proj-d7ae25f4",
+        "session_id": "dc-sess-ed2e5631",
+        "prompt": "Create a calculator module",
+        "status": "completed",
+        "events": [
+          {
+            "event_type": "step_start",
+            "timestamp": "2026-08-12T23:30:54.685678",
+            "message": "Starting DeepCode turn for session dc-sess-ed2e5631",
+            "details": {
+              "prompt": "Create a calculator module",
+              "workspace": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\phase13_test_calculator_app"
+            }
+          },
+          {
+            "event_type": "file_edit",
+            "timestamp": "2026-08-12T23:30:54.807881",
+            "message": "Created spec file 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\phase13_test_calculator_app\\project_spec.md'",
+            "details": {
+              "step": {
+                "step_index": 1,
+                "action": "analyze_requirements",
+                "status": "completed",
+                "description": "Analyzed prompt: 'Create a calculator module'",
+                "output": "Created physical spec file at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\phase13_test_calculator_app\\project_spec.md'"
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\phase13_test_calculator_app\\project_spec.md"
+            }
+          },
+          {
+            "event_type": "step_complete",
+            "timestamp": "2026-08-12T23:30:54.926055",
+            "message": "Scaffolded source file 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\phase13_test_calculator_app\\main.py'",
+            "details": {
+              "step": {
+                "step_index": 2,
+                "action": "execute_build",
+                "status": "completed",
+                "description": "Scaffolded source file at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\phase13_test_calculator_app\\main.py'",
+                "output": "Built project target successfully at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\phase13_test_calculator_app\\main.py'"
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\phase13_test_calculator_app\\main.py"
+            }
+          }
+        ],
+        "created_at": "2026-08-12T23:30:54.926698"
+      }
+    ],
+    "created_at": "2026-08-12T23:30:54.627073",
+    "updated_at": "2026-08-12T23:30:54.926641"
+  },
+  "proj-9a1e0bf2": {
+    "project_id": "proj-9a1e0bf2",
+    "user_id": "user-claimed-e819ee96",
+    "title": "Flutter Realtime Dashboard",
+    "specification": "Build a dark mode voice control analytics dashboard",
+    "workspace_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\dashboard_app",
+    "status": "completed",
+    "plan_summary": "Implementation Plan generated for 'Flutter Realtime Dashboard'. Awaiting explicit user approval before execution.",
+    "session_id": "dc-sess-ce890e5f",
+    "history": [
+      {
+        "turn_id": "turn-3f50cb61",
+        "project_id": "proj-9a1e0bf2",
+        "session_id": "dc-sess-ce890e5f",
+        "prompt": "Build a dark mode voice control analytics dashboard",
+        "status": "completed",
+        "events": [
+          {
+            "event_type": "step_start",
+            "timestamp": "2026-08-12T23:43:52.048389",
+            "message": "Starting DeepCode turn for session dc-sess-ce890e5f",
+            "details": {
+              "prompt": "Build a dark mode voice control analytics dashboard",
+              "workspace": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\dashboard_app"
+            }
+          },
+          {
+            "event_type": "file_edit",
+            "timestamp": "2026-08-12T23:43:52.201056",
+            "message": "Created specification file 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\dashboard_app\\project_spec.md'",
+            "details": {
+              "step": {
+                "step_index": 1,
+                "action": "analyze_requirements",
+                "status": "completed",
+                "description": "Analyzed prompt: 'Build a dark mode voice control analytics dashboard'",
+                "output": "Created specification at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\dashboard_app\\project_spec.md'"
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\dashboard_app\\project_spec.md"
+            }
+          },
+          {
+            "event_type": "step_complete",
+            "timestamp": "2026-08-12T23:43:52.314047",
+            "message": "Scaffolded multi-file project with entrypoint 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\dashboard_app\\main.py'",
+            "details": {
+              "step": {
+                "step_index": 2,
+                "action": "scaffold_project",
+                "status": "completed",
+                "description": "Scaffolded multi-file project rooted at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\dashboard_app\\main.py'",
+                "output": "Generated README, package metadata, src package, starter tests, and root entrypoint."
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\dashboard_app\\main.py",
+              "generated_files": [
+                ".gitignore",
+                "README.md",
+                "main.py",
+                "project_spec.md",
+                "pyproject.toml",
+                "src\\dashboard_app\\__init__.py",
+                "src\\dashboard_app\\app.py",
+                "tests\\test_app.py"
+              ]
+            }
+          }
+        ],
+        "created_at": "2026-08-12T23:43:52.317626"
+      }
+    ],
+    "created_at": "2026-08-12T23:43:51.989063",
+    "updated_at": "2026-08-12T23:43:52.317547"
+  },
+  "proj-78d118d8": {
+    "project_id": "proj-78d118d8",
+    "user_id": "user-claimed-e819ee96",
+    "title": "Downloadable Build",
+    "specification": "Build a downloadable sample",
+    "workspace_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\downloadable_build",
+    "status": "completed",
+    "plan_summary": "Implementation Plan generated for 'Downloadable Build'. Awaiting explicit user approval before execution.",
+    "session_id": "dc-sess-1c6fcc8a",
+    "history": [
+      {
+        "turn_id": "turn-0f9fdfa9",
+        "project_id": "proj-78d118d8",
+        "session_id": "dc-sess-1c6fcc8a",
+        "prompt": "Build a downloadable sample",
+        "status": "completed",
+        "events": [
+          {
+            "event_type": "step_start",
+            "timestamp": "2026-08-12T23:43:52.482494",
+            "message": "Starting DeepCode turn for session dc-sess-1c6fcc8a",
+            "details": {
+              "prompt": "Build a downloadable sample",
+              "workspace": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\downloadable_build"
+            }
+          },
+          {
+            "event_type": "file_edit",
+            "timestamp": "2026-08-12T23:43:52.642823",
+            "message": "Created specification file 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\downloadable_build\\project_spec.md'",
+            "details": {
+              "step": {
+                "step_index": 1,
+                "action": "analyze_requirements",
+                "status": "completed",
+                "description": "Analyzed prompt: 'Build a downloadable sample'",
+                "output": "Created specification at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\downloadable_build\\project_spec.md'"
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\downloadable_build\\project_spec.md"
+            }
+          },
+          {
+            "event_type": "step_complete",
+            "timestamp": "2026-08-12T23:43:52.744661",
+            "message": "Scaffolded multi-file project with entrypoint 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\downloadable_build\\main.py'",
+            "details": {
+              "step": {
+                "step_index": 2,
+                "action": "scaffold_project",
+                "status": "completed",
+                "description": "Scaffolded multi-file project rooted at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\downloadable_build\\main.py'",
+                "output": "Generated README, package metadata, src package, starter tests, and root entrypoint."
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\downloadable_build\\main.py",
+              "generated_files": [
+                ".gitignore",
+                "README.md",
+                "main.py",
+                "project_spec.md",
+                "pyproject.toml",
+                "src\\downloadable_build\\__init__.py",
+                "src\\downloadable_build\\app.py",
+                "tests\\test_app.py"
+              ]
+            }
+          }
+        ],
+        "created_at": "2026-08-12T23:43:52.746620"
+      }
+    ],
+    "created_at": "2026-08-12T23:43:52.398716",
+    "updated_at": "2026-08-12T23:43:52.746543"
+  },
+  "proj-bd7ad97c": {
+    "project_id": "proj-bd7ad97c",
+    "user_id": "user-claimed-e819ee96",
+    "title": "Persistent AI Assistant",
+    "specification": "Build a CLI assistant",
+    "workspace_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant",
+    "status": "completed",
+    "plan_summary": "Implementation Plan generated for 'Persistent AI Assistant'. Awaiting explicit user approval before execution.",
+    "session_id": "dc-sess-f7e80901",
+    "history": [
+      {
+        "turn_id": "turn-b571cadf",
+        "project_id": "proj-bd7ad97c",
+        "session_id": "dc-sess-f7e80901",
+        "prompt": "Build a CLI assistant",
+        "status": "completed",
+        "events": [
+          {
+            "event_type": "step_start",
+            "timestamp": "2026-08-12T23:43:53.130389",
+            "message": "Starting DeepCode turn for session dc-sess-f7e80901",
+            "details": {
+              "prompt": "Build a CLI assistant",
+              "workspace": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant"
+            }
+          },
+          {
+            "event_type": "file_edit",
+            "timestamp": "2026-08-12T23:43:53.261758",
+            "message": "Created specification file 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\project_spec.md'",
+            "details": {
+              "step": {
+                "step_index": 1,
+                "action": "analyze_requirements",
+                "status": "completed",
+                "description": "Analyzed prompt: 'Build a CLI assistant'",
+                "output": "Created specification at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\project_spec.md'"
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\project_spec.md"
+            }
+          },
+          {
+            "event_type": "step_complete",
+            "timestamp": "2026-08-12T23:43:53.368424",
+            "message": "Scaffolded multi-file project with entrypoint 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\main.py'",
+            "details": {
+              "step": {
+                "step_index": 2,
+                "action": "scaffold_project",
+                "status": "completed",
+                "description": "Scaffolded multi-file project rooted at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\main.py'",
+                "output": "Generated README, package metadata, src package, starter tests, and root entrypoint."
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\main.py",
+              "generated_files": [
+                ".gitignore",
+                "README.md",
+                "main.py",
+                "project_spec.md",
+                "pyproject.toml",
+                "src\\cli_assistant\\__init__.py",
+                "src\\cli_assistant\\app.py",
+                "tests\\test_app.py"
+              ]
+            }
+          }
+        ],
+        "created_at": "2026-08-12T23:43:53.372055"
+      },
+      {
+        "turn_id": "turn-df44ee73",
+        "project_id": "proj-bd7ad97c",
+        "session_id": "dc-sess-f7e80901",
+        "prompt": "Add voice logging module to CLI assistant",
+        "status": "completed",
+        "events": [
+          {
+            "event_type": "step_start",
+            "timestamp": "2026-08-12T23:43:53.507239",
+            "message": "Starting DeepCode turn for session dc-sess-f7e80901",
+            "details": {
+              "prompt": "Add voice logging module to CLI assistant",
+              "workspace": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant"
+            }
+          },
+          {
+            "event_type": "file_edit",
+            "timestamp": "2026-08-12T23:43:53.628689",
+            "message": "Created specification file 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\project_spec.md'",
+            "details": {
+              "step": {
+                "step_index": 1,
+                "action": "analyze_requirements",
+                "status": "completed",
+                "description": "Analyzed prompt: 'Add voice logging module to CLI assistant'",
+                "output": "Created specification at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\project_spec.md'"
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\project_spec.md"
+            }
+          },
+          {
+            "event_type": "step_complete",
+            "timestamp": "2026-08-12T23:43:53.738789",
+            "message": "Scaffolded multi-file project with entrypoint 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\main.py'",
+            "details": {
+              "step": {
+                "step_index": 2,
+                "action": "scaffold_project",
+                "status": "completed",
+                "description": "Scaffolded multi-file project rooted at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\main.py'",
+                "output": "Generated README, package metadata, src package, starter tests, and root entrypoint."
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\main.py",
+              "generated_files": [
+                ".gitignore",
+                "README.md",
+                "main.py",
+                "project_spec.md",
+                "pyproject.toml",
+                "src\\cli_assistant\\__init__.py",
+                "src\\cli_assistant\\app.py",
+                "tests\\test_app.py"
+              ]
+            }
+          }
+        ],
+        "created_at": "2026-08-12T23:43:53.738871"
+      }
+    ],
+    "created_at": "2026-08-12T23:43:53.088389",
+    "updated_at": "2026-08-12T23:43:53.738841"
+  },
+  "proj-381b5b63": {
+    "project_id": "proj-381b5b63",
+    "user_id": "user-claimed-e819ee96",
+    "title": "Legacy Claim Project",
+    "specification": "Build a project created before auth wiring",
+    "workspace_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\legacy_claim_project",
+    "status": "completed",
+    "plan_summary": "Implementation Plan generated for 'Legacy Claim Project'. Awaiting explicit user approval before execution.",
+    "session_id": "dc-sess-9d888eff",
+    "history": [
+      {
+        "turn_id": "turn-e4a5b20c",
+        "project_id": "proj-381b5b63",
+        "session_id": "dc-sess-9d888eff",
+        "prompt": "Build a project created before auth wiring",
+        "status": "completed",
+        "events": [
+          {
+            "event_type": "step_start",
+            "timestamp": "2026-08-12T23:43:54.035175",
+            "message": "Starting DeepCode turn for session dc-sess-9d888eff",
+            "details": {
+              "prompt": "Build a project created before auth wiring",
+              "workspace": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\legacy_claim_project"
+            }
+          },
+          {
+            "event_type": "file_edit",
+            "timestamp": "2026-08-12T23:43:54.182445",
+            "message": "Created specification file 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\legacy_claim_project\\project_spec.md'",
+            "details": {
+              "step": {
+                "step_index": 1,
+                "action": "analyze_requirements",
+                "status": "completed",
+                "description": "Analyzed prompt: 'Build a project created before auth wiring'",
+                "output": "Created specification at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\legacy_claim_project\\project_spec.md'"
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\legacy_claim_project\\project_spec.md"
+            }
+          },
+          {
+            "event_type": "step_complete",
+            "timestamp": "2026-08-12T23:43:54.296365",
+            "message": "Scaffolded multi-file project with entrypoint 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\legacy_claim_project\\main.py'",
+            "details": {
+              "step": {
+                "step_index": 2,
+                "action": "scaffold_project",
+                "status": "completed",
+                "description": "Scaffolded multi-file project rooted at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\legacy_claim_project\\main.py'",
+                "output": "Generated README, package metadata, src package, starter tests, and root entrypoint."
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\legacy_claim_project\\main.py",
+              "generated_files": [
+                ".gitignore",
+                "README.md",
+                "main.py",
+                "project_spec.md",
+                "pyproject.toml",
+                "src\\legacy_claim_project\\__init__.py",
+                "src\\legacy_claim_project\\app.py",
+                "tests\\test_app.py"
+              ]
+            }
+          }
+        ],
+        "created_at": "2026-08-12T23:43:54.299813"
+      }
+    ],
+    "created_at": "2026-08-12T23:43:54.005591",
+    "updated_at": "2026-08-12T23:43:54.299751"
+  },
+  "proj-41d41233": {
+    "project_id": "proj-41d41233",
+    "user_id": "user-claimed-e819ee96",
+    "title": "Flutter Realtime Dashboard",
+    "specification": "Build a dark mode voice control analytics dashboard",
+    "workspace_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\dashboard_app",
+    "status": "completed",
+    "plan_summary": "Implementation Plan generated for 'Flutter Realtime Dashboard'. Awaiting explicit user approval before execution.",
+    "session_id": "dc-sess-1d7afed7",
+    "history": [
+      {
+        "turn_id": "turn-69dc217c",
+        "project_id": "proj-41d41233",
+        "session_id": "dc-sess-1d7afed7",
+        "prompt": "Build a dark mode voice control analytics dashboard",
+        "status": "completed",
+        "events": [
+          {
+            "event_type": "step_start",
+            "timestamp": "2026-08-12T23:44:45.255745",
+            "message": "Starting DeepCode turn for session dc-sess-1d7afed7",
+            "details": {
+              "prompt": "Build a dark mode voice control analytics dashboard",
+              "workspace": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\dashboard_app"
+            }
+          },
+          {
+            "event_type": "file_edit",
+            "timestamp": "2026-08-12T23:44:45.398286",
+            "message": "Created specification file 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\dashboard_app\\project_spec.md'",
+            "details": {
+              "step": {
+                "step_index": 1,
+                "action": "analyze_requirements",
+                "status": "completed",
+                "description": "Analyzed prompt: 'Build a dark mode voice control analytics dashboard'",
+                "output": "Created specification at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\dashboard_app\\project_spec.md'"
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\dashboard_app\\project_spec.md"
+            }
+          },
+          {
+            "event_type": "step_complete",
+            "timestamp": "2026-08-12T23:44:45.503209",
+            "message": "Scaffolded multi-file project with entrypoint 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\dashboard_app\\main.py'",
+            "details": {
+              "step": {
+                "step_index": 2,
+                "action": "scaffold_project",
+                "status": "completed",
+                "description": "Scaffolded multi-file project rooted at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\dashboard_app\\main.py'",
+                "output": "Generated README, package metadata, src package, starter tests, and root entrypoint."
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\dashboard_app\\main.py",
+              "generated_files": [
+                ".gitignore",
+                "README.md",
+                "main.py",
+                "project_spec.md",
+                "pyproject.toml",
+                "src\\dashboard_app\\__init__.py",
+                "src\\dashboard_app\\app.py",
+                "tests\\test_app.py"
+              ]
+            }
+          }
+        ],
+        "created_at": "2026-08-12T23:44:45.509295"
+      }
+    ],
+    "created_at": "2026-08-12T23:44:45.179468",
+    "updated_at": "2026-08-12T23:44:45.509213"
+  },
+  "proj-df4202f7": {
+    "project_id": "proj-df4202f7",
+    "user_id": "user-claimed-e819ee96",
+    "title": "Downloadable Build",
+    "specification": "Build a downloadable sample",
+    "workspace_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\downloadable_build",
+    "status": "completed",
+    "plan_summary": "Implementation Plan generated for 'Downloadable Build'. Awaiting explicit user approval before execution.",
+    "session_id": "dc-sess-62ae50f7",
+    "history": [
+      {
+        "turn_id": "turn-4f41196a",
+        "project_id": "proj-df4202f7",
+        "session_id": "dc-sess-62ae50f7",
+        "prompt": "Build a downloadable sample",
+        "status": "completed",
+        "events": [
+          {
+            "event_type": "step_start",
+            "timestamp": "2026-08-12T23:44:45.708346",
+            "message": "Starting DeepCode turn for session dc-sess-62ae50f7",
+            "details": {
+              "prompt": "Build a downloadable sample",
+              "workspace": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\downloadable_build"
+            }
+          },
+          {
+            "event_type": "file_edit",
+            "timestamp": "2026-08-12T23:44:45.842221",
+            "message": "Created specification file 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\downloadable_build\\project_spec.md'",
+            "details": {
+              "step": {
+                "step_index": 1,
+                "action": "analyze_requirements",
+                "status": "completed",
+                "description": "Analyzed prompt: 'Build a downloadable sample'",
+                "output": "Created specification at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\downloadable_build\\project_spec.md'"
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\downloadable_build\\project_spec.md"
+            }
+          },
+          {
+            "event_type": "step_complete",
+            "timestamp": "2026-08-12T23:44:45.982477",
+            "message": "Scaffolded multi-file project with entrypoint 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\downloadable_build\\main.py'",
+            "details": {
+              "step": {
+                "step_index": 2,
+                "action": "scaffold_project",
+                "status": "completed",
+                "description": "Scaffolded multi-file project rooted at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\downloadable_build\\main.py'",
+                "output": "Generated README, package metadata, src package, starter tests, and root entrypoint."
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\downloadable_build\\main.py",
+              "generated_files": [
+                ".gitignore",
+                "README.md",
+                "main.py",
+                "project_spec.md",
+                "pyproject.toml",
+                "src\\downloadable_build\\__init__.py",
+                "src\\downloadable_build\\app.py",
+                "tests\\test_app.py"
+              ]
+            }
+          }
+        ],
+        "created_at": "2026-08-12T23:44:45.984259"
+      }
+    ],
+    "created_at": "2026-08-12T23:44:45.626882",
+    "updated_at": "2026-08-12T23:44:45.984197"
+  },
+  "proj-feb990b3": {
+    "project_id": "proj-feb990b3",
+    "user_id": "user-claimed-e819ee96",
+    "title": "Persistent AI Assistant",
+    "specification": "Build a CLI assistant",
+    "workspace_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant",
+    "status": "completed",
+    "plan_summary": "Implementation Plan generated for 'Persistent AI Assistant'. Awaiting explicit user approval before execution.",
+    "session_id": "dc-sess-66a03542",
+    "history": [
+      {
+        "turn_id": "turn-58a6b7b7",
+        "project_id": "proj-feb990b3",
+        "session_id": "dc-sess-66a03542",
+        "prompt": "Build a CLI assistant",
+        "status": "completed",
+        "events": [
+          {
+            "event_type": "step_start",
+            "timestamp": "2026-08-12T23:44:46.225678",
+            "message": "Starting DeepCode turn for session dc-sess-66a03542",
+            "details": {
+              "prompt": "Build a CLI assistant",
+              "workspace": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant"
+            }
+          },
+          {
+            "event_type": "file_edit",
+            "timestamp": "2026-08-12T23:44:46.376860",
+            "message": "Created specification file 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\project_spec.md'",
+            "details": {
+              "step": {
+                "step_index": 1,
+                "action": "analyze_requirements",
+                "status": "completed",
+                "description": "Analyzed prompt: 'Build a CLI assistant'",
+                "output": "Created specification at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\project_spec.md'"
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\project_spec.md"
+            }
+          },
+          {
+            "event_type": "step_complete",
+            "timestamp": "2026-08-12T23:44:46.482092",
+            "message": "Scaffolded multi-file project with entrypoint 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\main.py'",
+            "details": {
+              "step": {
+                "step_index": 2,
+                "action": "scaffold_project",
+                "status": "completed",
+                "description": "Scaffolded multi-file project rooted at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\main.py'",
+                "output": "Generated README, package metadata, src package, starter tests, and root entrypoint."
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\main.py",
+              "generated_files": [
+                ".gitignore",
+                "README.md",
+                "main.py",
+                "project_spec.md",
+                "pyproject.toml",
+                "src\\cli_assistant\\__init__.py",
+                "src\\cli_assistant\\app.py",
+                "tests\\test_app.py"
+              ]
+            }
+          }
+        ],
+        "created_at": "2026-08-12T23:44:46.484235"
+      },
+      {
+        "turn_id": "turn-396aef91",
+        "project_id": "proj-feb990b3",
+        "session_id": "dc-sess-66a03542",
+        "prompt": "Add voice logging module to CLI assistant",
+        "status": "completed",
+        "events": [
+          {
+            "event_type": "step_start",
+            "timestamp": "2026-08-12T23:44:46.581238",
+            "message": "Starting DeepCode turn for session dc-sess-66a03542",
+            "details": {
+              "prompt": "Add voice logging module to CLI assistant",
+              "workspace": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant"
+            }
+          },
+          {
+            "event_type": "file_edit",
+            "timestamp": "2026-08-12T23:44:46.720122",
+            "message": "Created specification file 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\project_spec.md'",
+            "details": {
+              "step": {
+                "step_index": 1,
+                "action": "analyze_requirements",
+                "status": "completed",
+                "description": "Analyzed prompt: 'Add voice logging module to CLI assistant'",
+                "output": "Created specification at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\project_spec.md'"
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\project_spec.md"
+            }
+          },
+          {
+            "event_type": "step_complete",
+            "timestamp": "2026-08-12T23:44:46.826063",
+            "message": "Scaffolded multi-file project with entrypoint 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\main.py'",
+            "details": {
+              "step": {
+                "step_index": 2,
+                "action": "scaffold_project",
+                "status": "completed",
+                "description": "Scaffolded multi-file project rooted at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\main.py'",
+                "output": "Generated README, package metadata, src package, starter tests, and root entrypoint."
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\main.py",
+              "generated_files": [
+                ".gitignore",
+                "README.md",
+                "main.py",
+                "project_spec.md",
+                "pyproject.toml",
+                "src\\cli_assistant\\__init__.py",
+                "src\\cli_assistant\\app.py",
+                "tests\\test_app.py"
+              ]
+            }
+          }
+        ],
+        "created_at": "2026-08-12T23:44:46.826353"
+      }
+    ],
+    "created_at": "2026-08-12T23:44:46.184555",
+    "updated_at": "2026-08-12T23:44:46.826146"
+  },
+  "proj-85bab295": {
+    "project_id": "proj-85bab295",
+    "user_id": "user-claimed-e819ee96",
+    "title": "Legacy Claim Project",
+    "specification": "Build a project created before auth wiring",
+    "workspace_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\legacy_claim_project",
+    "status": "completed",
+    "plan_summary": "Implementation Plan generated for 'Legacy Claim Project'. Awaiting explicit user approval before execution.",
+    "session_id": "dc-sess-9e1a061b",
+    "history": [
+      {
+        "turn_id": "turn-51b4a974",
+        "project_id": "proj-85bab295",
+        "session_id": "dc-sess-9e1a061b",
+        "prompt": "Build a project created before auth wiring",
+        "status": "completed",
+        "events": [
+          {
+            "event_type": "step_start",
+            "timestamp": "2026-08-12T23:44:47.012448",
+            "message": "Starting DeepCode turn for session dc-sess-9e1a061b",
+            "details": {
+              "prompt": "Build a project created before auth wiring",
+              "workspace": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\legacy_claim_project"
+            }
+          },
+          {
+            "event_type": "file_edit",
+            "timestamp": "2026-08-12T23:44:47.141411",
+            "message": "Created specification file 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\legacy_claim_project\\project_spec.md'",
+            "details": {
+              "step": {
+                "step_index": 1,
+                "action": "analyze_requirements",
+                "status": "completed",
+                "description": "Analyzed prompt: 'Build a project created before auth wiring'",
+                "output": "Created specification at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\legacy_claim_project\\project_spec.md'"
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\legacy_claim_project\\project_spec.md"
+            }
+          },
+          {
+            "event_type": "step_complete",
+            "timestamp": "2026-08-12T23:44:47.245685",
+            "message": "Scaffolded multi-file project with entrypoint 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\legacy_claim_project\\main.py'",
+            "details": {
+              "step": {
+                "step_index": 2,
+                "action": "scaffold_project",
+                "status": "completed",
+                "description": "Scaffolded multi-file project rooted at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\legacy_claim_project\\main.py'",
+                "output": "Generated README, package metadata, src package, starter tests, and root entrypoint."
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\legacy_claim_project\\main.py",
+              "generated_files": [
+                ".gitignore",
+                "README.md",
+                "main.py",
+                "project_spec.md",
+                "pyproject.toml",
+                "src\\legacy_claim_project\\__init__.py",
+                "src\\legacy_claim_project\\app.py",
+                "tests\\test_app.py"
+              ]
+            }
+          }
+        ],
+        "created_at": "2026-08-12T23:44:47.247818"
+      }
+    ],
+    "created_at": "2026-08-12T23:44:46.977126",
+    "updated_at": "2026-08-12T23:44:47.247451"
+  },
+  "proj-e8b00728": {
+    "project_id": "proj-e8b00728",
+    "user_id": "user-claimed-fb91207d",
+    "title": "Agent Scoped Build",
+    "specification": "Build for the connected authenticated user",
+    "workspace_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\agent_scoped_project",
+    "status": "plan_generated",
+    "plan_summary": "Implementation Plan generated for 'Agent Scoped Build'. Awaiting explicit user approval before execution.",
+    "session_id": "dc-sess-21d943fa",
+    "history": [],
+    "created_at": "2026-08-13T01:47:55.034628",
+    "updated_at": "2026-08-13T01:47:55.034628"
+  },
+  "proj-537fcec8": {
+    "project_id": "proj-537fcec8",
+    "user_id": "user-claimed-fb91207d",
+    "title": "Agent UUID Build",
+    "specification": "Build for a UUID-backed authenticated user",
+    "workspace_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\agent_prefixed_uuid_project",
+    "status": "plan_generated",
+    "plan_summary": "Implementation Plan generated for 'Agent UUID Build'. Awaiting explicit user approval before execution.",
+    "session_id": "dc-sess-c8c03d2d",
+    "history": [],
+    "created_at": "2026-08-13T01:47:55.265215",
+    "updated_at": "2026-08-13T01:47:55.265215"
+  },
+  "proj-prefixed-legacy": {
+    "project_id": "proj-prefixed-legacy",
+    "user_id": "user-22222222-2222-2222-2222-222222222222",
+    "title": "Prefixed Legacy Project",
+    "specification": "Legacy prefixed user id test",
+    "workspace_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\prefixed_legacy_project",
+    "status": "completed",
+    "plan_summary": "Ready",
+    "session_id": "dc-sess-prefixed-legacy",
+    "history": [],
+    "created_at": "2026-08-13T01:00:00",
+    "updated_at": "2026-08-13T01:00:01"
+  },
+  "proj-b023431e": {
+    "project_id": "proj-b023431e",
+    "user_id": "user-claimed-fb91207d",
+    "title": "Flutter Realtime Dashboard",
+    "specification": "Build a dark mode voice control analytics dashboard",
+    "workspace_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\dashboard_app",
+    "status": "completed",
+    "plan_summary": "Implementation Plan generated for 'Flutter Realtime Dashboard'. Awaiting explicit user approval before execution.",
+    "session_id": "dc-sess-2be99d40",
+    "history": [
+      {
+        "turn_id": "turn-96b088e7",
+        "project_id": "proj-b023431e",
+        "session_id": "dc-sess-2be99d40",
+        "prompt": "Build a dark mode voice control analytics dashboard",
+        "status": "completed",
+        "events": [
+          {
+            "event_type": "step_start",
+            "timestamp": "2026-08-13T01:47:55.439650",
+            "message": "Starting DeepCode turn for session dc-sess-2be99d40",
+            "details": {
+              "prompt": "Build a dark mode voice control analytics dashboard",
+              "workspace": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\dashboard_app"
+            }
+          },
+          {
+            "event_type": "file_edit",
+            "timestamp": "2026-08-13T01:47:55.609853",
+            "message": "Created specification file 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\dashboard_app\\project_spec.md'",
+            "details": {
+              "step": {
+                "step_index": 1,
+                "action": "analyze_requirements",
+                "status": "completed",
+                "description": "Analyzed prompt: 'Build a dark mode voice control analytics dashboard'",
+                "output": "Created specification at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\dashboard_app\\project_spec.md'"
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\dashboard_app\\project_spec.md"
+            }
+          },
+          {
+            "event_type": "step_complete",
+            "timestamp": "2026-08-13T01:47:55.715938",
+            "message": "Scaffolded multi-file project with entrypoint 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\dashboard_app\\main.py'",
+            "details": {
+              "step": {
+                "step_index": 2,
+                "action": "scaffold_project",
+                "status": "completed",
+                "description": "Scaffolded multi-file project rooted at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\dashboard_app\\main.py'",
+                "output": "Generated README, package metadata, src package, starter tests, and root entrypoint."
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\dashboard_app\\main.py",
+              "generated_files": [
+                ".gitignore",
+                "README.md",
+                "main.py",
+                "project_spec.md",
+                "pyproject.toml",
+                "src\\dashboard_app\\__init__.py",
+                "src\\dashboard_app\\app.py",
+                "tests\\test_app.py"
+              ]
+            }
+          }
+        ],
+        "created_at": "2026-08-13T01:47:55.716821"
+      }
+    ],
+    "created_at": "2026-08-13T01:47:55.393573",
+    "updated_at": "2026-08-13T01:47:55.716776"
+  },
+  "proj-d57f5946": {
+    "project_id": "proj-d57f5946",
+    "user_id": "user-claimed-fb91207d",
+    "title": "First Pending Build",
+    "specification": "Build the first draft",
+    "workspace_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\latest_pending_one",
+    "status": "plan_generated",
+    "plan_summary": "Implementation Plan generated for 'First Pending Build'. Awaiting explicit user approval before execution.",
+    "session_id": "dc-sess-6c4dfdfe",
+    "history": [],
+    "created_at": "2026-08-13T01:47:55.981280",
+    "updated_at": "2026-08-13T01:47:55.981280"
+  },
+  "proj-972ceca8": {
+    "project_id": "proj-972ceca8",
+    "user_id": "user-claimed-fb91207d",
+    "title": "Second Pending Build",
+    "specification": "Build the second draft",
+    "workspace_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\latest_pending_two",
+    "status": "completed",
+    "plan_summary": "Implementation Plan generated for 'Second Pending Build'. Awaiting explicit user approval before execution.",
+    "session_id": "dc-sess-78e41b53",
+    "history": [
+      {
+        "turn_id": "turn-31c59c67",
+        "project_id": "proj-972ceca8",
+        "session_id": "dc-sess-78e41b53",
+        "prompt": "Build the second draft",
+        "status": "completed",
+        "events": [
+          {
+            "event_type": "step_start",
+            "timestamp": "2026-08-13T01:47:56.244638",
+            "message": "Starting DeepCode turn for session dc-sess-78e41b53",
+            "details": {
+              "prompt": "Build the second draft",
+              "workspace": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\latest_pending_two"
+            }
+          },
+          {
+            "event_type": "file_edit",
+            "timestamp": "2026-08-13T01:47:56.386928",
+            "message": "Created specification file 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\latest_pending_two\\project_spec.md'",
+            "details": {
+              "step": {
+                "step_index": 1,
+                "action": "analyze_requirements",
+                "status": "completed",
+                "description": "Analyzed prompt: 'Build the second draft'",
+                "output": "Created specification at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\latest_pending_two\\project_spec.md'"
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\latest_pending_two\\project_spec.md"
+            }
+          },
+          {
+            "event_type": "step_complete",
+            "timestamp": "2026-08-13T01:47:56.500622",
+            "message": "Scaffolded multi-file project with entrypoint 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\latest_pending_two\\main.py'",
+            "details": {
+              "step": {
+                "step_index": 2,
+                "action": "scaffold_project",
+                "status": "completed",
+                "description": "Scaffolded multi-file project rooted at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\latest_pending_two\\main.py'",
+                "output": "Generated README, package metadata, src package, starter tests, and root entrypoint."
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\latest_pending_two\\main.py",
+              "generated_files": [
+                ".gitignore",
+                "README.md",
+                "main.py",
+                "project_spec.md",
+                "pyproject.toml",
+                "src\\latest_pending_two\\__init__.py",
+                "src\\latest_pending_two\\app.py",
+                "tests\\test_app.py"
+              ]
+            }
+          }
+        ],
+        "created_at": "2026-08-13T01:47:56.503575"
+      }
+    ],
+    "created_at": "2026-08-13T01:47:56.008054",
+    "updated_at": "2026-08-13T01:47:56.503525"
+  },
+  "proj-059667e3": {
+    "project_id": "proj-059667e3",
+    "user_id": "user-claimed-fb91207d",
+    "title": "Downloadable Build",
+    "specification": "Build a downloadable sample",
+    "workspace_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\downloadable_build",
+    "status": "completed",
+    "plan_summary": "Implementation Plan generated for 'Downloadable Build'. Awaiting explicit user approval before execution.",
+    "session_id": "dc-sess-20af6510",
+    "history": [
+      {
+        "turn_id": "turn-f71411a8",
+        "project_id": "proj-059667e3",
+        "session_id": "dc-sess-20af6510",
+        "prompt": "Build a downloadable sample",
+        "status": "completed",
+        "events": [
+          {
+            "event_type": "step_start",
+            "timestamp": "2026-08-13T01:47:56.904718",
+            "message": "Starting DeepCode turn for session dc-sess-20af6510",
+            "details": {
+              "prompt": "Build a downloadable sample",
+              "workspace": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\downloadable_build"
+            }
+          },
+          {
+            "event_type": "file_edit",
+            "timestamp": "2026-08-13T01:47:57.027989",
+            "message": "Created specification file 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\downloadable_build\\project_spec.md'",
+            "details": {
+              "step": {
+                "step_index": 1,
+                "action": "analyze_requirements",
+                "status": "completed",
+                "description": "Analyzed prompt: 'Build a downloadable sample'",
+                "output": "Created specification at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\downloadable_build\\project_spec.md'"
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\downloadable_build\\project_spec.md"
+            }
+          },
+          {
+            "event_type": "step_complete",
+            "timestamp": "2026-08-13T01:47:57.142317",
+            "message": "Scaffolded multi-file project with entrypoint 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\downloadable_build\\main.py'",
+            "details": {
+              "step": {
+                "step_index": 2,
+                "action": "scaffold_project",
+                "status": "completed",
+                "description": "Scaffolded multi-file project rooted at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\downloadable_build\\main.py'",
+                "output": "Generated README, package metadata, src package, starter tests, and root entrypoint."
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\downloadable_build\\main.py",
+              "generated_files": [
+                ".gitignore",
+                "README.md",
+                "main.py",
+                "project_spec.md",
+                "pyproject.toml",
+                "src\\downloadable_build\\__init__.py",
+                "src\\downloadable_build\\app.py",
+                "tests\\test_app.py"
+              ]
+            }
+          }
+        ],
+        "created_at": "2026-08-13T01:47:57.143590"
+      }
+    ],
+    "created_at": "2026-08-13T01:47:56.641658",
+    "updated_at": "2026-08-13T01:47:57.143556"
+  },
+  "proj-e1b9a154": {
+    "project_id": "proj-e1b9a154",
+    "user_id": "user-claimed-fb91207d",
+    "title": "Persistent AI Assistant",
+    "specification": "Build a CLI assistant",
+    "workspace_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant",
+    "status": "completed",
+    "plan_summary": "Implementation Plan generated for 'Persistent AI Assistant'. Awaiting explicit user approval before execution.",
+    "session_id": "dc-sess-5068fe40",
+    "history": [
+      {
+        "turn_id": "turn-1560ade0",
+        "project_id": "proj-e1b9a154",
+        "session_id": "dc-sess-5068fe40",
+        "prompt": "Build a CLI assistant",
+        "status": "completed",
+        "events": [
+          {
+            "event_type": "step_start",
+            "timestamp": "2026-08-13T01:47:57.454810",
+            "message": "Starting DeepCode turn for session dc-sess-5068fe40",
+            "details": {
+              "prompt": "Build a CLI assistant",
+              "workspace": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant"
+            }
+          },
+          {
+            "event_type": "file_edit",
+            "timestamp": "2026-08-13T01:47:57.576451",
+            "message": "Created specification file 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\project_spec.md'",
+            "details": {
+              "step": {
+                "step_index": 1,
+                "action": "analyze_requirements",
+                "status": "completed",
+                "description": "Analyzed prompt: 'Build a CLI assistant'",
+                "output": "Created specification at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\project_spec.md'"
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\project_spec.md"
+            }
+          },
+          {
+            "event_type": "step_complete",
+            "timestamp": "2026-08-13T01:47:57.679486",
+            "message": "Scaffolded multi-file project with entrypoint 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\main.py'",
+            "details": {
+              "step": {
+                "step_index": 2,
+                "action": "scaffold_project",
+                "status": "completed",
+                "description": "Scaffolded multi-file project rooted at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\main.py'",
+                "output": "Generated README, package metadata, src package, starter tests, and root entrypoint."
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\main.py",
+              "generated_files": [
+                ".gitignore",
+                "README.md",
+                "main.py",
+                "project_spec.md",
+                "pyproject.toml",
+                "src\\cli_assistant\\__init__.py",
+                "src\\cli_assistant\\app.py",
+                "tests\\test_app.py"
+              ]
+            }
+          }
+        ],
+        "created_at": "2026-08-13T01:47:57.681589"
+      },
+      {
+        "turn_id": "turn-9b6c0736",
+        "project_id": "proj-e1b9a154",
+        "session_id": "dc-sess-5068fe40",
+        "prompt": "Add voice logging module to CLI assistant",
+        "status": "completed",
+        "events": [
+          {
+            "event_type": "step_start",
+            "timestamp": "2026-08-13T01:47:57.803135",
+            "message": "Starting DeepCode turn for session dc-sess-5068fe40",
+            "details": {
+              "prompt": "Add voice logging module to CLI assistant",
+              "workspace": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant"
+            }
+          },
+          {
+            "event_type": "file_edit",
+            "timestamp": "2026-08-13T01:47:57.916310",
+            "message": "Created specification file 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\project_spec.md'",
+            "details": {
+              "step": {
+                "step_index": 1,
+                "action": "analyze_requirements",
+                "status": "completed",
+                "description": "Analyzed prompt: 'Add voice logging module to CLI assistant'",
+                "output": "Created specification at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\project_spec.md'"
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\project_spec.md"
+            }
+          },
+          {
+            "event_type": "step_complete",
+            "timestamp": "2026-08-13T01:47:58.022315",
+            "message": "Scaffolded multi-file project with entrypoint 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\main.py'",
+            "details": {
+              "step": {
+                "step_index": 2,
+                "action": "scaffold_project",
+                "status": "completed",
+                "description": "Scaffolded multi-file project rooted at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\main.py'",
+                "output": "Generated README, package metadata, src package, starter tests, and root entrypoint."
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\main.py",
+              "generated_files": [
+                ".gitignore",
+                "README.md",
+                "main.py",
+                "project_spec.md",
+                "pyproject.toml",
+                "src\\cli_assistant\\__init__.py",
+                "src\\cli_assistant\\app.py",
+                "tests\\test_app.py"
+              ]
+            }
+          }
+        ],
+        "created_at": "2026-08-13T01:47:58.022392"
+      }
+    ],
+    "created_at": "2026-08-13T01:47:57.360190",
+    "updated_at": "2026-08-13T01:47:58.022362"
+  },
+  "proj-49eb955d": {
+    "project_id": "proj-49eb955d",
+    "user_id": "user-claimed-fb91207d",
+    "title": "Legacy Claim Project",
+    "specification": "Build a project created before auth wiring",
+    "workspace_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\legacy_claim_project",
+    "status": "completed",
+    "plan_summary": "Implementation Plan generated for 'Legacy Claim Project'. Awaiting explicit user approval before execution.",
+    "session_id": "dc-sess-f742b7ba",
+    "history": [
+      {
+        "turn_id": "turn-11a89d7e",
+        "project_id": "proj-49eb955d",
+        "session_id": "dc-sess-f742b7ba",
+        "prompt": "Build a project created before auth wiring",
+        "status": "completed",
+        "events": [
+          {
+            "event_type": "step_start",
+            "timestamp": "2026-08-13T01:47:58.177040",
+            "message": "Starting DeepCode turn for session dc-sess-f742b7ba",
+            "details": {
+              "prompt": "Build a project created before auth wiring",
+              "workspace": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\legacy_claim_project"
+            }
+          },
+          {
+            "event_type": "file_edit",
+            "timestamp": "2026-08-13T01:47:58.305430",
+            "message": "Created specification file 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\legacy_claim_project\\project_spec.md'",
+            "details": {
+              "step": {
+                "step_index": 1,
+                "action": "analyze_requirements",
+                "status": "completed",
+                "description": "Analyzed prompt: 'Build a project created before auth wiring'",
+                "output": "Created specification at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\legacy_claim_project\\project_spec.md'"
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\legacy_claim_project\\project_spec.md"
+            }
+          },
+          {
+            "event_type": "step_complete",
+            "timestamp": "2026-08-13T01:47:58.407938",
+            "message": "Scaffolded multi-file project with entrypoint 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\legacy_claim_project\\main.py'",
+            "details": {
+              "step": {
+                "step_index": 2,
+                "action": "scaffold_project",
+                "status": "completed",
+                "description": "Scaffolded multi-file project rooted at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\legacy_claim_project\\main.py'",
+                "output": "Generated README, package metadata, src package, starter tests, and root entrypoint."
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\legacy_claim_project\\main.py",
+              "generated_files": [
+                ".gitignore",
+                "README.md",
+                "main.py",
+                "project_spec.md",
+                "pyproject.toml",
+                "src\\legacy_claim_project\\__init__.py",
+                "src\\legacy_claim_project\\app.py",
+                "tests\\test_app.py"
+              ]
+            }
+          }
+        ],
+        "created_at": "2026-08-13T01:47:58.408737"
+      }
+    ],
+    "created_at": "2026-08-13T01:47:58.125714",
+    "updated_at": "2026-08-13T01:47:58.408705"
+  },
+  "proj-2e828749": {
+    "project_id": "proj-2e828749",
+    "user_id": "user-1000",
+    "title": "User 1 Confidential Project",
+    "specification": "Secrets and sensitive data",
+    "workspace_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\user1_confidential_project",
+    "status": "plan_generated",
+    "plan_summary": "Implementation Plan generated for 'User 1 Confidential Project'. Awaiting explicit user approval before execution.",
+    "session_id": "dc-sess-5d3bc570",
+    "history": [],
+    "created_at": "2026-08-13T01:47:59.707650",
+    "updated_at": "2026-08-13T01:47:59.707650"
+  },
+  "proj-8ab8e724": {
+    "project_id": "proj-8ab8e724",
+    "user_id": "user-1000",
+    "title": "Phase 13 Test Calculator App",
+    "specification": "Create a calculator module",
+    "workspace_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\phase13_test_calculator_app",
+    "status": "completed",
+    "plan_summary": "Implementation Plan generated for 'Phase 13 Test Calculator App'. Awaiting explicit user approval before execution.",
+    "session_id": "dc-sess-afd0487e",
+    "history": [
+      {
+        "turn_id": "turn-bd2d42d4",
+        "project_id": "proj-8ab8e724",
+        "session_id": "dc-sess-afd0487e",
+        "prompt": "Create a calculator module",
+        "status": "completed",
+        "events": [
+          {
+            "event_type": "step_start",
+            "timestamp": "2026-08-13T01:47:59.856768",
+            "message": "Starting DeepCode turn for session dc-sess-afd0487e",
+            "details": {
+              "prompt": "Create a calculator module",
+              "workspace": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\phase13_test_calculator_app"
+            }
+          },
+          {
+            "event_type": "file_edit",
+            "timestamp": "2026-08-13T01:47:59.980342",
+            "message": "Created specification file 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\phase13_test_calculator_app\\project_spec.md'",
+            "details": {
+              "step": {
+                "step_index": 1,
+                "action": "analyze_requirements",
+                "status": "completed",
+                "description": "Analyzed prompt: 'Create a calculator module'",
+                "output": "Created specification at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\phase13_test_calculator_app\\project_spec.md'"
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\phase13_test_calculator_app\\project_spec.md"
+            }
+          },
+          {
+            "event_type": "step_complete",
+            "timestamp": "2026-08-13T01:48:00.084421",
+            "message": "Scaffolded multi-file project with entrypoint 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\phase13_test_calculator_app\\main.py'",
+            "details": {
+              "step": {
+                "step_index": 2,
+                "action": "scaffold_project",
+                "status": "completed",
+                "description": "Scaffolded multi-file project rooted at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\phase13_test_calculator_app\\main.py'",
+                "output": "Generated README, package metadata, src package, starter tests, and root entrypoint."
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\phase13_test_calculator_app\\main.py",
+              "generated_files": [
+                ".gitignore",
+                "README.md",
+                "main.py",
+                "project_spec.md",
+                "pyproject.toml",
+                "src\\phase13_test_calculator_app\\__init__.py",
+                "src\\phase13_test_calculator_app\\app.py",
+                "tests\\test_app.py"
+              ]
+            }
+          }
+        ],
+        "created_at": "2026-08-13T01:48:00.087156"
+      }
+    ],
+    "created_at": "2026-08-13T01:47:59.787548",
+    "updated_at": "2026-08-13T01:48:00.087119"
+  },
+  "proj-cf1a6569": {
+    "project_id": "proj-cf1a6569",
+    "user_id": "user-from-agent-123",
+    "title": "Agent Scoped Build",
+    "specification": "Build for the connected authenticated user",
+    "workspace_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\agent_scoped_project",
+    "status": "plan_generated",
+    "plan_summary": "Implementation Plan generated for 'Agent Scoped Build'. Awaiting explicit user approval before execution.",
+    "session_id": "dc-sess-6b2716d4",
+    "history": [],
+    "created_at": "2026-08-13T01:48:53.930914",
+    "updated_at": "2026-08-13T01:48:53.930914"
+  },
+  "proj-9901c8dd": {
+    "project_id": "proj-9901c8dd",
+    "user_id": "11111111-1111-1111-1111-111111111111",
+    "title": "Agent UUID Build",
+    "specification": "Build for a UUID-backed authenticated user",
+    "workspace_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\agent_prefixed_uuid_project",
+    "status": "plan_generated",
+    "plan_summary": "Implementation Plan generated for 'Agent UUID Build'. Awaiting explicit user approval before execution.",
+    "session_id": "dc-sess-8fda276d",
+    "history": [],
+    "created_at": "2026-08-13T01:48:53.968633",
+    "updated_at": "2026-08-13T01:48:53.968633"
+  },
+  "proj-90f6053a": {
+    "project_id": "proj-90f6053a",
+    "user_id": "user-claimed-bd71c315",
+    "title": "Flutter Realtime Dashboard",
+    "specification": "Build a dark mode voice control analytics dashboard",
+    "workspace_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\dashboard_app",
+    "status": "completed",
+    "plan_summary": "Implementation Plan generated for 'Flutter Realtime Dashboard'. Awaiting explicit user approval before execution.",
+    "session_id": "dc-sess-67c876fd",
+    "history": [
+      {
+        "turn_id": "turn-36410e20",
+        "project_id": "proj-90f6053a",
+        "session_id": "dc-sess-67c876fd",
+        "prompt": "Build a dark mode voice control analytics dashboard",
+        "status": "completed",
+        "events": [
+          {
+            "event_type": "step_start",
+            "timestamp": "2026-08-13T01:48:54.141156",
+            "message": "Starting DeepCode turn for session dc-sess-67c876fd",
+            "details": {
+              "prompt": "Build a dark mode voice control analytics dashboard",
+              "workspace": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\dashboard_app"
+            }
+          },
+          {
+            "event_type": "file_edit",
+            "timestamp": "2026-08-13T01:48:54.265040",
+            "message": "Created specification file 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\dashboard_app\\project_spec.md'",
+            "details": {
+              "step": {
+                "step_index": 1,
+                "action": "analyze_requirements",
+                "status": "completed",
+                "description": "Analyzed prompt: 'Build a dark mode voice control analytics dashboard'",
+                "output": "Created specification at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\dashboard_app\\project_spec.md'"
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\dashboard_app\\project_spec.md"
+            }
+          },
+          {
+            "event_type": "step_complete",
+            "timestamp": "2026-08-13T01:48:54.368875",
+            "message": "Scaffolded multi-file project with entrypoint 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\dashboard_app\\main.py'",
+            "details": {
+              "step": {
+                "step_index": 2,
+                "action": "scaffold_project",
+                "status": "completed",
+                "description": "Scaffolded multi-file project rooted at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\dashboard_app\\main.py'",
+                "output": "Generated README, package metadata, src package, starter tests, and root entrypoint."
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\dashboard_app\\main.py",
+              "generated_files": [
+                ".gitignore",
+                "README.md",
+                "main.py",
+                "project_spec.md",
+                "pyproject.toml",
+                "src\\dashboard_app\\__init__.py",
+                "src\\dashboard_app\\app.py",
+                "tests\\test_app.py"
+              ]
+            }
+          }
+        ],
+        "created_at": "2026-08-13T01:48:54.369736"
+      }
+    ],
+    "created_at": "2026-08-13T01:48:54.100014",
+    "updated_at": "2026-08-13T01:48:54.369703"
+  },
+  "proj-7ad6fbf6": {
+    "project_id": "proj-7ad6fbf6",
+    "user_id": "user-claimed-bd71c315",
+    "title": "First Pending Build",
+    "specification": "Build the first draft",
+    "workspace_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\latest_pending_one",
+    "status": "plan_generated",
+    "plan_summary": "Implementation Plan generated for 'First Pending Build'. Awaiting explicit user approval before execution.",
+    "session_id": "dc-sess-2cfc2715",
+    "history": [],
+    "created_at": "2026-08-13T01:48:54.546184",
+    "updated_at": "2026-08-13T01:48:54.546184"
+  },
+  "proj-3d3a71da": {
+    "project_id": "proj-3d3a71da",
+    "user_id": "user-claimed-bd71c315",
+    "title": "Second Pending Build",
+    "specification": "Build the second draft",
+    "workspace_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\latest_pending_two",
+    "status": "completed",
+    "plan_summary": "Implementation Plan generated for 'Second Pending Build'. Awaiting explicit user approval before execution.",
+    "session_id": "dc-sess-47a23d55",
+    "history": [
+      {
+        "turn_id": "turn-597e044f",
+        "project_id": "proj-3d3a71da",
+        "session_id": "dc-sess-47a23d55",
+        "prompt": "Build the second draft",
+        "status": "completed",
+        "events": [
+          {
+            "event_type": "step_start",
+            "timestamp": "2026-08-13T01:48:54.634204",
+            "message": "Starting DeepCode turn for session dc-sess-47a23d55",
+            "details": {
+              "prompt": "Build the second draft",
+              "workspace": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\latest_pending_two"
+            }
+          },
+          {
+            "event_type": "file_edit",
+            "timestamp": "2026-08-13T01:48:54.752202",
+            "message": "Created specification file 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\latest_pending_two\\project_spec.md'",
+            "details": {
+              "step": {
+                "step_index": 1,
+                "action": "analyze_requirements",
+                "status": "completed",
+                "description": "Analyzed prompt: 'Build the second draft'",
+                "output": "Created specification at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\latest_pending_two\\project_spec.md'"
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\latest_pending_two\\project_spec.md"
+            }
+          },
+          {
+            "event_type": "step_complete",
+            "timestamp": "2026-08-13T01:48:54.853935",
+            "message": "Scaffolded multi-file project with entrypoint 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\latest_pending_two\\main.py'",
+            "details": {
+              "step": {
+                "step_index": 2,
+                "action": "scaffold_project",
+                "status": "completed",
+                "description": "Scaffolded multi-file project rooted at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\latest_pending_two\\main.py'",
+                "output": "Generated README, package metadata, src package, starter tests, and root entrypoint."
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\latest_pending_two\\main.py",
+              "generated_files": [
+                ".gitignore",
+                "README.md",
+                "main.py",
+                "project_spec.md",
+                "pyproject.toml",
+                "src\\latest_pending_two\\__init__.py",
+                "src\\latest_pending_two\\app.py",
+                "tests\\test_app.py"
+              ]
+            }
+          }
+        ],
+        "created_at": "2026-08-13T01:48:54.854615"
+      }
+    ],
+    "created_at": "2026-08-13T01:48:54.577685",
+    "updated_at": "2026-08-13T01:48:54.854584"
+  },
+  "proj-fcfb71ae": {
+    "project_id": "proj-fcfb71ae",
+    "user_id": "user-claimed-bd71c315",
+    "title": "Downloadable Build",
+    "specification": "Build a downloadable sample",
+    "workspace_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\downloadable_build",
+    "status": "completed",
+    "plan_summary": "Implementation Plan generated for 'Downloadable Build'. Awaiting explicit user approval before execution.",
+    "session_id": "dc-sess-30cf6015",
+    "history": [
+      {
+        "turn_id": "turn-dd58c019",
+        "project_id": "proj-fcfb71ae",
+        "session_id": "dc-sess-30cf6015",
+        "prompt": "Build a downloadable sample",
+        "status": "completed",
+        "events": [
+          {
+            "event_type": "step_start",
+            "timestamp": "2026-08-13T01:48:54.948098",
+            "message": "Starting DeepCode turn for session dc-sess-30cf6015",
+            "details": {
+              "prompt": "Build a downloadable sample",
+              "workspace": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\downloadable_build"
+            }
+          },
+          {
+            "event_type": "file_edit",
+            "timestamp": "2026-08-13T01:48:55.057844",
+            "message": "Created specification file 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\downloadable_build\\project_spec.md'",
+            "details": {
+              "step": {
+                "step_index": 1,
+                "action": "analyze_requirements",
+                "status": "completed",
+                "description": "Analyzed prompt: 'Build a downloadable sample'",
+                "output": "Created specification at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\downloadable_build\\project_spec.md'"
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\downloadable_build\\project_spec.md"
+            }
+          },
+          {
+            "event_type": "step_complete",
+            "timestamp": "2026-08-13T01:48:55.165841",
+            "message": "Scaffolded multi-file project with entrypoint 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\downloadable_build\\main.py'",
+            "details": {
+              "step": {
+                "step_index": 2,
+                "action": "scaffold_project",
+                "status": "completed",
+                "description": "Scaffolded multi-file project rooted at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\downloadable_build\\main.py'",
+                "output": "Generated README, package metadata, src package, starter tests, and root entrypoint."
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\downloadable_build\\main.py",
+              "generated_files": [
+                ".gitignore",
+                "README.md",
+                "main.py",
+                "project_spec.md",
+                "pyproject.toml",
+                "src\\downloadable_build\\__init__.py",
+                "src\\downloadable_build\\app.py",
+                "tests\\test_app.py"
+              ]
+            }
+          }
+        ],
+        "created_at": "2026-08-13T01:48:55.168676"
+      }
+    ],
+    "created_at": "2026-08-13T01:48:54.893203",
+    "updated_at": "2026-08-13T01:48:55.168613"
+  },
+  "proj-b9d19e24": {
+    "project_id": "proj-b9d19e24",
+    "user_id": "user-claimed-bd71c315",
+    "title": "Persistent AI Assistant",
+    "specification": "Build a CLI assistant",
+    "workspace_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant",
+    "status": "completed",
+    "plan_summary": "Implementation Plan generated for 'Persistent AI Assistant'. Awaiting explicit user approval before execution.",
+    "session_id": "dc-sess-75c89202",
+    "history": [
+      {
+        "turn_id": "turn-8fce128d",
+        "project_id": "proj-b9d19e24",
+        "session_id": "dc-sess-75c89202",
+        "prompt": "Build a CLI assistant",
+        "status": "completed",
+        "events": [
+          {
+            "event_type": "step_start",
+            "timestamp": "2026-08-13T01:48:55.357026",
+            "message": "Starting DeepCode turn for session dc-sess-75c89202",
+            "details": {
+              "prompt": "Build a CLI assistant",
+              "workspace": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant"
+            }
+          },
+          {
+            "event_type": "file_edit",
+            "timestamp": "2026-08-13T01:48:55.474683",
+            "message": "Created specification file 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\project_spec.md'",
+            "details": {
+              "step": {
+                "step_index": 1,
+                "action": "analyze_requirements",
+                "status": "completed",
+                "description": "Analyzed prompt: 'Build a CLI assistant'",
+                "output": "Created specification at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\project_spec.md'"
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\project_spec.md"
+            }
+          },
+          {
+            "event_type": "step_complete",
+            "timestamp": "2026-08-13T01:48:55.575620",
+            "message": "Scaffolded multi-file project with entrypoint 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\main.py'",
+            "details": {
+              "step": {
+                "step_index": 2,
+                "action": "scaffold_project",
+                "status": "completed",
+                "description": "Scaffolded multi-file project rooted at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\main.py'",
+                "output": "Generated README, package metadata, src package, starter tests, and root entrypoint."
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\main.py",
+              "generated_files": [
+                ".gitignore",
+                "README.md",
+                "main.py",
+                "project_spec.md",
+                "pyproject.toml",
+                "src\\cli_assistant\\__init__.py",
+                "src\\cli_assistant\\app.py",
+                "tests\\test_app.py"
+              ]
+            }
+          }
+        ],
+        "created_at": "2026-08-13T01:48:55.576631"
+      },
+      {
+        "turn_id": "turn-7249c157",
+        "project_id": "proj-b9d19e24",
+        "session_id": "dc-sess-75c89202",
+        "prompt": "Add voice logging module to CLI assistant",
+        "status": "completed",
+        "events": [
+          {
+            "event_type": "step_start",
+            "timestamp": "2026-08-13T01:48:55.666988",
+            "message": "Starting DeepCode turn for session dc-sess-75c89202",
+            "details": {
+              "prompt": "Add voice logging module to CLI assistant",
+              "workspace": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant"
+            }
+          },
+          {
+            "event_type": "file_edit",
+            "timestamp": "2026-08-13T01:48:55.788454",
+            "message": "Created specification file 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\project_spec.md'",
+            "details": {
+              "step": {
+                "step_index": 1,
+                "action": "analyze_requirements",
+                "status": "completed",
+                "description": "Analyzed prompt: 'Add voice logging module to CLI assistant'",
+                "output": "Created specification at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\project_spec.md'"
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\project_spec.md"
+            }
+          },
+          {
+            "event_type": "step_complete",
+            "timestamp": "2026-08-13T01:48:55.894964",
+            "message": "Scaffolded multi-file project with entrypoint 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\main.py'",
+            "details": {
+              "step": {
+                "step_index": 2,
+                "action": "scaffold_project",
+                "status": "completed",
+                "description": "Scaffolded multi-file project rooted at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\main.py'",
+                "output": "Generated README, package metadata, src package, starter tests, and root entrypoint."
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\cli_assistant\\main.py",
+              "generated_files": [
+                ".gitignore",
+                "README.md",
+                "main.py",
+                "project_spec.md",
+                "pyproject.toml",
+                "src\\cli_assistant\\__init__.py",
+                "src\\cli_assistant\\app.py",
+                "tests\\test_app.py"
+              ]
+            }
+          }
+        ],
+        "created_at": "2026-08-13T01:48:55.895146"
+      }
+    ],
+    "created_at": "2026-08-13T01:48:55.306878",
+    "updated_at": "2026-08-13T01:48:55.895111"
+  },
+  "proj-6ef17ee9": {
+    "project_id": "proj-6ef17ee9",
+    "user_id": "user-claimed-bd71c315",
+    "title": "Legacy Claim Project",
+    "specification": "Build a project created before auth wiring",
+    "workspace_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\legacy_claim_project",
+    "status": "completed",
+    "plan_summary": "Implementation Plan generated for 'Legacy Claim Project'. Awaiting explicit user approval before execution.",
+    "session_id": "dc-sess-1d9729ba",
+    "history": [
+      {
+        "turn_id": "turn-3c9e09c9",
+        "project_id": "proj-6ef17ee9",
+        "session_id": "dc-sess-1d9729ba",
+        "prompt": "Build a project created before auth wiring",
+        "status": "completed",
+        "events": [
+          {
+            "event_type": "step_start",
+            "timestamp": "2026-08-13T01:48:56.111574",
+            "message": "Starting DeepCode turn for session dc-sess-1d9729ba",
+            "details": {
+              "prompt": "Build a project created before auth wiring",
+              "workspace": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\legacy_claim_project"
+            }
+          },
+          {
+            "event_type": "file_edit",
+            "timestamp": "2026-08-13T01:48:56.229521",
+            "message": "Created specification file 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\legacy_claim_project\\project_spec.md'",
+            "details": {
+              "step": {
+                "step_index": 1,
+                "action": "analyze_requirements",
+                "status": "completed",
+                "description": "Analyzed prompt: 'Build a project created before auth wiring'",
+                "output": "Created specification at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\legacy_claim_project\\project_spec.md'"
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\legacy_claim_project\\project_spec.md"
+            }
+          },
+          {
+            "event_type": "step_complete",
+            "timestamp": "2026-08-13T01:48:56.337140",
+            "message": "Scaffolded multi-file project with entrypoint 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\legacy_claim_project\\main.py'",
+            "details": {
+              "step": {
+                "step_index": 2,
+                "action": "scaffold_project",
+                "status": "completed",
+                "description": "Scaffolded multi-file project rooted at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\legacy_claim_project\\main.py'",
+                "output": "Generated README, package metadata, src package, starter tests, and root entrypoint."
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\legacy_claim_project\\main.py",
+              "generated_files": [
+                ".gitignore",
+                "README.md",
+                "main.py",
+                "project_spec.md",
+                "pyproject.toml",
+                "src\\legacy_claim_project\\__init__.py",
+                "src\\legacy_claim_project\\app.py",
+                "tests\\test_app.py"
+              ]
+            }
+          }
+        ],
+        "created_at": "2026-08-13T01:48:56.338921"
+      }
+    ],
+    "created_at": "2026-08-13T01:48:56.024849",
+    "updated_at": "2026-08-13T01:48:56.338855"
+  },
+  "proj-23e2e6d7": {
+    "project_id": "proj-23e2e6d7",
+    "user_id": "user-1000",
+    "title": "User 1 Confidential Project",
+    "specification": "Secrets and sensitive data",
+    "workspace_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\user1_confidential_project",
+    "status": "plan_generated",
+    "plan_summary": "Implementation Plan generated for 'User 1 Confidential Project'. Awaiting explicit user approval before execution.",
+    "session_id": "dc-sess-a4e9f250",
+    "history": [],
+    "created_at": "2026-08-13T01:48:57.168004",
+    "updated_at": "2026-08-13T01:48:57.168004"
+  },
+  "proj-dc782e82": {
+    "project_id": "proj-dc782e82",
+    "user_id": "user-1000",
+    "title": "Phase 13 Test Calculator App",
+    "specification": "Create a calculator module",
+    "workspace_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\phase13_test_calculator_app",
+    "status": "completed",
+    "plan_summary": "Implementation Plan generated for 'Phase 13 Test Calculator App'. Awaiting explicit user approval before execution.",
+    "session_id": "dc-sess-e52e293d",
+    "history": [
+      {
+        "turn_id": "turn-82287405",
+        "project_id": "proj-dc782e82",
+        "session_id": "dc-sess-e52e293d",
+        "prompt": "Create a calculator module",
+        "status": "completed",
+        "events": [
+          {
+            "event_type": "step_start",
+            "timestamp": "2026-08-13T01:48:57.369288",
+            "message": "Starting DeepCode turn for session dc-sess-e52e293d",
+            "details": {
+              "prompt": "Create a calculator module",
+              "workspace": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\phase13_test_calculator_app"
+            }
+          },
+          {
+            "event_type": "file_edit",
+            "timestamp": "2026-08-13T01:48:57.508788",
+            "message": "Created specification file 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\phase13_test_calculator_app\\project_spec.md'",
+            "details": {
+              "step": {
+                "step_index": 1,
+                "action": "analyze_requirements",
+                "status": "completed",
+                "description": "Analyzed prompt: 'Create a calculator module'",
+                "output": "Created specification at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\phase13_test_calculator_app\\project_spec.md'"
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\phase13_test_calculator_app\\project_spec.md"
+            }
+          },
+          {
+            "event_type": "step_complete",
+            "timestamp": "2026-08-13T01:48:57.622974",
+            "message": "Scaffolded multi-file project with entrypoint 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\phase13_test_calculator_app\\main.py'",
+            "details": {
+              "step": {
+                "step_index": 2,
+                "action": "scaffold_project",
+                "status": "completed",
+                "description": "Scaffolded multi-file project rooted at 'C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\phase13_test_calculator_app\\main.py'",
+                "output": "Generated README, package metadata, src package, starter tests, and root entrypoint."
+              },
+              "file_path": "C:\\Users\\saisr\\Projects\\SANA-LiveKit\\drafts\\phase13_test_calculator_app\\main.py",
+              "generated_files": [
+                ".gitignore",
+                "README.md",
+                "main.py",
+                "project_spec.md",
+                "pyproject.toml",
+                "src\\phase13_test_calculator_app\\__init__.py",
+                "src\\phase13_test_calculator_app\\app.py",
+                "tests\\test_app.py"
+              ]
+            }
+          }
+        ],
+        "created_at": "2026-08-13T01:48:57.624651"
+      }
+    ],
+    "created_at": "2026-08-13T01:48:57.302817",
+    "updated_at": "2026-08-13T01:48:57.624578"
+  }
+}

@@ -1,2473 +1,1340 @@
-# SaNa — Product Requirements Document (PRD)
+# Soul — Product Requirements Document
 
-**Status:** Architecture/MVP decisions approved — awaiting go-ahead to implement  
-**Product:** SaNa  
-**Document version:** 0.3.0  
-**Date:** 2026-08-08  
-**Audience:** Founder + future implementers (beginner-friendly)
-
----
-
-## Approved architecture decisions (2026-08-08)
-
-The following decisions are **APPROVED** for architecture and MVP. Implementation must not begin until the founder explicitly gives a go-ahead after reviewing this updated PRD.
-
-| # | Decision | Status | Notes |
-|---|---|---|---|
-| 1 | Backend: **Python + FastAPI** | **APPROVED** | Central SaNa Backend |
-| 2 | Auth/DB: **Supabase Auth + Supabase PostgreSQL** | **APPROVED** | Keep boundaries clean; avoid unnecessary Supabase lock-in |
-| 3 | Flutter state: **Riverpod** | **APPROVED** | |
-| 4 | Voice transport: **LiveKit** | **APPROVED** | |
-| 5 | Voice agents: **LiveKit Agents** | **APPROVED** | |
-| 6 | Dev LLM: **OpenRouter free + optional Ollama** | **APPROVED** | Provider-independent; do not hard-code one free model forever |
-| 7 | DeepCode MVP: **DeepCodeAdapter** around verified CLI/JSON | **APPROVED WITH VERIFICATION REQUIRED** | Verify commands/flags/JSON/session behavior before implementing adapter body |
-| 8 | Build MVP location: **Local trusted workspaces on PC** | **APPROVED FOR DEV/MVP** | Must be swappable later for sandboxed remote workers |
-| 9 | Mode switching: **Same conversation** | **APPROVED** | Store mode changes as metadata/events |
-| 10 | Voice stack: **C — Hybrid** | **APPROVED** | Prefer free/local when practical; substitute hosted for natural realtime UX |
-| 11 | Device testing: **Emulator + physical Android device** | **APPROVED** | Emulator for UI; physical device required for realtime voice validation |
-| 12 | Git/GitHub: **Use existing repository** | **APPROVED** | Do not create a new repo; never commit secrets |
-| 13 | Branding/orb direction | **APPROVED (initial, refinable)** | Dark-first, calm blue/teal glow, fluid state animations |
-
-### Supabase boundary rule (approved)
-
-- Use Supabase Auth for authentication.
-- Use Supabase PostgreSQL as the primary database.
-- Keep database/backend boundaries clean so SaNa is not unnecessarily locked into Supabase-specific features (prefer standard Postgres + portable repository interfaces).
-
-### DeepCode verification gate (approved)
-
-Before implementing the DeepCode adapter body:
-
-1. Verify the actual installed DeepCode CLI commands.
-2. Verify that `deepcode exec` / `deepcode loop` with `--json` is valid for the installed version.
-3. Verify the actual JSON output/schema from real runs.
-4. Verify session/project continuation behavior (`--resume`, workspace persistence).
-5. Do **not** invent commands, flags, APIs, JSON structures, or endpoints.
-
-Create the adapter **abstraction** so the rest of SaNa does not depend directly on the DeepCode CLI. Swap later without rewriting Build Mode core.
-
-### Build workspace rule (approved)
-
-- MVP builds run only in explicitly designated local project workspaces.
-- Do **not** give DeepCode unrestricted access outside those workspaces.
-- Architect Build Mode so local workspaces can later be replaced by isolated/sandboxed remote workers without rewriting SaNa’s core Build Mode.
-
-### Git / secrets rule (approved)
-
-- Use the existing GitHub repository; do not create a new one.
-- Inspect existing repository/history before changes.
-- Preserve current history and existing files.
-- Create sensible commits/checkpoints as development progresses.
-- Never commit API keys, `.env` secrets, Supabase secrets, OpenRouter keys, LiveKit secrets, or other credentials.
-- Ensure sensitive files are covered by `.gitignore`.
-
-**GitHub repository (resolved 2026-08-08):**  
-[https://github.com/saisree510/SaNa-Voice-Intelligence.git](https://github.com/saisree510/SaNa-Voice-Intelligence.git)
-
-- Existing product repo for SaNa — **do not create a new repository**
-- Do **not** use upstream `HKUDS/DeepCode` as SaNa’s product repo
-- Remote inspected as effectively empty (no commits yet)
-- Local `SANA` workspace currently contains `PRD.md` and is not yet initialized as a git working tree linked to this remote
-- Before implementation: initialize/link this local workspace to the existing remote, add `.gitignore`, and commit non-secret project files only after founder go-ahead
+**Document version:** 0.6.0  
+**Date:** 2026-08-21  
+**Status:** Draft for founder review  
+**Product stage:** Web MVP expansion  
+**Previous product name:** SaNa  
+**Primary audience:** Founder, product team, designers and implementers
 
 ---
 
-## How to read this document
+## 1. Revision summary
 
-This PRD explains **what SaNa is**, **how users experience it**, and **how the systems should fit together**.
+Version 0.6.0 locks the product and technical decisions for Soul's **Live Architecture Canvas** while preserving the working SaNa-to-Soul foundation and the phase-by-phase implementation plan introduced in v0.5.1.
 
-Wherever a technology is recommended, this document explains:
+This is not a restart. The verified Flutter, FastAPI, Supabase and LiveKit implementation remains the foundation. The next release adds:
 
-- what it is
-- why SaNa needs it
-- what problem it solves
-- where it runs
-- how it communicates with other parts
-- whether it is open-source
-- whether it can be free during development
-- whether it may cost money in production
-- what alternatives exist
+- Complete Soul branding
+- Strict authenticated user-data isolation
+- Public web deployment
+- A persistent real-time architecture canvas
+- Genuine DeepCode-backed project generation
+- A complete Projects workspace
+- Planning, build, review and validation workflows
+- An embedded, open-source Excalidraw canvas with Figma-inspired visual polish
+- A canonical Architecture Blueprint independent of any rendering library
+- Validated, progressive WebSocket drawing operations and replayable canvas history
+- Immutable architecture approval linked to DeepCode BuildRuns
 
-**Important principle:** if something was not verified in the current environment or official docs, it is labeled **TBD / Requires verification**. This PRD does **not** invent DeepCode REST endpoints or fictional SDKs.
+### Implementation status update: Phase A through A6
 
----
+**Updated:** 2026-08-21  
+**Overall Phase A status:** Complete. A0-A6 are complete.
 
-## Table of contents
+| Subphase | Status | Verified outcome |
+|---|---|---|
+| A0 - Repository and deployment snapshot | Complete | Branch, upstream, dirty worktree, deployed Railway backend, Soul LiveKit project, agent state, tests and secret exposure were audited without changing production state. |
+| A1 - Authenticated ownership hardening | Complete | Backend and Flutter ownership controls were committed and pushed in `4280603`; the production-safe Supabase migration was prepared and backend tests passed. |
+| A2 - Production RLS migration | Complete | Supabase migration was applied. RLS and authenticated policies for conversations, messages and conversation events were verified; invalid ownership rows were zero. |
+| A3 - Two-account browser and voice verification | Complete | User A and User B were verified to see only their own data. Railway validates Supabase sessions, mints Soul LiveKit tokens, dispatches `voice_agent`, and the hosted agent joins and responds in the browser room. |
+| A4 - Authenticated voice and Build Mode browser test | Complete | On the public web app, authenticated voice worked and a real Build Mode conversation created a project that User A could see in their Projects tab. Railway's isolated create-and-list persistence check also passed. |
+| A5 - Soul rebrand pass | Complete | Web title and metadata, authentication, onboarding, home, voice conversation, project generation attribution, backend metadata and hosted-agent prompts now identify as Soul. Existing Sana-named storage keys and authenticated integration headers remain as compatibility internals. Flutter analysis and 14 tests passed; backend tests passed. |
+| A6 - Public Flutter Web deployment | Complete | GitHub Pages serves the production Flutter Web build over HTTPS at `https://saisree510.github.io/SaNa-Voice-Intelligence/`, with repository-base routing and an SPA fallback. Public-browser verification passed for sign-in, refresh, voice connection, Projects, History, microphone permission and sign-out. |
 
-1. Product overview  
-2. Problem statement  
-3. Product vision  
-4. Product principles  
-5. Target users  
-6. User personas  
-7. Primary use cases  
-8. MVP scope  
-9. Non-goals  
-10. Future scope  
-11. Complete user journey  
-12. Authentication flow  
-13. Onboarding flow  
-14. Home experience  
-15. Voice interaction  
-16. Text interaction  
-17. Unified conversation model  
-18. Conversation history  
-19. General Mode  
-20. Debate Mode  
-21. Brainstorm Mode  
-22. Build Mode  
-23. DeepCode architecture  
-24. Persistent Build Projects  
-25. Build lifecycle  
-26. Build status/progress  
-27. LiveKit architecture  
-28. STT architecture  
-29. LLM architecture  
-30. TTS architecture  
-31. OpenRouter / local model strategy  
-32. Ollama strategy  
-33. Backend architecture  
-34. Flutter architecture  
-35. Database architecture  
-36. Database schema  
-37. API boundaries  
-38. State management  
-39. Memory architecture  
-40. Security  
-41. Build sandbox / security  
-42. Error handling  
-43. Offline / reconnection behavior  
-44. Functional requirements  
-45. Non-functional requirements  
-46. Performance / latency expectations  
-47. Testing strategy  
-48. Prerequisite checklist  
-49. Required accounts / API keys  
-50. Free vs paid infrastructure  
-51. Development phases  
-52. MVP acceptance criteria  
-53. Risks  
-54. Technical unknowns  
-55. Open questions  
-56. Decisions that require approval  
+**A3 decisions and findings:**
 
----
+- Legacy local Build Project drafts with test or legacy owner IDs remain quarantined and are not exposed to either authenticated user.
+- Failed connection attempts no longer create empty conversation records before LiveKit connects.
+- Flutter Web now displays safe token/session connection errors instead of silently returning to Home.
+- Railway must retain matching Soul LiveKit credentials plus `SUPABASE_URL` and `SUPABASE_ANON_KEY`; do not configure a legacy `SUPABASE_JWT_SECRET` for the migrated Supabase signing-key setup.
+- `AGENT_BACKEND_SHARED_SECRET` is synchronized between Railway and the hosted agent for protected backend calls. Its value is not recorded in this document or Git.
 
-## 1. Product overview
+**A6 hosting note:** GitHub Pages provides HTTPS and SPA fallback but does not apply the deployed `_headers` file. Browser microphone permission therefore uses the standard same-origin HTTPS permission flow; if an explicit `Permissions-Policy` header becomes mandatory, move the static site to a host with configurable response headers.
 
-**SaNa** is a developer-focused **conversational intelligence** mobile app.
+**Remaining Phase A work:** Phase A is complete. Phase B is also complete; Phase C can begin with the persistent architecture canvas and project workspace expansion described in the PRD.
 
-SaNa is:
+### Implementation status update: Phase B
 
-- voice-first, but **not** voice-only
-- conversation-first, but **not** “just a chatbot”
-- an AI technical partner a developer can talk with naturally
+**Updated:** 2026-08-22
+**Overall Phase B status:** Complete. Durable project metadata and archives are deployed and verified end to end.
 
-SaNa helps developers:
+| Subphase | Status | Verified outcome |
+|---|---|---|
+| B1 - Audit the existing project data path | Complete | The authoritative-path audit is recorded in `docs/phase-b1-project-data-path.md`. Project metadata currently lives in a Railway-local JSON file and generated files in the same local filesystem, which is not durable across service replacement or redeploy. |
+| B2 - Normalize project and build data | Complete | Migrations `09_persistent_build_projects.sql` and `10_build_artifact_storage.sql` are applied. Railway uses Supabase for durable project/build metadata and private Supabase Storage for completed ZIP archives. Legacy JSON records remain quarantined rather than being automatically claimed. |
+| B3 - Project list experience | Complete | The deployed Projects list shows lifecycle phase, last update, plan summary, empty/error/retry states and a project-detail entry point without exposing local workspace paths. |
+| B4 - Project detail experience | Complete | The deployed Flutter detail view includes specification, approved plan, Phase C architecture placeholder, build history, generated-file metadata, Resume and secure Download controls. |
+| B5 - Resume and download verification | Complete | A project and build history persisted through browser refresh and re-login; Resume completed without a duplicate entry; cross-user isolation was verified with two accounts; the browser ZIP download worked before and after a Railway redeploy, proving the artifact is durable. |
 
-- discuss coding problems
-- learn technical concepts
-- discuss AI and software engineering
-- debate technical ideas
-- brainstorm projects
-- design software and architectures
-- solve development problems
-- **build actual software projects**
-- continue improving previously created projects
+### Implementation status update: Phase C
 
-### What SaNa is not
+**Updated:** 2026-08-22
+**Overall Phase C status:** In progress. C1-C5 are complete, and C6 has begun. Persistent authenticated architecture storage, API access, RLS, deployed Supabase/Railway verification and validated WebSocket canvas-operation transport are implemented; the voice agent now has a tested architecture-generation tool, and Flutter Web can hydrate the embedded canvas from the latest authenticated saved Blueprint. Real-time event streaming into the visible canvas and approval/version UX remain separate checkpoints.
 
-| Not this | Why |
-|---|---|
-| Just a chatbot | Modes, voice, persistence, and Build Mode make it a product |
-| Just a voice assistant | Text and voice share one conversation |
-| DeepCode itself | DeepCode is the engineering engine used by Build Mode |
-| LiveKit itself | LiveKit is realtime communication infrastructure |
+| Subphase | Status | Verified outcome |
+|---|---|---|
+| C1 - Architecture Blueprint contract | Complete | Versioned, provider-neutral `ArchitectureSpec` and strictly allowlisted canvas-operation contracts are implemented in the backend. They separate architectural meaning from renderer coordinates/style, validate graph references and lifecycle timestamps, and return structured rejection errors. Contract examples and six regression tests are included. |
+| C2 - Standalone Excalidraw canvas proof | Complete | A bounded `canvas/` React/Vite module uses the MIT-licensed, audit-clean Excalidraw package to render an Overview Blueprint through local mock operations. It self-hosts required Excalidraw assets, provides native zoom/pan/selection/fullscreen plus Replay, Pause, 1x/2x, Fit and accessible/reduced-motion behavior, and now uses a subtle dot-only Soul workspace background instead of the heavier native grid. A production build and a real Chrome rendering check passed. The isolated proof bundle is approximately 401 KB gzipped and must be lazy-loaded in C3. |
+| C3 - Embed canvas in the Soul conversation | Complete | Flutter Web builds the standalone canvas into `mobile/web/canvas` and embeds it as a same-origin iframe in the active Agent conversation screen. Desktop starts conversation-first with the canvas collapsed, and `View on canvas` opens Canvas Focus Mode where the diagram becomes the main stage with a `Back to conversation` control. Canvas Focus hides the compact voice orb/top reservation and normal top overlay so the workspace can use the available vertical space. The bottom chat control exits Canvas Focus back to conversation first; clicking it again from conversation returns to the orb. The unused `Ask Soul` focus button was removed after testing because the persistent bottom chat control already provides the return path. Narrow layouts use Conversation/Canvas tabs and preserve the existing LiveKit voice controls. Flutter and the embedded canvas exchange a versioned JSON `postMessage` handshake, canvas state, acknowledgements, safe rejections and command messages for Fit, Replay, Pause and Play, scoped to the current origin. |
+| C4 - Authenticated storage and APIs | Complete | FastAPI has authenticated Architecture Blueprint storage APIs for create, read, update, list, versions, canvas events and snapshots, with backend owner checks, sequence-number enforcement and idempotent event writes. Supabase migration `11_architecture_canvas_storage.sql` is applied with RLS enabled on `architectures`, `architecture_versions`, `canvas_events` and `canvas_snapshots`. Railway reports `architecture_store: supabase`, and a browser-authenticated live API write created `arch-c4manualtest` in the private Supabase architecture table. Backend regression tests pass locally. |
+| C5 - Validated WebSocket operations | Complete | FastAPI exposes an authenticated `/v1/architectures/{architecture_id}/ws` WebSocket scoped to one owned architecture. It validates Supabase JWTs before accepting the connection, rejects cross-user access, validates every canvas operation against the allowlist/current Blueprint, persists accepted durable operations through the same idempotent sequence-number store as the HTTP API, broadcasts accepted events to other authorized clients on the same architecture, and returns safe structured rejection messages for invalid schema, oversized payloads, invalid operations and per-connection rate limits. Backend WebSocket regression tests cover auth, ownership, persistence, safe rejection and broadcast behavior. Production verification passed from the deployed Soul web app: a browser-authenticated architecture was created, the Railway WebSocket opened, returned `canvas_ready`, accepted a valid `move_node` operation and returned `canvas_accepted`. |
+| C6 - Voice/text progressive architecture generation | Complete | Real-time canvas streaming is fully implemented. When the voice agent initializes an Overview Architecture, it immediately broadcasts an `architecture_created` room packet via LiveKit data publishing, prompting Flutter to fetch the initial blueprint and open a WebSocket connection to the backend `/v1/architectures/{architecture_id}/ws` endpoint. The backend `/events` POST endpoint was updated to broadcast new canvas events directly through the WebSocket connection manager. The Dart architecture service parses and applies these events on the fly, notifying the UI which forwards them via postMessage to the React/Excalidraw canvas iframe. The canvas React app appends these operations without resetting the drawing animation step, delivering smooth real-time progressive drawing. All automated unit tests for Flutter, Python agent tools, and backend websocket connections pass cleanly. |
+| C7 - Manual editing and precedence | Complete | Manual editing (moving nodes, editing labels, deleting components) is fully supported. Moved nodes store coordinates inside the blueprint component's `metadata.position` property, which takes precedence over default calculations. Label edits and element deletions trigger validated `update_node` and `delete_node` WebSocket operations respectively, synchronizing edits reactively. Deletions prompt the user with a Flutter confirm dialog before executing. All client analysis and unit tests pass cleanly. |
+| C8 - Snapshots, replay and exports | Complete | Automated canvas snapshots are captured and stored in Supabase under `canvas_snapshots` whenever a diagram drawing animation reaches completion. Floating controls overlay with modern glassmorphism styling is added in the top-right corner of the canvas container, providing export functions: Export PNG (using Excalidraw's blob exporter), Export JSON (raw blueprint specification), and Export Mermaid (components and connections formatted as graph TD syntax). Play/pause/replay and speed selectors are supported and fully responsive. || C9 - Approval and canvas-to-build handoff | Complete | Locking blueprints into approved immutable versions linked to DeepCode builds is fully supported. Added `project_id` to `UpdateArchitectureRequest` patch schema. Implemented `createProject` and `approveProject` in `BuildProjectsService` to handle project planning and workspace generation. Implemented `approveArchitectureBlueprint` in `ArchitectureService` to post approved versions and patch architecture links. Integrated "Approve & Build" and "Open Build" contextual navigation buttons in the visual canvas header overlay. All 17 Flutter tests and 40 FastAPI backend tests pass cleanly. |
 
-**Simple summary:**  
-SaNa is the product experience. DeepCode is the builder. LiveKit is the realtime voice pipe.
+
+### Implementation status update: Phase D
+
+**Updated:** 2026-08-25
+**Overall Phase D status:** In progress. Railway currently reports `coding_provider: deepcode`, `deepcode_provider_registered: true` and no provider-registration error, so the backend can find and configure the DeepCode CLI. The remaining Railway-first checkpoint is verifying an actual deployed `deepcode exec` build can write files into the mounted workspace.
+
+| Subphase | Status | Verified outcome |
+|---|---|---|
+| D1-D5 - DeepCode runtime foundation | Complete | The backend includes provider-neutral coding-agent models, a DeepCode runtime adapter, safe workspace execution, approval-gated build execution, SSE progress streaming and provider labels that distinguish real DeepCode from Prototype Scaffold. |
+| D6 - Railway DeepCode runtime passthrough | In progress | `workspace_runner` now forwards the configured DeepCode provider API-key environment variable plus `DEEPCODE_SANDBOX`, `DEEPCODE_TRUST_WORKSPACE` and `DEEPCODE_WORK_LOCALLY` into the `deepcode exec` subprocess while continuing to block unrelated secrets such as the Supabase service-role key. `pytest-asyncio` is now declared so async backend tests execute under the configured pytest `asyncio_mode`. Local backend verification passed with 59 tests using a repo-local pytest temp directory. Production still needs Railway redeploy and one browser build attempt with log review to confirm DeepCode can write generated files in `/data/sana-builds`. |
+| D7 - Build/canvas stabilization | In progress | Browser testing confirmed deployed Build Mode can now create downloadable files. Follow-up fixes hydrate the approved Architecture Blueprint into `BuildSpec`, load canvas state by exact `architecture_id` when LiveKit announces a new architecture or includes one in the assistant transcript, reconnect the canvas WebSocket when the active architecture changes, accept one-node progressive diagrams, re-send live canvas updates into the embedded Excalidraw iframe, disable blocking delete-confirmation dialogs inside the iframe-backed canvas, prevent conversation canvases from auto-loading stale/global architectures, show only the latest eligible chat canvas card for real architecture/canvas language, create a linked live architecture automatically from the backend whenever Build Mode drafts a project plan, persist the Build Project before its linked Architecture record so the Supabase foreign-key link is valid, recover a linked architecture directly from a newly announced Build Project when a LiveKit room packet is missed, render the dotted workspace in both loaded and empty canvas states with diagrams above it, keep project creation resilient and logged if linked architecture persistence fails, infer project-specific `Project UI`/`Application Logic` canvas nodes instead of Soul's default stack, and stop conversation history from forcing bottom scroll while the user is reading older messages. Backend tests pass with 60 tests and the embedded canvas bundle builds successfully. The current host's Flutter analyzer/release build stalls before output and must be rerun from a healthy Flutter environment before this frontend change can be deployed to GitHub Pages. |
+
+
+### Version history
+
+| Version | Date | Purpose |
+|---|---|---|
+| 0.3.0 | 2026-08-08 | Initial architecture and conversation persistence |
+| 0.4.0 | 2026-08-09 | LiveKit-first implementation reset |
+| 0.5.0 | 2026-08-21 | Soul Web MVP, secure multi-user ownership, live canvas and real DeepCode integration |
+| 0.5.1 | 2026-08-21 | Expanded phase-by-phase implementation plan, tests, stop conditions, model guidance and review checkpoints |
+| **0.6.0** | **2026-08-21** | **Finalized the Excalidraw live-canvas architecture, Architecture Blueprint, progressive drawing, replay, visibility and approval decisions** |
 
 ---
 
-## 2. Problem statement
+## 2. Product vision
 
-Developers often bounce between:
+Soul enables a person to move from an idea to a working, reviewed software project through conversation.
 
-- ChatGPT / Claude for thinking
-- IDEs / coding agents for building
-- notes apps for ideas
-- separate voice tools that do not keep context
+The user should be able to:
 
-This creates friction:
+1. Speak or type an idea.
+2. Explore it through General, Debate or Brainstorm Mode.
+3. Ask Soul to create a live visual architecture.
+4. Enter Build Mode and receive an implementation plan.
+5. Explicitly approve execution.
+6. Have DeepCode generate project-specific files inside a controlled workspace.
+7. Follow progress, tests and review results.
+8. Reopen the conversation, canvas and files from Projects.
 
-1. Voice and text conversations are disconnected.
-2. Brainstorming and building live in different tools.
-3. Projects are hard to reopen and continue later.
-4. Coding agents are powerful but not designed as a calm, mobile-first technical partner.
+### Product promise
 
-SaNa aims to unify:
+> **From thought to working product through one secure, visual conversation.**
 
-**conversation + reasoning modes + engineering execution**
+### Long-term direction
 
-into one coherent mobile experience.
-
----
-
-## 3. Product vision
-
-SaNa should feel like:
-
-> “A calm, premium AI technical partner in your pocket — one you can talk to, type to, debate with, brainstorm with, and eventually ask to build and evolve real software.”
-
-Long-term vision:
-
-- developers start ideas by speaking
-- refine them through Debate / Brainstorm
-- convert promising ideas into Build Projects
-- continue those projects over days/weeks
-- always keep one synchronized conversation transcript
+Soul becomes an agent-native software development environment that reduces dependence on IDEs, terminals and localhost workflows while keeping users in control of planning, approval and release decisions.
 
 ---
 
-## 4. Product principles
+## 3. Product principles
 
-1. **Voice-first, not voice-only** — speaking and typing are equal interfaces to one conversation.
-2. **One conversation model** — never separate “voice chats” and “text chats.”
-3. **Modes, not separate apps** — General / Debate / Brainstorm / Build share one architecture.
-4. **Prove layers independently** — do not build everything at once.
-5. **Do not block Build Mode later** — early choices must leave room for DeepCode + sandboxes.
-6. **Secrets never live in Flutter** — API keys stay on backend / local secure config.
-7. **Prefer free/open during development** — without pretending local/open always means free hosted.
-8. **Do not invent integrations** — verify DeepCode / LiveKit / provider capabilities before coding against them.
-9. **Explain, don’t dump** — errors should be human-friendly; technical details optional.
-10. **Teach while building** — architecture should stay understandable to a learning founder.
-
----
-
-## 5. Target users
-
-### Primary
-
-- Indie developers / solo builders
-- Students learning software engineering / AI
-- Mobile-first developers who want to think out loud
-- Builders who want an AI partner for ideation + implementation
-
-### Secondary (later)
-
-- Small engineering teams
-- Mentors / tutors
-- Hackathon builders
-
-### Not initial target
-
-- Enterprise compliance-first orgs
-- Non-technical consumers wanting a general life assistant
+1. **Solve one journey well:** idea → architecture → approved build → validated files.
+2. **Human approval before execution:** entering Build Mode never starts code generation.
+3. **Visual understanding:** important plans and architectures should be visible on a canvas.
+4. **User ownership:** no user may see another user’s conversations, projects, files or canvas.
+5. **Honest capability:** scaffold generation must never be presented as DeepCode execution.
+6. **Web first, multi-platform later:** deliver the browser experience first while preserving Flutter mobile compatibility.
+7. **Provider boundaries:** voice, model, canvas and coding-agent providers must remain replaceable.
+8. **Safe execution:** coding agents operate only within validated project workspaces.
+9. **Persistent work:** conversations, diagrams, decisions, build events and files survive reconnection.
+10. **Quality before autonomy:** review, tests and traceability matter more than uncontrolled agent activity.
+11. **Open-source-first:** core canvas, model and agent integrations should use open-source, self-hostable components with replaceable hosted adapters.
+12. **Meaning before presentation:** the Architecture Blueprint is authoritative; Excalidraw and Mermaid are representations of that blueprint.
 
 ---
 
-## 6. User personas
+## 4. Target users
 
-### Persona A — “Sai, the learning builder”
+### Primary users
 
-- Learning Flutter + AI systems
-- Wants to talk through ideas, not only type
-- Has limited budget for APIs
-- Wants to eventually build real apps with AI help
+- Founders and product owners who need to turn ideas into demonstrable products
+- Developers who want conversational planning and assisted implementation
+- Technical teams that need reusable architectures, build records and project history
 
-Needs:
+### Initial release assumptions
 
-- low-cost development stack
-- clear explanations
-- ability to reopen projects later
-
-### Persona B — “Maya, the late-night debugger”
-
-- Experienced developer stuck on architecture tradeoffs
-- Wants Debate Mode to stress-test ideas
-- Sometimes wants Build Mode to scaffold solutions
-
-Needs:
-
-- strong reasoning
-- conversation history
-- mode switching without losing context
-
-### Persona C — “Leo, the idea machine”
-
-- Generates many product ideas
-- Needs Brainstorm Mode to structure them
-- Wants “let’s build it” conversion into a project
-
-Needs:
-
-- idea organization
-- conversion into Build Projects
-- persistence across days
+- Users have basic familiarity with software products but may not want to use a terminal.
+- One authenticated person owns each project in the MVP; collaborators are not included.
+- Projects are private by default. A future read-only public option may be enabled only after production RLS and ownership tests pass.
+- Collaboration and organization workspaces are future scope.
 
 ---
 
-## 7. Primary use cases
+## 5. Current verified foundation
 
-1. Sign up / sign in securely
-2. First-time onboarding (user name + assistant name)
-3. Ask a technical question by voice
-4. Continue the same conversation by typing
-5. Browse and resume conversation history
-6. Enter Debate Mode and challenge an idea
-7. Enter Brainstorm Mode and expand a product idea
-8. Convert a brainstorm into Build Mode
-9. Create a Build Project via DeepCode (MVP: controlled local/dev workspace)
-10. Reopen an existing Build Project and request changes
-11. See human-friendly status during builds (only when backed by real state)
-12. Recover gracefully from network / AI / microphone failures
+The following capabilities exist and must be preserved:
 
----
+- Flutter application with web build support
+- Supabase account creation and sign-in
+- FastAPI backend hosted on Railway
+- User-authenticated LiveKit token generation
+- Soul LiveKit Cloud project
+- Hosted Python `voice_agent`
+- Voice conversation with speech recognition, LLM response and text-to-speech
+- General, Debate, Brainstorm and Build modes
+- Conversation and Build Project ownership fields
+- Account-aware frontend cache reset
+- Build project statuses, generated-file metadata, listing and archive downloads
+- Hosted-agent authentication for backend calls
+- Supabase isolation migration prepared
+- Production Flutter Web build
+- Backend, Flutter and analysis tests passing at the v0.5.0 baseline
 
-## 8. MVP scope
+### Current external endpoints
 
-MVP means: **a real usable Android prototype**, not production perfection.
+- Railway backend: `https://sana-voice-intelligence-production.up.railway.app`
+- LiveKit project: `wss://soul-txbxvhr6.livekit.cloud`
+- Hosted LiveKit agent name: `voice_agent`
 
-### Finalized MVP scope (approved)
-
-- Flutter Android app (emulator for UI; physical device required for voice validation)
-- Supabase Auth + Supabase PostgreSQL (portable DB boundaries)
-- Authentication (sign up / sign in / sign out / password reset / session persistence)
-- First-time onboarding (user name + assistant name; speak or type)
-- Home screen with SaNa voice orb + Debate / Brainstorm / Build cards
-- Dark-first design system with refinable orb/branding tokens
-- General conversation (text first, then voice)
-- Unified voice + text conversation in the **same** conversation
-- Mode changes stored as metadata/events inside that conversation
-- Real-time transcription into the same transcript
-- Persistent conversations + history + resume
-- Debate Mode
-- Brainstorm Mode
-- Basic Build Mode with swappable execution backend
-- DeepCodeAdapter abstraction + verified CLI/JSON POC (after verification gate)
-- Simple Build Project persistence + reopen/continue
-- Local trusted workspaces for builds (dev/MVP only)
-- Hybrid voice stack interfaces (local preferred when practical; hosted substitutable)
-- Provider-independent LLM layer (OpenRouter free default; Ollama optional)
-
-### Explicitly deferred from MVP
-
-- Production-grade multi-tenant sandboxing / remote build workers
-- GitHub import/export of user projects
-- APK/web preview hosting
-- Deployment pipelines
-- Collaborative multi-user projects
-- Advanced long-term memory / RAG
-- Custom voices / personalities marketplace
-- Finalized brand identity lock
-- iOS release polish
+Secrets, API keys, service-role credentials and signing keys must never be recorded in this document, browser assets or Git.
 
 ---
 
-## 9. Non-goals
+## 6. Current gaps
 
-- Building a full IDE on the phone
-- Running arbitrary AI-generated code on-device
-- Tight coupling to one LLM vendor
-- Storing raw microphone audio by default
-- Fake “progress theater” not backed by real build events
-- Replacing DeepCode’s own Desktop/CLI UX
-- Building every mode as a separate product
+The following items block a public Soul release:
 
----
-
-## 10. Future scope (post-MVP)
-
-- Production sandboxed Build Mode (containers / isolated workers)
-- GitHub integration (import / export / PRs)
-- Build previews (web/APK artifacts)
-- Deployment helpers
-- Collaborative projects
-- Advanced long-term memory
-- Advanced RAG over user projects/docs
-- Multiple SaNa voices / personalities
-- Project sharing
-- Multi-agent engineering workflows
-- iOS parity
+1. Flutter Web is not publicly hosted.
+2. The Supabase user-isolation migration has not been applied to production.
+3. Full authenticated browser testing has not been completed.
+4. Current changes have not been reviewed, committed and pushed.
+5. SaNa/Sana names remain in internal folders, code identifiers and visible text.
+6. Build Mode still needs verified genuine DeepCode runtime integration.
+7. The live architecture canvas has not been implemented.
+8. Projects does not yet act as the complete persistent product workspace.
 
 ---
 
-## 11. Complete user journey
+## 7. MVP scope
 
-```mermaid
-flowchart TD
-  A[Open SaNa] --> B{Authenticated?}
-  B -->|No| C[Sign In / Sign Up / Forgot Password]
-  C --> D{First login?}
-  B -->|Yes| D
-  D -->|Yes| E[Onboarding: What should I call you?]
-  E --> F[Name your assistant - default SaNa]
-  F --> G[Home: voice orb + greeting]
-  D -->|No| G
-  G --> H{User action}
-  H --> I[General conversation]
-  H --> J[Debate Mode]
-  H --> K[Brainstorm Mode]
-  H --> L[Build Mode]
-  H --> M[History]
-  H --> N[Projects]
-  H --> O[Profile / Settings]
-  I --> P[Unified transcript voice+text]
-  J --> P
-  K --> P
-  L --> Q[Requirements / plan / confirm]
-  Q --> R[Create or open BuildProject]
-  R --> S[DeepCode engineering session]
-  S --> T[Results explained by SaNa]
-  K -->|Lets build it| Q
-```
+### Included
 
-### Plain-English journey
+- Public responsive Flutter Web application
+- Supabase sign-up, sign-in, session restoration and sign-out
+- Strict per-user conversation, project, canvas, build and file isolation
+- Text and real-time voice interaction
+- General, Debate, Brainstorm and Build modes in one conversation
+- Live Overview Architecture canvas embedded in the conversation experience
+- Progressive node-by-node architecture drawing with basic replay
+- Persistent Architecture Blueprint, canvas events, snapshots and approved versions
+- Build planning and explicit approval
+- Real DeepCode execution behind a provider adapter
+- Build progress and event streaming
+- Generated-file browsing and archive download
+- Automated tests and build review summary
+- Projects workspace with resume capability
+- Soul branding and installable web metadata
 
-1. You open SaNa.
-2. If needed, you sign in.
-3. First time: SaNa asks what to call you, then what to call itself.
-4. Home appears with the voice orb and a greeting like: “Hey Sai, what are we working on today?”
-5. You can talk normally, or choose Debate / Brainstorm / Build.
-6. Whatever you say or type becomes one shared conversation.
-7. If you build something, SaNa coordinates DeepCode to create/modify a project in a safe workspace.
-8. Later, you can reopen that project and continue.
+### Not included in this MVP
+
+- Shared team workspaces
+- Simultaneous multi-user canvas editing
+- App Store or Play Store release
+- Fully autonomous production deployment
+- Unrestricted computer access
+- Automatic destructive changes
+- Every specialist agent shown in the Agent-Native SDLC vision
+- Enterprise billing, subscriptions or usage metering
+- Multiple simultaneous architecture views in the first canvas slice
+- Advanced replay branching, timeline restoration or comparison UI
+- Swark-based post-build architecture verification in the first canvas slice
+- Full Microsoft Architecture Review Agent adoption
 
 ---
 
-## 12. Authentication flow
+## 8. Core user experience
 
-### Screens (unauthenticated)
+### 8.1 Authentication
 
-- Sign In
-- Sign Up
-- Forgot Password
+1. User opens the Soul website.
+2. User creates an account or signs in through Supabase.
+3. Flutter receives a Supabase access token.
+4. Flutter sends the token to FastAPI for protected operations.
+5. FastAPI verifies the token and derives the authenticated `user_id`.
+6. A new user sees empty History and Projects views.
 
-### Supported actions
+### 8.2 Home and modes
 
-- Register
-- Sign in
-- Sign out
-- Password reset
-- Persistent login session
-- Secure backend authentication
+The authenticated Home screen provides:
 
-### Security rule
+- Personalized greeting
+- Soul voice control
+- Text input
+- General, Debate, Brainstorm and Build mode selector
+- Recent project access
+- Connection and agent status
 
-Flutter must **never** contain:
+Mode changes remain inside the same conversation and persist as conversation events.
 
-- OpenRouter keys
-- LiveKit API secrets
-- database service-role keys
-- DeepCode credentials
-- any server master secrets
+### 8.3 Voice flow
 
-Flutter may hold only **user session tokens** issued by the auth system.
+1. Flutter requests a user-specific LiveKit token from FastAPI.
+2. FastAPI validates the Supabase session.
+3. Browser and hosted `voice_agent` join the same LiveKit room.
+4. User speech is transcribed.
+5. The selected mode determines the agent’s instructions.
+6. The LLM produces a response.
+7. TTS returns audio through LiveKit.
+8. The user may interrupt the agent.
+9. Final user and assistant turns persist; partial transcripts do not.
 
-### Approved approach
+### 8.4 Build flow
 
-**Supabase Auth** + **Supabase PostgreSQL** for MVP (**APPROVED**).
+1. User describes a product or feature.
+2. Soul asks required clarification questions.
+3. Soul creates a specification and architecture.
+4. Soul creates an implementation plan.
+5. Project status becomes `awaiting_approval`.
+6. User reviews the plan and explicitly approves or rejects it.
+7. On approval, FastAPI creates a controlled BuildRun.
+8. The DeepCode adapter starts the verified coding-agent runtime.
+9. Progress events stream to the web UI.
+10. DeepCode generates or edits project files in the authorized workspace.
+11. Tests and review checks run.
+12. Results, logs and file metadata persist.
+13. The user can inspect, resume or download the project from Projects.
 
-| Topic | Detail |
-|---|---|
-| What it is | Managed auth + Postgres platform |
-| Why SaNa needs it | Secure accounts without building auth from scratch |
-| Problem solved | Sign-up, login, sessions, password reset, user IDs |
-| Where it runs | Supabase cloud (or self-host later) |
-| Communication | Flutter ↔ Supabase Auth SDK; Backend verifies JWT |
-| Open-source? | Supabase stack is open-source; hosted service is commercial |
-| Free for development? | Yes, generous free tier typically |
-| Production cost? | May cost money as usage grows |
-| Alternatives | Firebase Auth, Auth0/Clerk, custom FastAPI+JWT+Postgres |
+### 8.5 Conversation and canvas experience
 
-**Boundary rule:** use standard Postgres schemas/repositories and keep SaNa Backend as the orchestration boundary so we are not unnecessarily locked into Supabase-only features.
+The canvas belongs to the active conversation and project; it is not a separate product or external account experience.
+
+On desktop web:
+
+- The conversation occupies approximately 35% of the available width.
+- The live canvas occupies approximately 65%.
+- A draggable divider allows resizing.
+- The canvas can be collapsed or expanded to fullscreen.
+- The canvas opens automatically for architecture/build requests and can also be opened manually.
+
+On narrow/mobile layouts:
+
+- Use `Conversation` and `Canvas` tabs instead of an unusable split view.
+- Voice remains active while the user views the canvas.
+- New canvas activity is indicated without interrupting the conversation.
+
+Conversation messages summarize meaningful canvas changes and provide a `View on canvas` action. The full interactive canvas must not be embedded repeatedly inside message bubbles.
 
 ---
 
-## 13. Onboarding flow
+## 9. Live visual canvas
 
-Triggered only on **first successful sign-in** when profile is incomplete.
+### Purpose
 
-### Step 1 — User name
+The canvas turns conversational reasoning into a structured, editable and replayable architecture. Users should watch Soul construct the design one meaningful step at a time, similar to watching a time-lapse of a drawing being created.
 
-SaNa asks:
+### 9.1 Locked technology decision
 
-> “What should I call you?”
+- **Canvas renderer/editor:** Excalidraw, MIT-licensed and embedded directly in Soul.
+- **Canvas module:** a small React/Vite module in the same repository and deployment as Flutter Web.
+- **Embedding boundary:** same-origin iframe/Flutter web element with a typed `postMessage` bridge.
+- **Visual style:** clean Figma-inspired presentation using low/no roughness, rounded components, consistent spacing, Soul colors and restrained animation.
+- **No external account:** users need only their Soul account; no Figma, Excalidraw or diagram-provider account is required.
+- **Canonical model:** Architecture Blueprint (`ArchitectureSpec`) JSON.
+- **Interactive representation:** Excalidraw scene JSON.
+- **Documentation/export representation:** Mermaid.
+- **Live transport:** authenticated FastAPI WebSocket for bidirectional canvas operations.
+- **Persistence:** Supabase PostgreSQL events, periodic snapshots and immutable architecture versions.
 
-User may **speak or type**.
+Do not introduce a general microfrontend platform. The canvas is one bounded web module compiled and deployed with Soul.
 
-Example answer: `Sai`
+### 9.2 Architecture Blueprint
 
-Store as `user_profiles.display_name`.
+`ArchitectureSpec` is the internal developer name. The user-facing product calls it the **Architecture Blueprint**.
 
-### Step 2 — Assistant name
+The Blueprint records architectural meaning independently from visual position. It contains, at minimum:
 
-Allow naming the conversational intelligence.
-
-Default: `SaNa`
+- Architecture/project identifier and version
+- Components with stable IDs, names, types, technology and optional metadata
+- Connections with stable IDs, source, target, protocol and direction
+- Groups/boundaries
+- Annotations, decisions, assumptions and identified risks
+- Diagram/view type
+- Approval status and timestamps
 
 Example:
 
-- User name: Sai
-- Assistant name: SaNa
-
-Store as `user_profiles.assistant_name`.
-
-### Returning users
-
-Skip onboarding if profile already has required fields.
-
----
-
-## 14. Home experience
-
-After onboarding, open the primary conversation screen.
-
-### Greeting example
-
-> “Hey Sai, what are we working on today?”
-
-### Primary visual
-
-Centered **SaNa voice orb / logo**.
-
-### Orb states
-
-| State | Meaning |
-|---|---|
-| Idle | Ready, waiting |
-| Connecting | Establishing LiveKit / agent session |
-| Listening | Mic active, waiting for speech |
-| User speaking | Speech detected |
-| Processing / thinking | STT done / LLM working |
-| SaNa speaking | TTS / agent audio playing |
-| Reconnecting | Temporary network recovery |
-| Error | Recoverable failure |
-
-### Approved initial visual direction
-
-SaNa should feel intelligent, calm, friendly, developer-focused, premium, and futuristic **without** excessive cyberpunk styling.
-
-- Dark-first interface
-- Deep navy / near-black background
-- Subtle blue / indigo / teal / cyan gradients
-- Soft glow rather than aggressive neon
-- Fluid orb animation
-- Different animation behavior for listening / thinking / speaking (not only color swaps)
-
-The voice orb is the main visual identity. Branding is **not** over-finalized: design tokens for colors, gradients, and orb motion must remain refinable.
-
-### Mode cards
-
-1. Debate  
-2. Brainstorm  
-3. Build  
-
-Users can also talk in **General Mode** without selecting a card.
-
-### Navigation (minimal)
-
-- Home
-- History
-- Projects
-- Profile / Settings
-
-### Device testing policy (approved)
-
-- Start general Flutter UI development on the **Android emulator**
-- Once microphone, LiveKit, STT/TTS, audio routing, permissions, interruption/barge-in, and realtime voice are introduced, also test frequently on a **physical Android device**
-- Real voice UX cannot be validated adequately on emulator alone
-
----
-
-## 15. Voice interaction
-
-### Plain English
-
-When you speak, your phone sends audio into a realtime session. A voice agent turns speech into text, thinks, speaks back, and the written transcript updates at the same time.
-
-### Technical flow
-
-```mermaid
-sequenceDiagram
-  participant User
-  participant Flutter
-  participant LiveKit as LiveKit Server
-  participant Agent as SaNa Voice Agent
-  participant STT
-  participant LLM
-  participant TTS
-  participant Backend as SaNa Backend
-  participant DB as Database
-
-  User->>Flutter: Speaks
-  Flutter->>LiveKit: Audio stream (WebRTC)
-  LiveKit->>Agent: Audio track
-  Agent->>STT: Transcribe
-  STT-->>Agent: Partial/final transcript
-  Agent->>Backend: Persist user message (final)
-  Backend->>DB: Store message
-  Agent->>LLM: Reason with mode + context
-  LLM-->>Agent: Response text
-  Agent->>TTS: Synthesize speech
-  TTS-->>Agent: Audio
-  Agent->>LiveKit: Speak audio + transcript events
-  LiveKit->>Flutter: Audio + transcript
-  Agent->>Backend: Persist assistant message
-  Backend->>DB: Store message
-  Flutter->>User: Hear + see same conversation
+```json
+{
+  "components": [
+    {"id": "web", "name": "Flutter Web", "type": "frontend"},
+    {"id": "api", "name": "FastAPI", "type": "service"}
+  ],
+  "connections": [
+    {"id": "web-api", "from": "web", "to": "api", "protocol": "HTTPS"}
+  ]
+}
 ```
 
-### Requirements
+Moving or restyling a visual node must not change its architectural meaning. Excalidraw JSON is never the sole authoritative record.
 
-- Microphone permission handling
-- Secure LiveKit token generation on backend
-- Connection / reconnection lifecycle
-- User speech detection / assistant speech detection
-- Interruptions / barge-in (where supported by LiveKit Agents)
-- Partial + final transcripts
-- Transcript synchronization with chat UI
-- Natural error messaging on failures
+### 9.3 Immediate MVP scope
+
+The first complete slice supports one **Overview Architecture** canvas only. It must provide:
+
+- Components, connections, groups and concise annotations
+- Stable element IDs
+- Zoom, pan, fit-to-screen, selection and fullscreen
+- Progressive node and edge creation
+- Basic node movement, label editing and deletion
+- Save, reopen and reconnection recovery
+- Basic Architecture Replay with play, pause, 1x and 2x speed
+- PNG, Architecture Blueprint JSON and Mermaid export
+- An accessible text summary
+- Desktop split view and mobile tab view
+
+Additional views such as Data Flow, Sequence, ER/Database, Deployment, Security, AI Agents and Build History are planned after the Overview slice is reliable. They must reuse the same Blueprint and primitives rather than become unrelated renderers.
+
+### 9.4 Validated canvas operations
+
+The AI and client communicate through a bounded operation contract. Initial operations are:
+
+- `add_node`
+- `update_node`
+- `move_node`
+- `delete_node`
+- `connect_nodes`
+- `disconnect_nodes`
+- `create_group`
+- `add_annotation`
+- `highlight_risk`
+- `focus_viewport`
+
+For every operation, FastAPI validates:
+
+- The authenticated user owns the project and architecture
+- The operation type is allowlisted
+- Referenced nodes/edges exist where required
+- IDs are stable and non-duplicated
+- The client version matches the current architecture version
+- Payload, label, graph and rate limits are respected
+- The operation cannot execute code or escape the canvas boundary
+
+Invalid operations are rejected and recorded safely without corrupting the last valid architecture.
+
+### 9.5 Progressive drawing behavior
+
+- Partial voice transcripts may appear as captions but never mutate durable architecture.
+- Finalized semantic phrases produce small batches of validated canvas operations.
+- Target visible update cadence is approximately 0.8-1.5 seconds during active architecture generation, subject to model latency.
+- Nodes should fade/scale into place; edges should appear as drawn paths; viewport movement must be smooth and restrained.
+- Existing unaffected elements must not be regenerated.
+- The canvas must respect reduced-motion settings.
+- The canvas displays clear `Listening`, `Understanding`, `Drawing`, `Review needed` and `Saved` states.
+
+### 9.6 Manual-edit precedence
+
+User changes take priority over AI presentation choices. When a user moves, labels or styles an element, mark the affected properties as user-controlled. Soul must not overwrite those properties unless the user explicitly requests it or approves a proposed layout reset.
+
+### 9.7 Event history, snapshots and replay
+
+Every accepted operation becomes an immutable `canvas_event` with:
+
+- `id`
+- `user_id`
+- `architecture_id`
+- `architecture_version`
+- `sequence_number`
+- `idempotency_key`
+- `event_type`
+- Validated payload
+- Actor (`user`, `soul_agent` or `system`)
+- Timestamp
+
+Examples include `canvas_started`, `node_added`, `node_moved`, `edge_connected`, `group_created`, `annotation_added`, `architecture_approved` and `canvas_completed`.
+
+Periodic snapshots allow fast loading. On reconnect, Soul loads the newest valid snapshot and applies later events exactly once. Events should be recorded now even when advanced timeline controls are deferred.
+
+Initial Architecture Replay includes play, pause and speed. Timeline scrubbing, branching, side-by-side comparison and restoration UI are later scope.
+
+### 9.8 Approval and Build Mode handoff
+
+When the user selects `Approve and Build`:
+
+1. Validate the current Blueprint.
+2. Create an immutable approved architecture version.
+3. Show the exact version and Build plan to the user.
+4. Bind the approval event and BuildRun to that immutable version.
+5. Send the approved Blueprint, not raw canvas coordinates, to DeepCode through the BuildSpec.
+
+Later canvas edits create a new draft version and do not silently alter an active or completed BuildRun. Execution-relevant changes require new approval.
+
+### 9.9 Visibility and sharing
+
+- Architectures and projects are `private` by default.
+- Collaborators and simultaneous multi-user editing are not included now.
+- Read-only public sharing may be enabled only after production RLS and two-account isolation tests pass.
+- Public viewers cannot edit, approve, build, resume, download generated files or access private conversation data.
+- Generated files and archives remain private unless a separate future sharing decision explicitly includes them.
+
+### 9.10 Open-source references and boundaries
+
+- Use Excalidraw and Excalidraw MCP patterns for progressive interactive rendering.
+- Use relevant parser, component mapping and risk-review concepts from Microsoft's MIT-licensed Architecture Review Agent; do not adopt Azure OpenAI or Azure hosting as required dependencies.
+- Mermaid remains a lightweight export/documentation format, not the primary canvas.
+- Swark-style code-to-architecture verification is a later post-build capability; do not require GitHub Copilot or incorporate AGPL code without a license review.
+- GenAI-DrawIO-Creator may inform validation and element-level update patterns but is not the core renderer.
+- Figma/FigJam is not a runtime dependency because it is proprietary and would require external accounts. Figma may be used only as a design reference or optional future export.
+
+### 9.11 Canvas safety
+
+- Viewing, replaying or editing architecture never executes code.
+- Canvas-generated architecture requires explicit Build Mode approval before becoming execution input.
+- Every architecture, event, snapshot and version query enforces authenticated ownership or an explicitly allowed read-only public policy.
+- WebSocket connections require authenticated session establishment and authorization before subscription.
 
 ---
 
-## 16. Text interaction
+## 10. DeepCode integration
 
-Users can type at any time in the transcript view.
+### Current limitation
 
-Typed messages:
+The existing `DeepCodeAdapter` has operated as a controlled scaffold generator. It can create starter files and build records but must not be described as genuine DeepCode execution unless the DeepCode runtime is actually invoked.
 
-- join the **same conversation**
-- use the same mode / context loaded from PostgreSQL via Conversation Service
-- are persisted like voice transcripts through the same Conversation Service
-- may be answered by voice, text, or both depending on session state
+### Required target behavior
 
-### Typed turn path (FastAPI)
+The backend must use a provider abstraction:
 
 ```text
-Flutter typed message
-  → SaNa Backend REST/SSE
-    → Conversation Service
-      → load conversation context from PostgreSQL (messages + recent events)
-      → AI Orchestrator (current mode)
-      → LLMProvider
-      → persist assistant message (idempotent)
-      → return/stream response to Flutter
+Build Service
+    → CodingAgentAdapter
+        → DeepCodeAdapter
+            → verified DeepCode CLI/runtime
 ```
 
-MVP recommendation for simultaneous voice+text:
+### Verification gate
 
-- If a LiveKit voice session is active, typed text should be injected into the same agent session when supported (**requires verification** of LiveKit Agents text-input path; Flutter starter docs indicate text input is supported), **and** still persisted through Conversation Service.
-- If voice is inactive, text uses the FastAPI path above exclusively.
+Before implementation, the coding agent must verify from the installed version:
+
+1. Available DeepCode commands
+2. Supported execution and loop modes
+3. Structured/JSON output behavior
+4. Workspace selection behavior
+5. Resume/session behavior
+6. Exit codes and error output
+7. Cancellation behavior
+
+Do not invent CLI commands, flags, endpoints or JSON schemas.
+
+### DeepCode input
+
+Each approved execution receives:
+
+- Project specification
+- Acceptance criteria
+- Selected technical stack
+- Immutable approved Architecture Blueprint version
+- BuildSpec generated from that Blueprint
+- Existing project files when resuming
+- Workspace boundary
+- Repository/project rules
+- Test requirements
+- Safety constraints
+
+### DeepCode output
+
+Soul must capture:
+
+- Run status
+- Structured progress events where supported
+- Files created, modified or deleted
+- Test commands and results
+- Warnings and errors
+- Completion summary
+- Runtime/session identifier when supported
+
+### Fallback behavior
+
+If DeepCode is unavailable:
+
+- Do not claim that DeepCode executed.
+- Do not silently run the prototype scaffold.
+- Offer a clearly labelled `Prototype Scaffold` only after user confirmation.
+- Persist the blocker and failed BuildRun status.
 
 ---
 
-## 17. Unified conversation model
+## 11. Projects workspace
 
-### Core rule
+Projects is Soul’s persistent product workspace.
 
-Voice and text are two interfaces to **one conversation**.
+### Project list
 
-Example:
+Each card displays:
 
-1. User speaks: “SaNa, explain what LangGraph does.”
-2. Transcript shows user text.
-3. SaNa answers by voice and text.
-4. User types: “How is it different from CrewAI?”
-5. SaNa continues with full prior context.
+- Project title
+- Current status
+- Last updated time
+- Current phase
+- Latest build result
+- Resume action
 
-There are **not** separate voice conversation objects and text conversation objects.
+### Project detail
 
-### Authoritative persisted history
+Each project includes:
 
-**PostgreSQL, accessed through SaNa’s Conversation Service, is the authoritative persisted conversation history.**
+- Overview and specification
+- Linked conversation
+- Latest draft and approved Architecture Blueprint
+- Live canvas and Architecture Replay
+- Approved implementation plan
+- Build-run history
+- Progress and event logs
+- Generated files
+- Test and review results
+- Download archive
+- Resume Build
 
-| Store | Role |
-|---|---|
-| PostgreSQL `messages` / `conversation_events` / `conversations` | **Source of truth** for durable history, resume, audit, and LLM context assembly |
-| LiveKit room / agent in-memory state | Ephemeral realtime transport only |
-| Flutter local UI state | Display/cache only; may be stale; must rehydrate from Conversation Service |
+### Project requirements
 
-LiveKit must **not** be treated as the long-term conversation database.  
-If LiveKit disconnects, the Conversation Service + PostgreSQL remain the truth.
+- Projects appear immediately after creation.
+- Existing owned projects are backfilled without duplicates where required.
+- Refresh occurs after creation and status changes.
+- Projects survive browser refresh and account re-login.
+- Users cannot access projects belonging to another account.
+- Viewing, importing or downloading never executes code.
 
-### Shared context for voice and text turns
+---
 
-Both paths must resolve the same `conversation_id` and assemble context from the same Conversation Service:
+## 12. System architecture
 
 ```text
-Shared context assembly (Conversation Service)
-  1. Load conversation row (current mode, linked build project, etc.)
-  2. Load recent messages (authoritative transcript)
-  3. Load recent conversation_events (mode changes, build links, session transitions)
-  4. Apply user preferences (display name, assistant name)
-  5. Produce Mode-aware prompt/context package for LLM / voice agent
+Flutter Web
+  ├── Supabase Auth
+  ├── FastAPI/Railway APIs
+  ├── LiveKit browser client
+  ├── Conversation + Projects UI
+  └── Same-origin React/Vite Excalidraw canvas module
+
+FastAPI on Railway
+  ├── Supabase token verification
+  ├── LiveKit token service
+  ├── Conversation service
+  ├── Architecture Blueprint service
+  ├── Authenticated canvas WebSocket service
+  ├── Canvas validation, snapshot and replay service
+  ├── Project/build service
+  ├── Coding-agent adapter
+  └── Secure download service
+
+LiveKit Cloud
+  ├── Realtime rooms
+  ├── Browser audio transport
+  └── Hosted Python voice_agent
+
+Supabase PostgreSQL
+  ├── Profiles
+  ├── Conversations/messages/events
+  ├── Architecture Blueprints/versions
+  ├── Canvas events/snapshots
+  ├── Projects/build runs/build events
+  └── Generated-file metadata
+
+Controlled build workspace
+  └── DeepCode runtime → project-specific files and tests
 ```
 
-#### Voice turn path (LiveKit)
+---
+
+## 13. Data and ownership model
+
+Every durable user resource must contain or resolve to an authenticated owner.
+
+### Core entities
+
+- `profiles`
+- `conversations`
+- `messages`
+- `conversation_events`
+- `architectures`
+- `architecture_versions`
+- `canvas_events`
+- `canvas_snapshots`
+- `build_projects`
+- `build_runs`
+- `build_events`
+- `generated_files`
+
+### Ownership requirements
+
+- `user_id` is derived server-side from the verified Supabase token.
+- The frontend cannot select or override ownership.
+- Child records must resolve to a parent owned by the current user.
+- Database RLS and backend authorization must both enforce isolation.
+- Visibility is `private` by default; any future `public` policy is read-only and narrowly scoped.
+- Downloads require authorization at request time.
+- Service-role operations must retain explicit ownership predicates.
+
+---
+
+## 14. Security requirements
+
+### Authentication and authorization
+
+- Reject missing, invalid, expired or incorrectly issued Supabase tokens.
+- Never accept frontend-provided identity as authoritative.
+- Use user-derived LiveKit participant identities.
+- Protect hosted voice-agent backend calls separately.
+- Verify project ownership on list, read, modify, resume and download.
+
+### Build workspace
+
+- Canonicalize and validate every workspace path.
+- Restrict execution to designated project roots.
+- Block path traversal and symlink escapes.
+- Never expose host credentials to generated code.
+- Apply timeouts and cancellation.
+- Require confirmation for destructive operations.
+- Record auditable BuildRun and approval events.
+
+### Secrets
+
+- Secrets remain in approved environment stores.
+- Browser bundles may contain only public configuration.
+- LiveKit API secrets and Supabase service-role credentials never enter Flutter.
+- `.env` and local credential files remain Git-ignored.
+- Logs must redact credentials and tokens.
+
+### Required isolation tests
+
+- User A cannot list User B’s conversations.
+- User A cannot retrieve User B’s project by ID.
+- User A cannot download User B’s archive.
+- User A cannot access User B’s canvas.
+- A public viewer cannot edit, approve, build, resume or access private files/conversations.
+- Account switching clears user-specific cached state.
+- A new account begins with empty project and history views.
+
+---
+
+## 15. Build states
+
+Recommended project and BuildRun states:
+
+- `draft`
+- `planning`
+- `awaiting_approval`
+- `approved`
+- `queued`
+- `running`
+- `testing`
+- `reviewing`
+- `completed`
+- `failed`
+- `cancelled`
+- `blocked`
+
+All status transitions must be validated server-side and recorded as events.
+
+---
+
+## 16. Agent-native lifecycle
+
+Soul’s target lifecycle is:
 
 ```text
-Flutter mic
-  → LiveKit Server
-    → SaNa Voice Agent
-      → STT (partials are UI-only; not durable messages)
-      → on FINAL user transcript:
-          Conversation Service.persist_message(idempotent)
-      → Conversation Service.load_context(conversation_id)
-      → LLM (+ mode behavior)
-      → TTS + speak via LiveKit
-      → Conversation Service.persist_message(assistant, idempotent)
-      → Flutter shows same transcript from realtime events + eventual DB sync
+Plan → Prototype → Build → Review → Validate → Deploy/Monitor
+  ↑                                                     ↓
+  └────────────── Continuous feedback loop ─────────────┘
 ```
 
-#### Text turn path (FastAPI)
+### MVP agents/capabilities
 
-```text
-Flutter text send
-  → FastAPI
-    → Conversation Service.persist_message(user text, idempotent)
-    → Conversation Service.load_context(conversation_id)
-    → AI Orchestrator / LLMProvider
-    → Conversation Service.persist_message(assistant, idempotent)
-    → stream/return to Flutter
-```
+1. **Planning and architecture:** clarifies the request and creates the plan/canvas.
+2. **DeepCode build:** performs approved file generation and modifications.
+3. **Test and review:** runs checks and summarizes readiness.
 
-Both paths write and read the **same** conversation records.
-
-### Context rehydration (reconnect / resume later)
-
-When a voice session reconnects, or when a user resumes a conversation later (voice or text):
-
-1. Flutter (or agent bootstrap) calls SaNa Backend with `conversation_id` (+ auth).
-2. Conversation Service loads authoritative messages + conversation_events from PostgreSQL.
-3. Backend returns a rehydration package: conversation metadata, ordered messages, recent events, current mode, linked build project if any.
-4. Flutter replaces/reconciles local transcript UI with the authoritative list (dedupe by message identity).
-5. If starting/resuming LiveKit:
-   - mint a new short-lived token for a room tied to that `conversation_id`
-   - Voice Agent receives bootstrap context from Conversation Service **before** generating replies
-   - Agent must not invent prior turns from stale in-memory state alone
-6. Only **final** transcripts after reconnect may create new messages; replays/duplicates are rejected by idempotency keys.
-
-```mermaid
-sequenceDiagram
-  participant Flutter
-  participant API as SaNa Backend
-  participant CS as Conversation Service
-  participant DB as PostgreSQL
-  participant LK as LiveKit + Voice Agent
-
-  Flutter->>API: Resume conversation_id
-  API->>CS: load_context + transcript
-  CS->>DB: SELECT messages/events
-  DB-->>CS: authoritative history
-  CS-->>API: rehydration package
-  API-->>Flutter: messages + events + mode
-  Flutter->>API: Request LiveKit token
-  API-->>Flutter: token + room
-  Flutter->>LK: Connect/reconnect
-  API->>LK: Bootstrap agent with same context
-  Note over LK,CS: Later finals persist via Conversation Service only
-```
-
-### Idempotency / deduplication for realtime persistence
-
-Realtime voice can emit partial transcripts, repeated finals, and reconnect replays. Persistence must be idempotent so duplicates cannot create multiple rows.
-
-**Rules:**
-
-1. **Partials never become durable messages.** UI may show interim text; only finals (or explicit text sends) persist.
-2. Every persist request carries a **client/event idempotency key** (unique per logical utterance/turn), for example:
-   - `idempotency_key` / `client_message_id`
-   - optional stable provider ids when available (`transcript_final_id`, agent turn id)
-3. Conversation Service upserts by unique key: same key → return existing message; do not insert again.
-4. Content edits to the same logical utterance (rare STT revision) update the existing row or create a revision record — they must not create a second unrelated user message for the same utterance.
-5. Assistant replies likewise use turn-level idempotency keys.
-6. Reconnection bootstrap reloads from DB; it must not re-persist historical messages already stored.
-7. Flutter dedupes locally by `message_id` / `idempotency_key` when merging LiveKit events with API history.
-
-Suggested uniqueness:
-
-```text
-UNIQUE (conversation_id, idempotency_key)
-```
-
-### Suggested interaction: reveal transcript by swipe
-
-**Voice-first view**
-
-- Orb
-- Mode cards
-- Voice controls
-
-**Swipe / scroll upward**
-
-**Transcript view**
-
-- Messages
-- Text input + send
-- Persistent voice controls
-
-This should feel like revealing another representation of the same conversation, not opening a different chatbot.
+Security, accessibility, compliance, infrastructure and on-call specialist agents are future phases unless needed as deterministic checks in the MVP.
 
 ---
 
-## 18. Conversation history
+## 17. Non-functional requirements
 
-Users can:
+### Performance
 
-- view previous conversations
-- search conversations (**MVP: title/content search; advanced ranking later**)
-- resume a conversation
-- continue with voice or text
+- Home and Projects should become interactive quickly on typical broadband.
+- Voice connection state must be visible.
+- Canvas animations should target 60 FPS on supported desktop browsers and avoid full-scene regeneration for incremental changes.
+- Progressive operations should normally become visible within 1.5 seconds after a finalized semantic phrase, excluding provider outages or documented model latency.
+- Build progress must update without requiring page refresh.
+- Large project archives must stream rather than load fully into browser memory.
 
-**Authoritative store:** PostgreSQL via Conversation Service (not LiveKit, not Flutter cache).
+### Reliability
 
-Each conversation stores a current mode:
+- Reconnecting must restore conversation and project state.
+- Canvas reconnect loads the latest valid snapshot and applies later idempotent events without duplication.
+- Duplicate requests must be controlled through idempotency keys.
+- Partial transcripts are not durable messages.
+- Failed build runs preserve diagnostic events.
 
-- `general`
-- `debate`
-- `brainstorm`
-- `build`
+### Accessibility
 
-Mode changes over time are also recorded as `conversation_events` (see below), so history can show which mode produced which segment even if the conversation later switches modes.
+- Keyboard-accessible navigation and canvas controls
+- Sufficient text/background contrast
+- Visible focus states
+- Screen-reader labels for controls and diagram summaries
+- Reduced-motion behavior
+- Accessible text summaries for architecture components, connections, risks and changes
 
-### Stored conversation fields (minimum)
+### Observability
 
-- conversation_id
-- user_id
-- title
-- mode (current)
-- created_at
-- updated_at
-
-### Stored message fields (minimum)
-
-- message_id
-- conversation_id
-- sender (`user` / `assistant` / `system`)
-- content
-- source (`voice` / `text`)
-- idempotency_key
-- timestamp
-- metadata (JSON)
-
-### conversation_events (important non-message events)
-
-Not every durable fact is a chat bubble. SaNa records important non-message events in `conversation_events`.
-
-Examples:
-
-| event_type | Purpose |
-|---|---|
-| `mode_changed` | General ↔ Debate ↔ Brainstorm ↔ Build |
-| `build_project_linked` | Conversation associated with a BuildProject |
-| `build_project_unlinked` | Link removed/changed |
-| `build_approval_requested` | Plan presented; waiting for explicit user approval |
-| `build_approval_granted` | User approved starting execution |
-| `build_approval_denied` | User declined execution |
-| `voice_session_started` | LiveKit/voice session began |
-| `voice_session_ended` | Voice session ended cleanly |
-| `voice_session_reconnected` | Session recovered after disconnect |
-| `conversation_resumed` | User reopened conversation later |
-
-These events:
-
-- preserve mode/project/session timeline without polluting the message transcript
-- help rehydrate context (current mode, linked project, pending approvals)
-- support analytics/debugging later
-
-### Audio storage policy
-
-- **Default:** do **not** permanently store raw microphone audio
-- Transcription becomes normal persisted text messages
-- Optional later: encrypted audio retention with explicit user consent
+- Correlation IDs across browser, backend, LiveKit job and BuildRun
+- Structured application and build events
+- WebSocket connection, canvas-operation latency, rejection and replay diagnostics
+- Provider latency and error visibility
+- No secret values in logs
 
 ---
 
-## 19. General Mode
+## 18. Delivery phases
 
-Default mode. No card required.
+### 18.1 Global execution protocol
 
-Supports:
+These rules apply to every phase:
 
-- programming questions
-- AI questions
-- technical explanations
-- architecture discussions
-- debugging discussions
-- learning
-- project questions
-- software engineering questions
+1. Verify the active Git branch and working-tree status.
+2. Stop if the branch is unexpected or unrelated changes make the phase unsafe.
+3. Read the latest PRD and the previous phase report; do not repeat a full repository audit.
+4. Inspect only the files and services relevant to the current phase.
+5. Record the pre-change test baseline.
+6. Implement the smallest complete vertical slice.
+7. Run targeted tests first and the full applicable suite before completion.
+8. Inspect `git diff`, `git diff --check` and staged-file boundaries.
+9. Report changes, tests, risks and manual verification required.
+10. Stop for founder review before commit, push, migration or deployment unless that action was explicitly approved.
 
-Behavior:
+### 18.2 Model and usage strategy
 
-- helpful technical partner
-- asks clarifying questions when needed
-- does not blindly start coding unless user enters Build Mode or clearly requests building
-
----
-
-## 20. Debate Mode
-
-Entry phrase:
-
-> “Okay {userName}, what do you want to debate today?”
-
-Example topic:
-
-> “Microservices are always better than monoliths.”
-
-SaNa should:
-
-- challenge assumptions
-- provide counterarguments
-- ask probing questions
-- identify weak/strong arguments
-- provide technical evidence when possible
-- explore tradeoffs
-- avoid blind agreement
-- help improve reasoning
-- summarize when appropriate
-
-Voice + text remain synchronized.
-
----
-
-## 21. Brainstorm Mode
-
-Entry phrase:
-
-> “Okay {userName}, what are we brainstorming today?”
-
-Example:
-
-> “I want to build an AI application for recruiters.”
-
-SaNa should:
-
-- explore the idea
-- generate alternatives
-- expand incomplete ideas
-- ask useful clarifications
-- identify potential users
-- suggest features
-- discuss feasibility
-- compare technology options
-- discuss architecture
-- identify risks
-- organize ideas
-- convert promising ideas into actionable project concepts
-
-### Conversion into Build Mode
-
-Brainstorm → refine → user says “Let’s build it” → create / enter Build Project workflow.
-
----
-
-## 22. Build Mode — critical differentiator
-
-### Plain English
-
-Build Mode is where SaNa stops being only a thinking partner and becomes a project-building partner.
-
-SaNa handles the human conversation.  
-**DeepCode handles engineering execution.**
-
-### Critical rule: entering Build Mode does NOT execute code
-
-Selecting Build Mode, saying “let’s build it,” or linking a Build Project only changes conversation mode / planning state.
-
-SaNa must:
-
-1. gather requirements
-2. ask clarifying questions as needed
-3. produce a specification / implementation plan
-4. present that plan to the user
-5. **wait for explicit user approval** before starting a new build execution
-
-Until approval is granted, DeepCode must not begin file/command execution for that new run.
-
-Record these as `conversation_events` where applicable:
-
-- `build_approval_requested`
-- `build_approval_granted`
-- `build_approval_denied`
-
-### Intended workflow
-
-```mermaid
-flowchart LR
-  A[User idea] --> B[Enter Build Mode - no execution yet]
-  B --> C[Clarifying questions]
-  C --> D[Requirements]
-  D --> E[Specification]
-  E --> F[Implementation plan presented]
-  F --> G{Explicit user approval?}
-  G -->|No| H[Stay in planning / revise plan]
-  G -->|Yes| I[Create / open BuildProject]
-  I --> J[Start BuildRun / DeepCode execution]
-  J --> K[Create/edit files]
-  K --> L[Run commands / tests]
-  L --> M{Pass?}
-  M -->|No| N[Debug / modify]
-  N --> L
-  M -->|Yes| O[Return results]
-  O --> P[SaNa explains what was built]
-```
-
-### Hard constraints
-
-- Do **not** execute arbitrary AI-generated code on the user’s phone.
-- Build execution belongs on backend infrastructure in an isolated / designated workspace.
-- Entering Build Mode ≠ starting DeepCode.
-- A new BuildRun requires explicit approval after the plan is shown.
-- Dangerous/destructive operations require additional safeguards (see Build lifecycle / sandbox).
-
----
-
-## 23. DeepCode architecture
-
-### Verified identity of DeepCode in this environment
-
-Inspected local installation:
-
-- Product: **DeepCode — Open Agentic Coding** (HKUDS / `deepcode-hku`)
-- Version observed: **DeepCode 2.0.0**
-- CLI available: `deepcode.exe`
-- Local config: `~/.deepcode/`
-- Nearby source checkout observed: `Projects AI/DeepCode/DeepCode`
-
-DeepCode is an **agentic coding/build engine**, not merely a knowledge base.
-
-### Verified DeepCode capabilities (from local CLI + docs)
-
-| Capability | Verified? | Evidence |
+| Work type | Recommended model | Reasoning |
 |---|---|---|
-| Interactive CLI / TUI | Yes | `deepcode` default entry |
-| Headless one-shot task | Yes | `deepcode exec "<task>"` |
-| Durable goal loop | Yes | `deepcode loop "<goal>"` |
-| Resume session | Yes | `--resume <session-id>` |
-| Workspace selection | Yes | `--workspace` / `-w` |
-| Machine-readable events | Yes | `deepcode exec ... --json` (NDJSON) |
-| MCP server mode | Yes (exists) | `deepcode mcp` (stdio). Exact tool schema **TBD / Requires verification** |
-| App Server | Yes | `deepcode-app-server` / JSON-RPC over **stdio** |
-| HTTP REST API | **Not found** | No documented public REST API in inspected materials |
-| Provider switching | Yes | `deepcode provider ...` |
-| OpenRouter support | Yes | provider template `openrouter` |
-| Ollama support | Yes | provider `ollama` (`http://localhost:11434/v1`) |
-| Session persistence | Yes | `~/.deepcode/sessions/` JSONL + sqlite projection |
-| Access presets | Yes | `ask`, `read-only`, `full-access` |
-| Command sandbox / workspace fence | Yes | documented security profiles |
-| Skills system | Yes | `deepcode skill ...` |
-| Automations | Yes | `deepcode automation ...` |
+| Architecture, security, RLS and DeepCode design | GPT-5.6 Sol | High, focused checkpoint only |
+| Normal implementation and debugging | GPT-5.6 Terra | Medium |
+| Mechanical tests, formatting and renaming | GPT-5.6 Luna | Low or medium |
+| Final phase review | GPT-5.6 Sol | High |
 
-### Important observed development note
-
-A recent local headless session using OpenRouter model `anthropic/claude-sonnet-4.5` failed with OpenRouter **402 credits** error.  
-This confirms: having an OpenRouter account ≠ free unlimited paid-model usage. SaNa/DeepCode must prefer `openrouter/free` or `:free` variants / Ollama during development.
-
-### SaNa ≠ DeepCode
-
-```text
-SaNa product experience
-  ├── conversation UX
-  ├── modes
-  ├── auth / history / projects
-  ├── voice orchestration
-  └── Build Orchestrator
-        └── DeepCodeAdapter
-              └── DeepCode (exec/loop/MCP/app-server as available)
-```
-
-### Approved integration strategy (**APPROVED WITH VERIFICATION REQUIRED**)
-
-Because no public DeepCode HTTP REST API was found, SaNa will use a **`DeepCodeAdapter`** abstraction so the rest of SaNa does not depend directly on the DeepCode CLI.
-
-#### MVP adapter candidate (must re-verify before coding the body)
-
-Candidate based on inspected DeepCode 2.0.0 help/docs (re-verify on implementation day):
-
-```text
-deepcode exec "<task>" \
-  --workspace <build_project_workspace> \
-  --resume <deepcode_session_id?> \
-  --connection <provider_connection_id> \
-  --model <model_id> \
-  --access <ask|read-only|full-access> \
-  --json
-```
-
-For longer goals:
-
-```text
-deepcode loop "<goal>" \
-  --workspace <path> \
-  --test-cmd "<verification command>" \
-  --resume <session-id>
-```
-
-**Verification gate before adapter implementation:**
-
-1. Re-run installed CLI help and confirm commands/flags.
-2. Confirm `--json` is valid and capture real sample output.
-3. Document actual JSON event schema from those samples (do not invent fields).
-4. Confirm `--resume` / workspace continuation behavior with a tiny real task.
-5. Only then implement the adapter body that parses verified events into SaNa Build Status.
-
-SaNa Backend must parse only verified event shapes and map them into Build Status events.
-
-#### Alternative adapter paths (later / optional)
-
-| Path | Pros | Cons | Status |
-|---|---|---|---|
-| `deepcode exec/loop --json` | Documented, scriptable, resumable | Process orchestration complexity | **Recommended MVP** |
-| `deepcode mcp` (stdio MCP) | Standard tool protocol | Schema/details need verification | Candidate |
-| `deepcode-app-server` JSON-RPC stdio | Richer thread/turn model | Desktop-oriented, stdio not network API | Possible internal option |
-| Invented REST API | Convenient | **Not real** | Forbidden |
-
-### DeepCodeAdapter conceptual interface
-
-```text
-DeepCodeAdapter
-- createSession(workspace, model, connection, access)
-- runTurn(sessionId, prompt, options) -> eventStream
-- runGoal(sessionId, goal, testCmd?) -> eventStream
-- resume(sessionId)
-- getSessionMetadata(sessionId)
-- cancel(sessionId)                 # TBD / Requires verification of cancel semantics for CLI
-```
-
-If an ideal capability is missing, keep the adapter method and document the implementation gap rather than inventing DeepCode APIs.
-
-### Technology card — DeepCode
-
-| Topic | Detail |
-|---|---|
-| What it is | Open agentic coding system that can explore repos, edit files, run commands/tests, and iterate |
-| Why SaNa needs it | Build Mode needs a real engineering engine |
-| Problem solved | Creating/modifying software projects beyond chat-only code snippets |
-| Where it runs | Developer machine / backend worker host (not on the phone) |
-| Communication | SaNa Backend → DeepCodeAdapter → CLI/MCP/App Server |
-| Open-source? | Yes (MIT-oriented open project; verify exact license in repo) |
-| Free for development? | Software is free; LLM usage may still cost money |
-| Production cost? | Compute + model inference costs |
-| Alternatives | Aider, OpenHands, SWE-agent, custom LangGraph coding agents — but this project standardizes on DeepCode |
+Do not use Max or Ultra by default. Do not ask a model to rediscover completed work. Preserve short phase reports so the next run can continue without rereading the entire repository.
 
 ---
 
-## 24. Persistent Build Projects
+### Phase A — Secure, verify and publish the existing foundation
 
-Build Mode must support continuing existing projects over time.
+#### Objective
 
-### Example
+Turn the currently working local Soul Web build into a verified, user-isolated and publicly accessible baseline before adding new product capabilities.
 
-- Day 1: “Build me an expense tracker.”
-- Day 3: “Open my expense tracker.” → “Add Google authentication.”
-- Later: “Add dark mode.” / “Fix the login bug.” / “Explain how auth works.”
+#### A0 — Repository and deployment snapshot
 
-DeepCode should modify the **same workspace/project**, not regenerate everything.
+- Verify branch, upstream and working-tree status.
+- Record the current commit hash without changing history.
+- Inventory modified and untracked files.
+- Confirm the Railway health endpoint reports the Soul LiveKit URL.
+- Confirm the hosted `voice_agent` is running.
+- Confirm secrets are absent from tracked files and `mobile/build/web`.
+- Record existing backend and Flutter test results.
 
-### Entities
+**Deliverable:** concise baseline report.  
+**Stop condition:** unexpected branch, merge conflict, exposed secret or unrelated destructive change.
 
-| Entity | Meaning |
-|---|---|
-| `BuildProject` | Long-lived project the user owns |
-| `BuildSession` | A DeepCode/SaNa working session linked to a project |
-| `BuildRun` | One execution attempt (a turn/goal run) |
-| `Artifact` | Output such as logs, summaries, file manifests, test reports |
+#### A1 — Review the Supabase isolation migration
 
-### Associations
+- Inspect the migration without applying it.
+- Confirm every user-owned table contains or resolves to `user_id`.
+- Verify RLS is enabled on all relevant tables.
+- Verify SELECT, INSERT, UPDATE and DELETE policies use the authenticated user.
+- Verify service-role backend paths still apply explicit ownership filters.
+- Check indexes for common `user_id` and parent-resource queries.
+- Prepare rollback or corrective SQL before production execution.
 
-- User → many BuildProjects
-- BuildProject → many BuildSessions / BuildRuns
-- BuildProject → one primary workspace path / repo identity
-- BuildProject ↔ Conversation(s)
-- BuildRun → Artifacts
-- BuildSession may store DeepCode `session_id` for `--resume`
+**Tests:** migration syntax, local/staging policy tests if available, backend authorization tests.  
+**Approval gate:** founder reviews the SQL and target Supabase project before application.
 
----
+#### A2 — Apply and verify the production migration
 
-## 25. Build lifecycle
+- Apply only the approved migration to the verified Soul Supabase project.
+- Do not print credentials or service-role keys.
+- Confirm RLS and policies after migration.
+- Confirm existing records retain the correct owner.
+- Identify orphaned records; do not assign them to arbitrary users.
 
-### MVP Build Mode (developer-controlled) — APPROVED
+**Tests:** two-account direct database/API isolation checks.  
+**Stop condition:** ownership ambiguity, policy failure or unexpected production data change.
 
-```text
-Flutter
-  → SaNa Backend
-    → Build Orchestrator
-      → WorkspaceBackend interface
-        → LocalTrustedWorkspaceBackend (MVP)
-      → DeepCodeAdapter
-        → DeepCode (local process, workspace-fenced)
-          → Explicitly designated local workspace directory only
-            → create/edit/test
-              → status/result
-                → SaNa explains
-```
+#### A3 — Complete two-account end-to-end isolation testing
 
-### Production Build Mode (later) — architecture must allow swap
+Using User A and User B:
 
-```text
-Flutter
-  → SaNa Backend
-    → Build Orchestrator
-      → WorkspaceBackend interface
-        → SandboxedRemoteWorkspaceBackend (later)
-      → DeepCodeAdapter
-        → DeepCode inside isolated worker / container
-          → Ephemeral or persistent sandbox workspace
-            → resource/time/network limits
-```
+- Create separate conversations.
+- Create separate Build Projects.
+- Verify list endpoints show only the current user’s records.
+- Attempt cross-user detail, resume, canvas and download access by ID.
+- Verify all unauthorized attempts return an appropriate denial without data leakage.
+- Sign out and switch accounts in the same browser.
+- Confirm caches and UI state reset.
+- Confirm a new account starts with empty History and Projects.
 
-MVP explicitly allows local/developer-only execution.  
-Production sandboxing is Phase 17, not a blocker for the first prototype.  
-**Do not give DeepCode unrestricted access outside designated project workspaces.**
+**Acceptance:** no cross-account data is visible through UI, API or direct identifier access.
 
-### Explicit approval gate before execution
+#### A4 — Authenticated voice and existing Build Mode browser test
 
-Build Orchestrator states for a new run:
+- Sign in through Flutter Web.
+- Request a user-specific LiveKit token.
+- Confirm the participant identity derives from the authenticated user.
+- Complete one voice turn and interruption test.
+- Enter Build Mode and create a prototype project.
+- Confirm the project is stored under the authenticated account.
+- Confirm the archive download is authorized.
 
-1. `planning` — requirements/spec/plan being produced (no DeepCode execution)
-2. `awaiting_approval` — plan presented; blocked until user approves
-3. `approved` — user explicitly approved; execution may start
-4. `running` / `testing` / `debugging` / `completed` / `failed` / `cancelled`
+**Acceptance:** voice and the existing controlled build workflow work after the isolation changes.
 
-Approval must be an explicit user action in the product (confirm button and/or clear confirm phrase handled as a deliberate approval event — not inferred merely from entering Build Mode).
+#### A5 — Soul rebrand pass
 
-### Dangerous / destructive operation safeguards
+- Replace user-visible SaNa/Sana branding with Soul.
+- Update titles, descriptions, PWA metadata, icons and accessible labels.
+- Preserve internal package/folder names when renaming them would create unnecessary risk.
+- Document intentionally deferred internal renames.
+- Do not rename cloud resources merely for visual consistency.
 
-In addition to workspace fencing:
+**Tests:** Flutter tests, analysis, web build and visual inspection at desktop and narrow widths.
 
-| Safeguard | Requirement |
-|---|---|
-| Workspace fence | DeepCode may only touch the designated BuildProject workspace |
-| Default access preset | Prefer least privilege; avoid blanket unrestricted host access |
-| Destructive command class | Deletes, mass overwrites, privilege changes, network exfil-like actions need extra confirmation or denial |
-| Dependency/install scope | Limit to project workspace; no global machine mutation by default |
-| Secrets | Never inject user cloud secrets into workspaces casually; redacted logs |
-| Timeout / cancel | Every BuildRun has timeout and user-cancel path |
-| Audit | Persist BuildRun status + summaries; link conversation_events for approval/execution transitions |
+#### A6 — Public Flutter Web deployment
 
-Exact command allow/deny policy details: refine during Phase 13–14 using DeepCode’s real access presets — do not invent unsupported controls.
+- Select and document the approved static hosting provider.
+- Configure SPA redirects.
+- Configure microphone permission headers and HTTPS.
+- Configure public Supabase values and Railway base URL without secrets.
+- Deploy the production web build.
+- Test sign-up, sign-in, refresh, deep links, microphone permission and sign-out on the public URL.
 
----
+**Phase A exit criteria:**
 
-## 26. Build status / progress
+- Production RLS is active and verified.
+- Two-account isolation passes.
+- Authenticated voice works on the public site.
+- Existing Build Mode works without data leakage.
+- Visible branding uses Soul.
+- Tests and production web build pass.
 
-SaNa should eventually narrate progress conversationally, for example:
-
-- “I’ve created the project.”
-- “I’m implementing authentication now.”
-- “The first build failed because of a dependency issue. I’m fixing it.”
-- “The tests are passing.”
-- “Your project is ready.”
-
-### Allowed statuses (only when backed by real state)
-
-- Understanding requirements
-- Planning
-- Waiting for user decision / awaiting approval (**required before new execution**)
-- Creating project
-- Coding
-- Installing dependencies
-- Building
-- Testing
-- Debugging
-- Completed
-- Failed
-- Cancelled
-
-### Mapping principle
-
-Do **not** fake progress.  
-Map DeepCode NDJSON/tool events → SaNa BuildStatus only when evidence exists.
-
-Exact event schema mapping: **TBD / Requires verification** during Phase 13 POC by capturing real `--json` output from sample runs.
+**Review/commit checkpoint:** one security-focused checkpoint and, if preferred, a separate web-deployment/rebrand checkpoint. Commit and push only after approval.
 
 ---
 
-## 27. LiveKit architecture
+### Phase B — Complete the Projects workspace
 
-### Plain English
+#### Objective
 
-LiveKit is the realtime “phone line” between the Flutter app and the SaNa voice agent. It carries audio (and related realtime data) with low latency.
+Make Projects the reliable, persistent home for every user-owned product, conversation, build and downloadable artifact.
 
-### Recommended topology
+#### B1 — Audit the existing project data path
 
-```text
-Flutter Mobile App
-   |  (WebRTC via LiveKit Flutter SDK)
-   v
-LiveKit Server  (local self-host for dev OR LiveKit Cloud)
-   |
-   +--> SaNa Voice Agent (LiveKit Agents, Python)
-          |
-          +--> STT
-          +--> LLM / orchestration hooks
-          +--> TTS
-```
+- Trace project creation from voice/text Build Mode to FastAPI persistence.
+- Trace list, detail, status, resume and download requests.
+- Identify whether any legacy projects exist only on disk or without ownership metadata.
+- Confirm the UI and backend use the same authoritative project source.
 
-Token generation must happen on **SaNa Backend** (API key/secret never in Flutter).
+**Deliverable:** root-cause report for missing, duplicate or stale projects.
 
-### Concerns to design for
+#### B2 — Normalize project and build data
 
-- Microphone permissions
-- Room/session creation
-- Secure token generation
-- Connection lifecycle
-- Reconnection
-- Speech detection
-- Interruptions / barge-in
-- Latency
-- Streaming / partial / final transcripts
-- Transcript sync to DB + UI
-- Network failures
-- Agent failures
+- Finalize project, BuildRun, event and generated-file relationships.
+- Add required ownership, status and timestamp indexes.
+- Define stable API response models.
+- Backfill valid existing projects idempotently.
+- Quarantine ambiguous or unsafe legacy records rather than exposing them.
 
-### Technology card — LiveKit
+**Tests:** idempotent backfill, ownership, duplicate prevention and status-transition tests.
 
-| Topic | Detail |
-|---|---|
-| What it is | Open-source realtime WebRTC platform + Agents framework |
-| Why SaNa needs it | Reliable low-latency voice sessions on mobile |
-| Problem solved | Streaming mic audio / agent audio / realtime session lifecycle |
-| Where it runs | LiveKit server (local or cloud) + agent worker process |
-| Communication | Flutter ↔ LiveKit; Agent ↔ LiveKit; Backend mints tokens via LiveKit Server API |
-| Open-source? | Yes (server + agents). Cloud is commercial |
-| Free for development? | Self-host local is free; Cloud has free Build plan allotments |
-| Production cost? | Cloud usage can cost money; self-host costs infra/ops |
-| Alternatives | Agora, WebRTC custom, Daily, raw WebSocket audio (usually worse DX) |
+#### B3 — Project list experience
 
-### Verified LiveKit capabilities relevant to SaNa
+- Display title, status, current phase, last update and latest result.
+- Provide loading, empty, error and retry states.
+- Refresh after project creation and status changes.
+- Preserve the current authenticated user boundary.
 
-- Flutter client SDK + official agent starter Flutter app exist
-- LiveKit Agents supports STT / LLM / TTS composition
-- LiveKit Agents can use Ollama via OpenAI-compatible plugin (`openai.LLM.with_ollama`)
-- Kokoro local TTS integration is documented for LiveKit Agents
-- Local LiveKit server can run in `--dev` mode
+#### B4 — Project detail experience
+
+- Add specification and approved plan.
+- Link the authoritative conversation.
+- Add architecture/canvas placeholder until Phase C.
+- Display BuildRun history and events.
+- Display generated-file metadata and test status.
+- Add secure Resume and Download actions.
+
+#### B5 — Resume and download verification
+
+- Reopen a project after browser refresh and re-login.
+- Resume without creating a duplicate project.
+- Authorize every archive generation/download request.
+- Reject cross-user and invalid-path downloads.
+
+**Phase B exit criteria:** an authenticated user can create, leave, reopen, resume and download only their own project, with no duplicate or missing list entry.
+
+**Review/commit checkpoint:** Projects data/API changes and UI changes may be separate commits after approval.
 
 ---
 
-## 28. STT architecture
+### Phase C — Persistent live canvas MVP
 
-**STT = Speech-to-Text** (“listener that turns voice into words”)
+#### Objective
 
-### Options
+Let Soul create clear, structured diagrams during a conversation and persist them as part of a project.
 
-| Option | Cost | Latency | Quality | Hardware | Complexity | Scalability |
-|---|---|---|---|---|---|---|
-| Hosted STT via LiveKit Inference / Deepgram / OpenAI | Paid (free credits possible) | Usually best | High | Low | Low | High |
-| Local faster-whisper / Whisper-compatible server | Free compute-wise | Medium/high depending on GPU | Good | Medium/High | Medium | Limited to your machine |
-| Fully on-device mobile STT | Free runtime | Variable | Variable | Phone CPU | High | Device-bound |
+#### C1 — Architecture Blueprint contract
 
-### Approved strategy: Hybrid (**APPROVED** — option C)
+- Define and test the provider-neutral `ArchitectureSpec` schema.
+- Include stable component, connection, group, annotation, decision and risk IDs.
+- Define draft, approved and superseded version behavior.
+- Define the allowed canvas operation schema and validation errors.
+- Keep visual coordinates/style outside the core architectural meaning where practical.
 
-- Prefer free/local/open-source STT when practical (e.g., evaluate local Whisper-compatible STT).
-- Keep STT behind a replaceable interface: `SpeechToTextProvider`.
-- If local STT cannot provide the latency/reliability/natural conversational experience SaNa requires, substitute a hosted STT provider without rewriting voice architecture.
-- Long-term priority: natural realtime conversational UX; early priority: keep costs low.
+**Deliverable:** versioned schema, examples and validation tests before renderer work.
 
----
+#### C2 — Standalone Excalidraw canvas proof
 
-## 29. LLM architecture
+- Add a bounded `canvas/` React/Vite module using the MIT-licensed Excalidraw package.
+- Do not add a general microfrontend framework.
+- Render one Overview Architecture example from a Blueprint.
+- Add nodes and edges progressively through local mock operations.
+- Verify zoom, pan, selection, fit, fullscreen and basic responsive behavior.
+- Apply clean Figma-inspired Soul styling with low/no roughness.
+- Verify reduced-motion and accessible summary behavior.
 
-**LLM = Large Language Model** (“the reasoning brain”)
+**Stop condition:** unsupported license, unusable Flutter embedding, unacceptable performance or a requirement for external user accounts.
 
-SaNa must use a **provider-independent** architecture.
+#### C3 — Embed canvas in the Soul conversation
 
-### Conceptual interface
+- Build/deploy the canvas module from the same repository and origin as Flutter Web.
+- Embed it through an isolated Flutter web element/iframe.
+- Add a typed and origin-validated `postMessage` bridge.
+- Implement desktop 35/65 split view with resizing, collapse and fullscreen.
+- Implement narrow/mobile `Conversation` and `Canvas` tabs.
+- Add `View on canvas` activity cards to conversation history.
+- Preserve voice controls while the canvas is visible.
 
-```text
-LLMProvider
-- chat(messages, tools?, stream?)
-- listModels()
-- healthcheck()
+#### C4 — Authenticated storage and APIs
 
-Implementations (examples):
-- OpenRouterProvider
-- OllamaProvider
-- OpenAIProvider
-- AnthropicProvider
-```
+- Implement `architectures`, `architecture_versions`, `canvas_events` and `canvas_snapshots` storage.
+- Link each architecture to its owner, conversation and optional project.
+- Add authenticated create, read, update, list, version, event and snapshot APIs.
+- Enforce RLS and backend ownership checks.
+- Add sequence-number and idempotency constraints.
+- Store private visibility by default.
 
-No scattered business logic like `if provider == OpenAI` across the app.
+#### C5 — Validated WebSocket operations
 
-### Where LLMs are used
+- Add an authenticated FastAPI WebSocket endpoint scoped to one owned architecture.
+- Validate every operation against the allowlist and current version.
+- Broadcast accepted operations to the authorized canvas.
+- Persist accepted durable operations exactly once.
+- Return safe structured rejection events for invalid operations.
+- Implement reconnection using latest snapshot plus later events.
+- Add rate, payload, graph-size and connection limits.
 
-1. **Conversation intelligence** (General / Debate / Brainstorm / Build planning)
-2. **Voice agent responses** (via LiveKit Agents LLM plugin)
-3. **DeepCode engineering** (DeepCode’s own provider system)
+#### C6 — Voice/text progressive architecture generation
 
-These can share provider settings conceptually, but may use different models (e.g., fast model for voice, stronger model for Build).
+- Extend the Soul planning agent to produce structured Blueprint changes and canvas operations.
+- Treat partial transcripts as captions only.
+- Convert finalized semantic phrases into small validated operation batches.
+- Target visible updates every 0.8-1.5 seconds when feasible.
+- Animate new nodes, edges and viewport focus without regenerating unaffected elements.
+- Surface Listening, Understanding, Drawing, Review needed and Saved states.
+- Never persist an incomplete invalid Blueprint as an approved version.
 
-### Technology cards
+#### C7 — Manual editing and precedence
 
-#### OpenRouter
+- Allow node movement, label editing, connection changes and deletion with confirmation.
+- Mark manually controlled visual properties so AI layout does not overwrite them silently.
+- Reflect meaningful manual edits back into the Blueprint when applicable.
+- Require explicit permission before a full layout reset.
 
-| Topic | Detail |
-|---|---|
-| What it is | Unified API gateway to many models |
-| Why SaNa needs it | Easy model switching without rewriting app logic |
-| Problem solved | One integration → many providers/models |
-| Where it runs | Hosted API (`https://openrouter.ai/api/v1`) |
-| Communication | Backend / DeepCode / Agents → HTTPS OpenAI-compatible API |
-| Open-source? | No (commercial gateway); many routed models are open-weight |
-| Free for development? | Yes via `openrouter/free` and `:free` variants, with rate limits |
-| Production cost? | Paid models / higher volume will cost money |
-| Alternatives | Direct OpenAI/Anthropic APIs, Together, Fireworks, local Ollama |
+#### C8 — Snapshots, basic replay and exports
 
-#### Distinctions (critical)
+- Create periodic snapshots and verify deterministic event replay.
+- Implement Architecture Replay with play, pause, 1x and 2x speed.
+- Export PNG, Architecture Blueprint JSON and Mermaid.
+- Defer timeline scrubbing, branching, side-by-side comparison and restoration UI.
 
-| Term | Meaning |
-|---|---|
-| Open-source / open-weight model | Model weights/code available; hosting may still cost money |
-| Free hosted inference | Someone hosts it at $0 (often rate-limited, availability changes) |
-| Paid hosted inference | Pay per token/request |
-| Fully local inference | Runs on your machine (Ollama/vLLM); electricity/hardware cost, no API bill |
+#### C9 — Approval and Canvas-to-Build handoff
 
----
+- Validate the current Blueprint before approval.
+- Create an immutable approved architecture version.
+- Display exactly which version and BuildSpec will be sent to DeepCode.
+- Bind the approval event and BuildRun to that immutable version.
+- Require new approval for execution-relevant changes.
+- Viewing, editing or replaying a canvas never executes code.
+- Keep read-only public sharing disabled until Phase A isolation/RLS evidence is complete; when enabled, exclude editing, builds, private conversations and file downloads.
 
-## 30. TTS architecture
+**Phase C exit criteria:** in the same conversation, a user can request an Overview Architecture, watch it draw progressively, edit and save it, reopen and replay it, then approve an immutable Blueprint version for Build Mode.
 
-**TTS = Text-to-Speech** (“speaker that turns words into voice”)
+**Tests:** Blueprint/operation validation, malformed graph, WebSocket authentication, ownership, idempotency, snapshot replay, reconnect, manual-edit precedence, version locking, rendering, browser refresh, reduced motion and responsive UI.
 
-### Options
-
-| Option | Notes |
-|---|---|
-| Kokoro via Kokoro-FastAPI | Open-weight; documented LiveKit Agents integration; good local/dev candidate |
-| Hosted TTS (Cartesia / OpenAI / LiveKit Inference) | Higher quality/ops simplicity; costs money |
-| Other local TTS | Possible, but evaluate latency/quality |
-
-### Approved strategy: Hybrid (**APPROVED** — option C)
-
-- Evaluate Kokoro / local TTS during development when practical.
-- Keep TTS behind a replaceable interface: `TextToSpeechProvider`.
-- If local TTS cannot meet natural realtime UX needs, substitute hosted TTS via the LiveKit plugin ecosystem without rewriting voice architecture.
-- Same rule as STT/LLM: cost-aware early, UX-quality long-term.
-
----
-
-## 31. OpenRouter / local model strategy
-
-### Approved development preference (**APPROVED**)
-
-1. Default to currently available OpenRouter free models (`openrouter/free` and/or `:free` variants) during early development
-2. Support Ollama for local development/testing
-3. Keep the LLM layer provider-independent so higher-quality hosted models can be introduced later without architectural changes
-4. Do **not** assume a particular OpenRouter free model will remain available permanently
-5. Implement graceful fallback when free model is unavailable / rate-limited
-6. Avoid paid OpenRouter models unless intentionally approved
-
-### Important lesson from current machine
-
-A DeepCode headless run using a paid Anthropic model through OpenRouter failed due to insufficient credits.  
-For SaNa development:
-
-- configure DeepCode connection to free/local models
-- configure SaNa LLM layer similarly
-- treat paid models as an explicit upgrade path
-
-### DeepCode provider switching (verified)
-
-DeepCode already supports switching connections/models via:
-
-- `deepcode provider set ...`
-- `--connection` and `--model` on `exec` / `loop`
-
-So SaNa architecture can change DeepCode’s model/provider **without redesigning SaNa**.
+**Review/commit checkpoint:** Blueprint contract, standalone canvas, embedding, storage/WebSocket, agent generation and approval handoff are separate reviewable checkpoints.
 
 ---
 
-## 32. Ollama strategy
+### Phase D — Genuine DeepCode integration
 
-### Technology card — Ollama
+#### Objective
 
-| Topic | Detail |
-|---|---|
-| What it is | Local model runner with simple CLI/API |
-| Why SaNa needs it | Free local inference during development |
-| Problem solved | Avoid API spend; private local experimentation |
-| Where it runs | Your computer |
-| Communication | OpenAI-compatible HTTP at `http://localhost:11434/v1` |
-| Open-source? | Ollama client/tooling is available; model licenses vary |
-| Free for development? | Yes (no API bill); uses your CPU/GPU/RAM |
-| Production cost? | Your infra cost if self-hosting for users |
-| Alternatives | vLLM, llama.cpp server, LM Studio, cloud GPUs |
+Replace the misleading scaffold-only path with a verified, traceable and controlled DeepCode coding-agent execution.
 
-### Hardware guidance (practical)
+#### D1 — Runtime discovery
 
-| Machine class | Realistic expectation |
-|---|---|
-| 8 GB RAM, no GPU | Small models only; may be slow for voice |
-| 16 GB RAM | Small/medium models usable for text; voice may lag |
-| 16 GB+ with strong GPU / Apple Silicon / NVIDIA | Better realtime voice + local coding models |
-| Low RAM / weak CPU | Prefer OpenRouter free hosted models |
+- Verify the installed DeepCode version.
+- Inspect official local help for commands and flags.
+- Run a harmless disposable-workspace proof.
+- Capture sanitized stdout, stderr, exit code and structured output.
+- Verify resume/session, cancellation and workspace behavior.
+- Document the observed schema; do not infer undocumented fields.
 
-Exact model picks depend on hardware benchmarks — **TBD after Ollama install**.
+**Stop condition:** no verified noninteractive/structured execution path or unsafe unrestricted workspace behavior.
 
-### Verified compatibility
+#### D2 — Adapter contract
 
-- DeepCode has built-in `ollama` provider template
-- LiveKit Agents documents Ollama via OpenAI plugin
+- Define provider-neutral request, event, result and error models.
+- Keep Build Service independent of DeepCode CLI details.
+- Retain the current scaffold generator as an explicitly named optional prototype provider.
+- Never silently switch providers.
 
-Current environment status: **Ollama not installed / not on PATH** (needs setup if chosen).
+#### D3 — Safe workspace runner
 
----
+- Create one controlled root per user/project/BuildRun.
+- Canonicalize paths and block traversal/symlink escape.
+- Apply execution timeout, cancellation and output-size limits.
+- Use an allowlisted environment with no unnecessary credentials.
+- Record approval and runtime identity before starting.
 
-## 33. Backend architecture
+#### D4 — Approved execution input
 
-### Approved: Python + FastAPI (**APPROVED**)
+- Assemble a BuildSpec from the specification, acceptance criteria, technical stack, immutable approved Architecture Blueprint version, repository rules and test requirements.
+- Show the final plan and workspace target before approval.
+- Bind approval and BuildRun to a plan/Blueprint version hash or equivalent immutable reference.
+- Reject execution if the plan changed after approval.
 
-| Topic | Detail |
-|---|---|
-| What it is | Modern Python web framework for APIs |
-| Why SaNa needs it | Central secure backend for auth coordination, tokens, orchestration, Build Mode |
-| Problem solved | Keeps secrets off device; coordinates DB, LLM, LiveKit, DeepCode |
-| Where it runs | Locally in dev; cloud VM/container in production |
-| Communication | Flutter → REST/WebSocket; Backend → DB/LLM/LiveKit/DeepCode |
-| Open-source? | Yes |
-| Free for development? | Yes |
-| Production cost? | Hosting cost |
-| Alternatives | Node/NestJS, Go, Django, Supabase Edge Functions only (likely too limited for DeepCode orchestration) |
+#### D5 — Execution and progress
 
-### Why FastAPI fits SaNa
+- Start DeepCode only after valid approval.
+- Parse and normalize verified runtime events.
+- Stream status to Flutter Web.
+- Persist events idempotently.
+- Record created, modified and deleted file paths without exposing secret contents.
+- Support cancellation and mark abnormal termination correctly.
 
-- Python ecosystem matches LiveKit Agents + DeepCode
-- Easy async streaming endpoints
-- Clear OpenAPI docs for learning
-- Good for orchestration services
+#### D6 — Completion and fallback
 
-### Backend modules (logical)
+- Capture the final file inventory, summary and test recommendations.
+- Clearly label the provider used for every BuildRun.
+- On runtime failure, persist `failed` or `blocked` with actionable diagnostics.
+- Offer Prototype Scaffold only after explicit confirmation.
 
-```text
-SaNa Backend
-├── Auth / session verification
-├── Profile / onboarding APIs
-├── Conversation service
-├── LiveKit token service
-├── AI orchestrator (modes + prompts)
-├── LLMProvider abstraction
-├── Build orchestrator
-├── DeepCodeAdapter
-├── Project / artifact service
-└── Status streaming (WebSocket or SSE)
-```
+**Phase D exit criteria:** a verified DeepCode run creates project-specific files inside the controlled workspace, streams traceable events and is visibly distinguishable from prototype scaffolding.
 
-### Voice agent process
+**Tests:** command parsing, fake-process adapter tests, timeout, cancellation, path traversal, approval mismatch, event idempotency, failure and successful disposable-project integration test.
 
-The LiveKit Agent may run as:
-
-- a sibling Python process in development, or
-- part of the backend deployment unit later
-
-It should call into shared orchestration logic where practical, rather than duplicating mode prompts.
+**Review/commit checkpoint:** runtime discovery documentation, adapter, safe runner and UI integration should be reviewed separately. No production execution before security review.
 
 ---
 
-## 34. Flutter architecture
+### Phase E — Review, validation and completion evidence
 
-### Recommendation
+#### Objective
 
-- Flutter app, Android first
-- Feature-first folder structure
-- Design system with dark-theme-friendly tokens
-- Voice-first home + transcript reveal interaction
-- No secrets in app
+Ensure Soul never marks a build complete without recorded validation evidence.
 
-### High-level app modules
+#### E1 — Detect project toolchain
 
-```text
-lib/
-  app/                 # bootstrap, router, theme
-  features/
-    auth/
-    onboarding/
-    home_voice/
-    conversation/
-    history/
-    projects/
-    build/
-    settings/
-  core/
-    network/
-    storage/
-    livekit/
-    state/
-    design/
-```
+- Determine project language/framework from generated files.
+- Select only approved read/build/test commands.
+- Do not execute arbitrary commands suggested by generated content without policy validation.
 
-### Platform targets
+#### E2 — Deterministic validation
 
-- MVP: Android
-- Later: iOS
+- Run applicable formatter check, lint, type check, unit tests and build verification.
+- Capture command, sanitized output, duration and exit status.
+- Apply time and output limits.
 
----
+#### E3 — AI review
 
-## 35. Database architecture
+- Review the approved specification, diff and deterministic results.
+- Report findings by severity with file references and suggested remediation.
+- Do not report AI review as a substitute for tests.
 
-### Approved: PostgreSQL via Supabase (**APPROVED**)
+#### E4 — Remediation loop
 
-| Topic | Detail |
-|---|---|
-| What it is | Postgres database + auth + APIs + optional RLS |
-| Why SaNa needs it | Authoritative persistence for users, conversations, messages, conversation_events, build projects |
-| Problem solved | Durable multi-device history, shared voice/text context, and project memory |
-| Where it runs | Supabase hosted Postgres (or self-host later) |
-| Communication | Backend (service role / user JWT) → SQL/API; Flutter uses user-scoped access carefully |
-| Open-source? | Postgres yes; Supabase yes (hosted optional) |
-| Free for development? | Usually yes on free tier |
-| Production cost? | Yes as scale grows |
-| Alternatives | Firebase Firestore, PlanetScale/Neon + custom auth, local Postgres only for solo-dev |
+- Present findings to the user.
+- Require approval before another modifying agent run.
+- Rerun failed validation after remediation.
+- Preserve previous results for audit history.
 
-**Portability rule:** prefer ordinary Postgres tables/SQL and repository interfaces in SaNa Backend. Use Supabase conveniences where helpful, but do not scatter irreversible Supabase-only product logic throughout the app.
+#### E5 — Completion decision
 
-### Plain-English data model
+- Mark `completed` only when required checks pass or documented waivers are explicitly accepted.
+- Show a concise readiness summary in Projects.
+- Include validation evidence in project export metadata.
 
-- A **user** has a **profile** (display name, assistant name).
-- A user has many **conversations**.
-- A conversation has many **messages** (authoritative chat transcript).
-- A conversation has many **conversation_events** (mode changes, approvals, session transitions, project links).
-- A user has many **build projects**.
-- A build project has many **build sessions/runs** and **artifacts**.
-- A conversation can link to a build project when relevant.
-- LiveKit sessions are ephemeral; PostgreSQL via Conversation Service remains authoritative.
+**Phase E exit criteria:** every completed BuildRun has deterministic test evidence, review findings and a traceable completion decision.
+
+**Tests:** toolchain detection, command policy, output redaction, timeout, failed test, waiver and successful completion-state tests.
+
+**Review/commit checkpoint:** deterministic validator before AI review, followed by end-to-end completion workflow.
 
 ---
 
-## 36. Database schema (proposed)
+### Phase F — Mobile packaging and advanced agent lifecycle
 
-> Passwords are **not** stored manually if using Supabase Auth / managed auth.
+#### Objective
 
-```text
-users                    # auth user identity (managed)
-user_profiles
-conversations
-messages
-conversation_events      # non-message durable events
-conversation_sessions    # realtime/voice session metadata
-build_projects
-build_sessions
-build_runs
-artifacts
-```
+Expand the proven Soul Web workflow after the MVP is stable.
 
-### Suggested columns
+#### F1 — Mobile readiness
 
-#### user_profiles
+- Audit web-only dependencies.
+- Optimize responsive layouts and voice permissions for Android/iOS.
+- Add mobile-specific deep links, downloads and background behavior where supported.
+- Complete physical-device voice testing.
 
-- id (pk)
-- user_id (unique, fk)
-- display_name
-- assistant_name (default `SaNa`)
-- onboarding_completed_at
-- preferences (jsonb)
-- created_at / updated_at
+#### F2 — Collaboration
 
-#### conversations
+- Introduce organizations, project membership and explicit roles.
+- Replace single-owner assumptions with reviewed membership policies.
+- Add invitations, audit events and shared project permissions.
 
-- id
-- user_id
-- title
-- mode (`general|debate|brainstorm|build`)  # current mode
-- linked_build_project_id nullable
-- created_at / updated_at
+#### F3 — Specialist agents
 
-#### messages
+Add only when product evidence requires them:
 
-- id
-- conversation_id
-- sender (`user|assistant|system`)
-- content
-- source (`voice|text`)
-- idempotency_key  # unique with conversation_id
-- metadata jsonb
-- created_at
+- Security
+- Accessibility
+- Compliance readiness
+- Infrastructure/operations
+- Performance
+- Deployment and monitoring
 
-Unique constraint:
+Each specialist must have a bounded responsibility, inputs, outputs, tests and a user-visible value.
 
-```text
-UNIQUE (conversation_id, idempotency_key)
-```
+#### F4 — Production sandbox workers
 
-#### conversation_events
+- Replace host-local workspaces with isolated ephemeral workers.
+- Apply CPU, memory, network, time and storage controls.
+- Store build artifacts outside the worker lifecycle.
+- Add concurrency and usage limits.
 
-- id
-- conversation_id
-- event_type  
-  (`mode_changed` | `build_project_linked` | `build_project_unlinked` |  
-   `build_approval_requested` | `build_approval_granted` | `build_approval_denied` |  
-   `voice_session_started` | `voice_session_ended` | `voice_session_reconnected` |  
-   `conversation_resumed` | …)
-- from_mode nullable
-- to_mode nullable
-- build_project_id nullable
-- conversation_session_id nullable
-- idempotency_key nullable/unique-as-needed
-- payload jsonb
-- created_at
+#### F5 — Advanced architecture intelligence
 
-#### conversation_sessions
+- Add Data Flow, Sequence, ER/Database, Deployment, Security, AI-Agent and Build-History views using the shared Blueprint.
+- Add fuller architecture risk review using selected concepts from the Microsoft Architecture Review Agent.
+- Add Swark-style code scanning through Soul's provider-neutral model adapter to infer the actual built architecture.
+- Compare approved versus implemented architecture and present differences for user review.
+- Add advanced replay timeline scrubbing, restoration, branching and side-by-side comparison only after event storage is proven reliable.
 
-- id
-- conversation_id
-- livekit_room_name
-- agent_session_id nullable
-- status
-- started_at / ended_at
-
-#### build_projects
-
-- id
-- user_id
-- name
-- description
-- workspace_path or storage_uri
-- primary_deepcode_session_id nullable
-- status
-- created_at / updated_at
-
-#### build_sessions
-
-- id
-- build_project_id
-- conversation_id nullable
-- deepcode_session_id nullable
-- status
-- created_at / updated_at
-
-#### build_runs
-
-- id
-- build_project_id
-- build_session_id
-- trigger_message_id nullable
-- approval_event_id nullable  # conversation_events.build_approval_granted
-- status  # includes awaiting_approval / approved / running / ...
-- goal_text
-- plan_summary nullable
-- started_at / finished_at
-- error_summary nullable
-
-#### artifacts
-
-- id
-- build_run_id
-- type (`log|summary|file_manifest|test_report|other`)
-- uri_or_inline
-- metadata jsonb
-- created_at
-
-### Relationships
-
-```mermaid
-erDiagram
-  USERS ||--|| USER_PROFILES : has
-  USERS ||--o{ CONVERSATIONS : owns
-  CONVERSATIONS ||--o{ MESSAGES : contains
-  CONVERSATIONS ||--o{ CONVERSATION_EVENTS : records
-  CONVERSATIONS ||--o{ CONVERSATION_SESSIONS : has
-  USERS ||--o{ BUILD_PROJECTS : owns
-  BUILD_PROJECTS ||--o{ BUILD_SESSIONS : has
-  BUILD_PROJECTS ||--o{ BUILD_RUNS : has
-  BUILD_SESSIONS ||--o{ BUILD_RUNS : includes
-  BUILD_RUNS ||--o{ ARTIFACTS : produces
-  BUILD_PROJECTS ||--o{ CONVERSATIONS : linked
-```
+**Phase F exit criteria:** defined per approved mobile, collaboration or specialist-agent release; Phase F is not required for the Soul Web MVP.
 
 ---
 
-## 37. API boundaries
+### 18.3 Required phase completion report
 
-### Rule
+At the end of every subphase, Codex must report:
 
-Do **not** expose internal services directly to Flutter unless necessary.
+1. Branch and final Git status
+2. Objective completed or blocked
+3. Root cause or design decision
+4. Files and migrations changed
+5. Tests run and exact results
+6. Manual verification still required
+7. Security or data risks
+8. Recommended next subphase
+9. Whether a commit/push/deployment approval is needed
 
-### Communication map
-
-```text
-Flutter
-  ├── REST/HTTPS ──▶ SaNa Backend API
-  └── LiveKit WebRTC ──▶ LiveKit Server ──▶ Voice Agent
-
-SaNa Backend
-  ├── Conversation Service ──▶ PostgreSQL (authoritative history)
-  ├── LiveKit Server API (token/room admin)
-  ├── LLMProvider (OpenRouter/Ollama/etc.)
-  └── DeepCodeAdapter ──▶ DeepCode process/stdio
-```
-
-### What uses what
-
-| Interaction | Transport | Why |
-|---|---|---|
-| Auth / profiles / CRUD | REST | Simple request/response |
-| Send text message / get reply (non-voice) | REST + optional SSE/WebSocket | Streaming assistant text helps UX |
-| Resume/rehydrate conversation | REST | Load authoritative messages/events from Postgres |
-| Voice audio | LiveKit WebRTC | Realtime media |
-| Transcript events in call | LiveKit data/transcript APIs | Same-session UX sync; finals persist via Conversation Service |
-| Build progress updates | WebSocket or SSE | Server needs to push long-running events |
-| Backend → DeepCode | Local process stdio / CLI | Verified available interface |
-| Backend → LLM | HTTPS | Standard provider APIs |
-
-Avoid adding gRPC/Kafka/etc. unless a concrete need appears.
-
-### Development networking (Android emulator / physical device → PC services)
-
-During local development, FastAPI and LiveKit typically run on the developer PC. The phone/emulator must reach those services over the network correctly.
-
-| Client | How it should reach the PC | Notes |
-|---|---|---|
-| Android emulator → FastAPI on host | Use emulator host loopback alias **`10.0.2.2`** (maps to host `localhost`) | Example: `http://10.0.2.2:8000` |
-| Android emulator → LiveKit on host | Point LiveKit URL at host via `10.0.2.2` (or host LAN IP if that proves more reliable for WebRTC) | WebRTC/UDP can be finicky; verify in Phase 7 |
-| Physical Android device → FastAPI/LiveKit on PC | Use the PC’s **LAN IP** (e.g. `http://192.168.x.x:8000`) on the same Wi‑Fi | Enable OS firewall allow rules for the dev ports |
-| Production-like | HTTPS domain names / LiveKit Cloud | Not required for early phases |
-
-Rules:
-
-1. Flutter must use a configurable base URL (emulator vs device vs prod) — no hard-coded assumption that `localhost` on the phone means the PC.
-2. LiveKit tokens minted by FastAPI must embed a reachable LiveKit URL for that client environment.
-3. SaNa Backend, LiveKit server, and Voice Agent may all run on the same PC in MVP, but Flutter still treats them as network services.
-4. Never expose service-role secrets on these LAN endpoints; keep auth required even in development where practical.
-
-```text
-[Android Emulator]
-   http://10.0.2.2:8000  ──▶  FastAPI on PC
-   LiveKit via 10.0.2.2/LAN ──▶ LiveKit on PC ──▶ Voice Agent on PC
-
-[Physical Android device]
-   http://<PC_LAN_IP>:8000 ──▶ FastAPI on PC
-   ws/<PC_LAN_IP> LiveKit  ──▶ LiveKit on PC ──▶ Voice Agent on PC
-
-PostgreSQL / Supabase may be cloud-hosted even while FastAPI/LiveKit are local.
-```
+The report must not contain credentials, access tokens, API secrets or private configuration values.
 
 ---
 
-## 38. State management
+## 19. MVP acceptance criteria
 
-### Approved for Flutter: **Riverpod** (**APPROVED**)
+Soul Web MVP is accepted when:
 
-| Topic | Detail |
-|---|---|
-| What it is | Flutter state-management / dependency framework |
-| Why SaNa needs it | Many async states (auth, voice, transcript, build) must stay consistent |
-| Problem solved | Predictable app state without spaghetti `setState` |
-| Where it runs | On the phone (Flutter) |
-| Communication | UI reads providers; providers call repositories/services |
-| Open-source? | Yes |
-| Free? | Yes |
-| Production cost? | None |
-| Alternatives | Bloc, Provider, Signals, Redux-like approaches |
-
-### Key states to model
-
-- Authentication state
-- Onboarding state
-- Conversation state
-- Voice connection state
-- Voice agent state
-- Transcript state
-- Current mode
-- Build project state
-- Build progress state
+1. The public web application supports Supabase sign-up, sign-in and sign-out.
+2. Two-account tests prove conversation, project, canvas and download isolation.
+3. Voice connects to the Soul LiveKit project and the hosted agent responds.
+4. Mode changes work inside the same conversation.
+5. A user can open the live Overview Architecture canvas inside the active conversation.
+6. Voice or text causes validated nodes and connections to appear progressively without full-canvas regeneration.
+7. The Architecture Blueprint remains authoritative and can be saved, reopened and exported.
+8. Manual edits are preserved and basic Architecture Replay works.
+9. Architecture approval creates an immutable version linked to the BuildRun.
+10. Build Mode produces a plan but does not execute before approval.
+11. An approved build invokes the verified DeepCode runtime with the approved BuildSpec.
+12. Progress and final status appear in the web application.
+13. Project-specific generated files and test results are stored.
+14. Projects lists only the authenticated user’s work.
+15. The user can resume and securely download an owned project.
+16. Secrets are absent from browser bundles and Git.
+17. Automated backend, Flutter and canvas-module tests pass.
+18. Visible product branding uses Soul.
 
 ---
 
-## 39. Memory architecture
+## 20. Release blockers
 
-Do **not** mix all “memory” into one vague bucket.
+The following must be resolved before public demonstration as a production-ready system:
 
-| Memory type | What it is | How it works |
-|---|---|---|
-| Conversation context | Recent messages + relevant events in current chat | Conversation Service loads from PostgreSQL for both voice and text turns |
-| Conversation history | Stored past chats | Authoritative DB retrieval + resume/rehydration |
-| Conversation events | Mode/project/session/approval transitions | `conversation_events` timeline alongside messages |
-| User preferences | Name, assistant name, settings | `user_profiles` |
-| Build memory | Specs, workspace, sessions, prior changes | `build_*` tables + workspace files |
-| Long-term AI memory (later) | Useful durable facts | Separate explicit memory store; not MVP-critical |
-
-### Build memory note
-
-The source of truth for code is the **workspace/repo files**.  
-DB stores metadata, summaries, run history, and links — not a replacement for the filesystem.
+- Production Supabase isolation migration not applied
+- Public frontend hosting incomplete
+- Full two-account end-to-end test incomplete
+- Real DeepCode integration not verified
+- Live canvas not implemented
+- Architecture Blueprint ownership, event replay and approval version-locking not verified
+- Existing uncommitted/unpushed work not reviewed
 
 ---
 
-## 40. Security
+## 21. Implementation rules for coding agents
 
-### Non-negotiables
-
-1. No provider/server secrets in Flutter
-2. Authenticate every user-specific API call
-3. Authorize access so users only see their own data
-4. LiveKit tokens are short-lived and minted server-side
-5. OpenRouter / DeepCode credentials only on backend/worker host
-6. Redact secrets from logs
-7. Treat Build Mode as potentially dangerous code execution
-
-### Threat areas and controls
-
-| Area | Control |
-|---|---|
-| Auth | Managed auth + secure session tokens |
-| Authorization | User ownership checks; RLS if Supabase |
-| LiveKit | Backend token minting, room isolation per session |
-| API secrets | Env vars / secret manager |
-| Prompt injection | Tool allowlists; never obey “ignore safety” for filesystem/network |
-| Build execution | Workspace fence, sandbox, resource limits |
-| Dependency risks | Pin versions; review generated dependency changes |
-| Logging | Redact keys, tokens, raw audio by default |
+- Inspect the current repository before proposing changes.
+- Preserve working features and Git history.
+- Work in small, reviewable checkpoints.
+- Do not repeat a complete repository audit for every phase.
+- Do not expose or print secrets.
+- Do not change branches automatically.
+- Do not commit or push without explicit approval.
+- Do not rewrite the application simply to adopt a reference repository.
+- Do not add Figma/FigJam, GitHub Copilot, Azure OpenAI or another proprietary service as a required canvas/runtime dependency.
+- Verify dependency licenses before adoption; keep license notices required by MIT, Apache-2.0 and other approved licenses.
+- Treat Microsoft Architecture Review Agent, Swark and GenAI-DrawIO-Creator as references unless a separately reviewed integration is approved.
+- Use the lowest-cost suitable model for mechanical tasks and stronger reasoning only for architecture, security and DeepCode integration.
+- Report root cause, files changed, tests and remaining risks after each checkpoint.
 
 ---
 
-## 41. Build sandbox / security
+## 22. Open decisions
 
-### MVP
-
-- Trusted local workspace directories owned by SaNa Backend
-- DeepCode access preset preferably constrained (`ask` or carefully controlled `full-access` only in disposable workspaces)
-- No on-device code execution
-- Timeouts for runs
-- Clear user messaging when waiting for approvals / failures
-
-### Production (later)
-
-Evaluate:
-
-- Docker / container isolation
-- Ephemeral workspaces
-- CPU/memory/time limits
-- Network egress restrictions
-- Non-root execution
-- Per-user isolation
-- Artifact scanning before download
-
-### MVP vs Production
-
-| Topic | MVP | Production |
-|---|---|---|
-| Where code runs | Local/dev machine workspace | Isolated workers/containers |
-| Multi-tenant safety | Single trusted developer environment | Strong isolation |
-| Network | Developer-controlled | Restricted by default |
-| Goal | Prove DeepCode loop works | Safe for real users at scale |
+1. Public Flutter Web hosting provider and production domain
+2. Exact installed DeepCode command and structured-output contract
+3. Storage strategy for generated project archives at production scale
+4. Whether the internal repository/package names should be renamed immediately or after the web MVP stabilizes
+5. Initial limits for concurrent builds, workspace size and execution duration
+6. Which build-validation checks are required before download
+7. Exact snapshot cadence and maximum architecture/event limits after performance measurement
+8. Whether read-only public sharing belongs in the first public MVP or the immediately following release after RLS verification
+9. Soul product-source license (private source, Apache-2.0 or AGPL) independent of the open-source dependency policy
 
 ---
 
-## 42. Error handling
+## 23. Founder approval gate
 
-Errors should be explained naturally.
+Approval of this PRD authorizes phased implementation but does not authorize:
 
-| Failure | User-facing example |
-|---|---|
-| No internet | “SaNa can’t reach the network right now. Check your connection and try again.” |
-| LiveKit disconnect | “I lost the voice connection. Trying to reconnect…” |
-| Mic permission denied | “I need microphone access to listen. You can still type to me.” |
-| STT failure | “I couldn’t understand the audio clearly. Try again, or type your question.” |
-| LLM unavailable | “SaNa is having trouble reaching the AI service. Let’s try again.” |
-| Free OpenRouter model unavailable | “The free AI model is busy or unavailable. Retry, switch model, or use a local model.” |
-| TTS failure | “I can still answer in text even though voice playback failed.” |
-| Database failure | “I couldn’t save that just now. Please retry.” |
-| DeepCode failure | “The build engine hit a problem. I’ve saved the error details.” |
-| Build/test/dependency failure | Explain cause in plain English + next action |
-| Build timeout | “This build is taking too long, so I paused it. Want me to continue?” |
-| App closed during build | Resume/rehydrate run status on next open if still running server-side; otherwise mark interrupted |
+- Destructive repository operations
+- Production database migration without review
+- Unreviewed public deployment
+- Unrestricted DeepCode access
+- Automatic commit or push
 
-Technical details can live in a debug/details panel for development.
+Recommended first action after approval:
 
----
-
-## 43. Offline / reconnection behavior
-
-### Offline
-
-- Show clear offline state on orb / banner
-- Allow reading locally cached transcript if available (**TBD implementation detail**)
-- Treat any local cache as non-authoritative
-- Queue outgoing actions only if safe; otherwise ask user to retry when online
-- On reconnect, rehydrate from Conversation Service / PostgreSQL and reconcile by message/event identity
-
-### Voice reconnection / later resume
-
-- Detect disconnect; attempt reconnect with backoff
-- Preserve `conversation_id`
-- Record `voice_session_reconnected` or `conversation_resumed` in `conversation_events` when appropriate
-- Rehydrate authoritative messages + conversation_events from PostgreSQL via Conversation Service
-- Bootstrap the Voice Agent with that same context before generating new replies
-- Do not pretend audio was heard during disconnect
-- Persist only new **final** turns after reconnect, using idempotency keys so replayed finals cannot duplicate rows
-- Flutter merges LiveKit live events with DB history by `message_id` / `idempotency_key`
-
-### Build reconnection
-
-- Build runs continue on backend when possible
-- App reconnects to status stream
-- If process died, mark failed/interrupted honestly
-- Approval state remains authoritative in DB (`awaiting_approval` stays blocked until explicit approval)
-
----
-
-## 44. Functional requirements
-
-1. Users can register, sign in, sign out, reset password.
-2. First-time users complete onboarding with speak-or-type name capture.
-3. Home shows personalized greeting + orb + mode cards.
-4. Users can converse in General Mode by text via FastAPI + Conversation Service.
-5. Users can converse by voice with live transcription; finals persist through Conversation Service.
-6. Voice and text share one conversation; PostgreSQL is the authoritative history.
-7. Users can view/search/resume history; resume rehydrates from Conversation Service.
-8. Mode changes and key session/build transitions persist as `conversation_events`.
-9. Transcript/message persistence is idempotent (no duplicate rows from partials/finals/reconnects).
-10. Debate Mode uses debate-specific behavior.
-11. Brainstorm Mode uses brainstorm-specific behavior and can transition to Build.
-12. Entering Build Mode does not execute code; SaNa gathers requirements and presents a plan.
-13. Explicit user approval is required before a new BuildRun/DeepCode execution starts.
-14. Dangerous/destructive operations require additional safeguards beyond mode entry.
-15. Backend can invoke DeepCode through DeepCodeAdapter after approval.
-16. Build projects persist and can be reopened for further changes.
-17. Secrets remain off-device.
-18. Errors are human-friendly.
-
----
-
-## 45. Non-functional requirements
-
-- Android-first mobile UX
-- Calm, minimal, premium, developer-oriented visual design
-- Modular architecture with clear boundaries
-- Provider-independent LLM layer
-- Observability sufficient for debugging voice/build failures
-- Incremental delivery by phases
-- Learning-friendly documentation and code structure
-
----
-
-## 46. Performance / latency expectations
-
-These are targets, not hard guarantees on free/local stacks.
-
-| Interaction | Target feel |
-|---|---|
-| Text LLM reply (dev) | First tokens under ~2–5s when services healthy |
-| Voice end-of-speech to first audio | Aim under ~1–2s with hosted low-latency stack; local may be slower |
-| Transcript partial updates | Near-realtime during speech |
-| Conversation list load | Under ~1s for normal history sizes |
-| Build start acknowledgment | Immediate (“I’m starting the build workflow…”) even if engineering takes minutes |
-
-If local STT/LLM/TTS cannot meet conversational feel, use hybrid hosted components for voice MVP.
-
----
-
-## 47. Testing strategy
-
-| Layer | What to test |
-|---|---|
-| Unit | Prompt/mode selection, reducers/providers, adapters parsing |
-| Widget | Auth screens, orb states, transcript reveal interaction |
-| Integration | Text conversation → DB persistence → history resume |
-| Backend | Authz, token minting, conversation APIs |
-| AI | Mode behavior evals with fixed fixtures |
-| Voice | Connection, transcript sync, interruption smoke tests |
-| Build | DeepCodeAdapter POC on sample workspace; failure/recovery paths |
-| Security | No secrets in app; user isolation tests |
-
----
-
-## 48. Prerequisite checklist
-
-### Current environment inspection
-
-**Phase 0 progress (2026-08-08 evening):** local workspace linked to existing GitHub repo; git initialized; `.gitignore` + `.env.example` added; Flutter/Android PATH + `ANDROID_HOME` configured; AVD `sana_api36` created. See Phase 0 checklist status below.
-
-| Prerequisite | Required now? | Required later? | Current status | How to verify | Example command | Account/key? | Free for dev? | Prod cost? |
-|---|---|---|---|---|---|---|---|---|
-| Flutter SDK | Yes | Yes | Installed at `C:\src\flutter` (3.44.9), **not on PATH** | flutter doctor | `C:\src\flutter\bin\flutter doctor -v` | No | Yes | No |
-| Dart | Yes | Yes | Bundled with Flutter (3.12.2) | dart version via Flutter | `C:\src\flutter\bin\dart --version` | No | Yes | No |
-| Android Studio | Yes | Yes | Installed | Open IDE / path exists | — | No | Yes | No |
-| Android SDK | Yes | Yes | Present; flutter doctor OK (SDK 36) | flutter doctor | `flutter doctor -v` | No | Yes | No |
-| Android cmdline tools | Yes/Useful | Yes | Present enough for toolchain | sdkmanager / doctor | `flutter doctor -v` | No | Yes | No |
-| Android Emulator | Yes (or physical device) | Yes | Emulator tooling present; **no emulator/device currently connected** in doctor output | list devices | `flutter devices` | No | Yes | No |
-| ADB | Yes | Yes | Installed under SDK, not on PATH | adb version | `%LOCALAPPDATA%\Android\Sdk\platform-tools\adb version` | No | Yes | No |
-| Java/JDK | Yes | Yes | Android Studio JBR available | java -version via JBR | `"C:\Program Files\Android\Android Studio\jbr\bin\java" -version` | No | Yes | No |
-| Cursor | Yes | Yes | In use | — | — | Account | Freemium possible | Maybe |
-| Git | Yes | Yes | Installed (2.54) | git version | `git --version` | No | Yes | No |
-| GitHub | Recommended | Yes for collaboration | Not verified | gh auth / site login | `gh auth status` | Yes | Free tiers | Maybe private/org costs |
-| Env var management | Yes | Yes | Needs project convention | printenv / dotenv | — | Secrets | Free | Secret manager maybe |
-| Python | Yes | Yes | 3.14.6 available | python version | `py --version` | No | Yes | No |
-| Python package manager | Yes | Yes | pip available; `uv` not found | pip/uv | `py -m pip --version` | No | Yes | No |
-| FastAPI | Later (Phase 3+) | Yes | Not installed yet | import check | `py -c "import fastapi"` | No | Yes | Hosting later |
-| Docker | No for earliest phases | Yes for prod sandbox | **Not installed** | docker version | `docker --version` | No | Yes (Docker Desktop licensing varies) | Infra |
-| DeepCode | Yes before Build phases | Yes | **Installed v2.0.0**, CLI works | deepcode help | `deepcode --help` | Model keys as needed | Software free | Compute+LLM |
-| OpenRouter account | Yes for hosted LLM/dev | Optional if fully local | Account exists (per user); key config needs care | provider/models test | `deepcode provider test personal-openrouter` | API key | Free models available | Paid models/rate limits |
-| Ollama | Optional now | Recommended for local | **Not installed** | ollama version | `ollama --version` | No | Yes | Hardware |
-| LiveKit account or local server | Later (voice phases) | Yes | Not set up yet | local server / cloud project | `livekit-server --dev` or Cloud dashboard | Cloud keys if used | Local free / Cloud free tier | Usage |
-| LiveKit Flutter SDK | Later | Yes | Not in project yet | pubspec dependency | — | No | Yes | No |
-| LiveKit Agents | Later | Yes | Not installed yet | pip package | `py -m pip show livekit-agents` | Possibly provider keys | OSS free | Hosted inference maybe |
-| Microphone permissions | Later | Yes | OS/app permission at runtime | Emulator/device mic tests | — | No | Yes | No |
-| Supabase (if chosen) | Before auth/DB phases | Yes | Not created yet | project dashboard | — | Yes | Free tier | Maybe |
-| Node.js | Useful (tooling) | Optional | v24.14.1 present | node version | `node --version` | No | Yes | No |
-
-### Phase 0 checklist — complete before Phase 1 implementation
-
-**Repo / secrets**
-
-- [x] Identify and connect the **existing** SaNa GitHub repository: `https://github.com/saisree510/SaNa-Voice-Intelligence.git`
-- [x] Do **not** create a new GitHub repository
-- [x] Do **not** commit into upstream `HKUDS/DeepCode`
-- [ ] Authenticate GitHub CLI if needed (`gh auth login`) — still needed for convenient `gh`/`git push` auth in this environment
-- [x] Confirm `.gitignore` covers `.env`, keys, Supabase/LiveKit/OpenRouter secrets
-- [x] Local env strategy: copy `.env.example` → `.env` (never commit `.env`)
-
-**Mobile toolchain**
-
-- [x] Flutter/Dart on user PATH (`C:\src\flutter\bin`) — open a new terminal if an old shell still cannot find `flutter`
-- [x] `ANDROID_HOME` / `ANDROID_SDK_ROOT` set; `platform-tools`, `emulator`, Android Studio JBR added to user PATH
-- [x] Verify: `flutter doctor -v` (Android toolchain OK; Visual Studio missing is OK for Android-only)
-- [x] AVD created: `sana_api36` (Android 36 Google APIs x86_64 / Pixel 6)
-- [x] Verify: `flutter devices` shows running Android emulator (`emulator-5554`, Android 16 / API 36). Launch with `flutter emulators --launch sana_api36`
-- [ ] Confirm a physical Android device can be used later for voice testing (USB debugging)
-
-**Backend / language**
-
-- [x] Verify Python: `py --version` → 3.14.6
-- [x] Verify pip: `py -m pip --version` → 26.1.2
-- [x] Plan FastAPI project env (install during backend scaffolding in later phases)
-
-**AI / DeepCode**
-
-- [x] Verify DeepCode CLI: `deepcode --help` (v2.0.0)
-- [x] DeepCode version matches expectations
-- [ ] Confirm OpenRouter API key is available via env (`OPENROUTER_API_KEY` not set in Phase 0 shell)
-- [ ] Test OpenRouter **free** path before paid models
-- [ ] Optional now: install Ollama if choosing local LLM early; otherwise after text chat (**deferred**)
-- [ ] DeepCode verification samples (required before Build adapter body; Phase 13 gate):  
-  `deepcode exec ... --json` real output capture + `--resume` continuation check
-
-**Accounts / cloud**
-
-- [ ] Supabase: create or select SaNa project (Auth + Postgres) — needed before Phase 3
-- [ ] Note Supabase URL / anon key / service role storage plan (service role backend-only)
-- [ ] LiveKit: decide local server vs Cloud before voice phases (Phase 7); not required for Phase 1–2
-- [x] Confirm no secrets will be placed in Flutter (documented + `.gitignore`)
-
-**Explicitly not required before Phase 1**
-
-- [x] Docker (needed later for production sandbox, not Phase 1) — not installed; OK
-- [x] Full LiveKit voice stack — deferred
-- [x] Physical-device voice validation — deferred until voice phases
-- [x] Final branding assets — deferred
-
----
-
-## 49. Required accounts / API keys
-
-| Item | Needed for | When | Notes |
-|---|---|---|---|
-| OpenRouter API key | Hosted LLMs / DeepCode | Early AI phases | Prefer free models in dev |
-| Supabase project URL + anon key + service role | Auth/DB | Auth phase | Service role only on backend |
-| LiveKit API key/secret + URL | Voice | Voice phases | Local dev keys possible |
-| Optional STT/TTS provider keys | Voice quality | Voice phases | Avoid if local Kokoro/Whisper chosen |
-| GitHub account | Source control | Now/soon | Recommended |
-| Google Play account | Android distribution | Post-MVP | Not needed to start |
-
----
-
-## 50. Free vs paid infrastructure
-
-### Likely free during development
-
-- Flutter / Dart / Android tooling
-- DeepCode software
-- Python / FastAPI
-- Git
-- Ollama + local open-weight models (if hardware allows)
-- OpenRouter free router / `:free` models (rate-limited)
-- LiveKit self-hosted local server
-- Kokoro / Whisper local services
-- Supabase free tier (typical)
-
-### May cost money
-
-- Paid OpenRouter / OpenAI / Anthropic models
-- LiveKit Cloud usage beyond free allotments
-- Hosted STT/TTS
-- Supabase/pro hosting beyond free limits
-- Cloud VMs for always-on backend/agents
-- Production sandbox compute
-
-### Strategy
-
-Default to free/local for learning and early phases.  
-Upgrade specific bottlenecks (usually voice latency or coding model quality) only when needed.
-
----
-
-## 51. Development phases
-
-The original phase plan is strong. Minor adjustments below optimize for learning and risk reduction:
-
-1. Prove text conversation before voice.
-2. Prove DeepCode adapter before full Build UX.
-3. Keep production sandbox last.
-
-### PHASE 0 — Prerequisites
-
-Verify tooling and accounts. Fix PATH. Confirm emulator/device. Confirm DeepCode + free/local LLM path.
-
-### PHASE 1 — Product Architecture
-
-Finalize PRD approval, architecture choices, schema, API boundaries. **← current phase**
-
-### PHASE 2 — Flutter Foundation
-
-Create Flutter app, navigation, design system, dark theme, base SaNa UI shell (orb placeholder ok).
-
-### PHASE 3 — Authentication
-
-Sign up/in/out, session persistence, password reset.
-
-### PHASE 4 — Onboarding
-
-Name capture (text first; voice capture can reuse later voice pipeline), profile persistence.
-
-### PHASE 5 — Text Conversation
-
-User message → backend → LLM → response displayed. No LiveKit yet.
-
-### PHASE 6 — Conversation Persistence
-
-Conversations/messages/history/resume.
-
-### PHASE 7 — LiveKit
-
-Mic permissions, token minting, room join, agent connection smoke test.
-
-### PHASE 8 — Full Voice Pipeline
-
-STT + LLM + TTS + interruptibility + streaming transcripts + orb/voice states.
-
-### PHASE 9 — Voice + Text Unified Conversation
-
-Guarantee one conversation context across modalities.
-
-### PHASE 10 — SaNa Voice Orb polish
-
-Idle/listening/thinking/speaking/error motion polish.
-
-### PHASE 11 — Debate Mode
-
-Debate prompts + UX indicator + entry flow.
-
-### PHASE 12 — Brainstorm Mode
-
-Brainstorm prompts + conversion affordance toward Build.
-
-### PHASE 13 — DeepCode Integration POC
-
-Backend safely starts/resumes DeepCode on a tiny sample task, consumes `--json` events, stores result metadata.
-
-### PHASE 14 — Build Mode MVP
-
-Requirements → plan → BuildProject → DeepCode → controlled workspace → result explanation.
-
-### PHASE 15 — Persistent Projects
-
-Open existing project; add feature; fix bug; explain code.
-
-### PHASE 16 — Security + Testing
-
-Unit/widget/integration/backend/voice/build tests; threat review.
-
-### PHASE 17 — Production Build Infrastructure
-
-Hardened isolated execution for real multi-user usage.
-
-### Why this order
-
-- Authentication/onboarding before conversation personalization
-- Text before voice (voice has more moving parts)
-- Persistence before advanced modes
-- DeepCode POC before full Build UX
-- Production sandbox last (avoids premature complexity)
-
----
-
-## 52. MVP acceptance criteria
-
-MVP is accepted when:
-
-1. Android app launches on emulator or device.
-2. User can sign up/in/out and stay signed in.
-3. First-time onboarding stores user + assistant names.
-4. Home greets user by name and shows orb + 3 mode cards.
-5. General text chat works through backend LLM abstraction.
-6. Conversations persist and can be resumed.
-7. Voice session works with transcription into the same conversation.
-8. User can alternate voice and text without context loss.
-9. Debate and Brainstorm modes change assistant behavior clearly.
-10. Build Mode gathers requirements and presents a plan without auto-executing.
-11. Explicit approval is required before a new DeepCode/BuildRun execution starts.
-12. After approval, Build Mode can create a simple project via DeepCode in a controlled workspace.
-13. A created Build Project can be reopened and modified in a second session.
-14. Conversation history rehydrates from PostgreSQL/Conversation Service after reconnect/resume without duplicate messages.
-15. No server secrets are embedded in the Flutter app.
-16. Failures show human-friendly messages.
-
----
-
-## 53. Risks
-
-| Risk | Impact | Mitigation |
-|---|---|---|
-| Free model availability changes | Dev friction | Provider abstraction + Ollama fallback |
-| Voice latency too high on local stack | Poor UX | Hybrid hosted STT/TTS for voice MVP |
-| DeepCode process orchestration complexity | Build Mode delays | Phase 13 POC before UI polish |
-| Accidental paid API usage | Surprise cost | Default free models; budget alarms |
-| Executing unsafe generated code | Security incident | No on-device exec; sandbox; access presets |
-| Overbuilding sandbox too early | Wasted time | Explicit MVP vs production split |
-| Mode sprawl as separate systems | Inconsistent UX | Shared ConversationMode architecture |
-| Python 3.14 compatibility with some packages | Install issues | Pin tested Python version if needed (**verify**) |
-
----
-
-## 54. Technical unknowns (TBD / Requires verification)
-
-1. Exact JSON/NDJSON event schema from installed `deepcode exec --json` / `loop` (must capture real samples before adapter body).
-2. Confirmed session/project continuation behavior with `--resume` + workspace on this machine.
-3. Full MCP tool surface from `deepcode mcp` if considered later.
-4. Whether App Server JSON-RPC should ever be used by SaNa Backend (stdio coupling concerns).
-5. Best cancel/interrupt approach for headless DeepCode runs from backend.
-6. Best LiveKit transcript sync pattern with Flutter for unified DB persistence.
-7. Whether voice agent should call SaNa Backend for every turn persistence, or batch.
-8. Practical local Whisper/STT latency on this Windows machine.
-9. Practical Kokoro TTS latency on this Windows machine.
-10. Whether OpenRouter free models available to this account support tool-calling needs for DeepCode quality.
-11. Ideal Flutter transcript reveal gesture (`DraggableScrollableSheet` vs custom).
-12. Whether Docker Desktop will be installed later for production sandbox work (currently missing).
-13. **Existing SaNa GitHub repository URL / local clone path** — local `SANA` folder is not a git repo yet; `gh` is not authenticated in this environment.
-
----
-
-## 55. Remaining open questions
-
-Architecture decisions in Section 56 are approved. Remaining questions before/during early setup:
-
-1. ~~What is the exact existing GitHub repository for SaNa?~~ **Resolved:** [https://github.com/saisree510/SaNa-Voice-Intelligence.git](https://github.com/saisree510/SaNa-Voice-Intelligence.git) — remote is empty; local `SANA` folder should become the working tree.
-2. Approve initializing local git in `SANA`, linking `origin` to that repo, adding `.gitignore`, and making the first commit (`PRD.md` only) before Phase 1?
-3. Install **Ollama now**, or after text chat works?
-4. Confirm Build Mode MVP workspaces under a SaNa-managed directory (recommended: yes, e.g. a designated `workspaces/` root outside phone storage).
-5. Preferred Android **application id / package name** (example: `app.sana.mobile`)?
-6. Preferred display name exact casing: `SaNa` everywhere?
-7. Supabase project: create a new Supabase project for SaNa, or use an existing one?
-8. LiveKit for early voice phases: start with **local self-hosted** server, LiveKit Cloud free tier, or decide at Phase 7?
-9. Any existing logo/orb asset files to reuse, or generate placeholder orb visuals in code first?
-
----
-
-## 56. Decisions — approval status
-
-| # | Decision | Status |
-|---|---|---|
-| 1 | Backend: Python + FastAPI | **APPROVED** |
-| 2 | Auth/DB: Supabase Auth + Supabase PostgreSQL (portable boundaries) | **APPROVED** |
-| 3 | Flutter state management: Riverpod | **APPROVED** |
-| 4 | Voice transport: LiveKit | **APPROVED** |
-| 5 | Voice agent framework: LiveKit Agents | **APPROVED** |
-| 6 | Dev LLM: OpenRouter free + optional Ollama; provider-independent | **APPROVED** |
-| 7 | DeepCodeAdapter around verified CLI/JSON (verification gate required) | **APPROVED WITH VERIFICATION REQUIRED** |
-| 8 | Build MVP: local trusted workspaces; swappable later | **APPROVED FOR DEV/MVP** |
-| 9 | Mode switching: same conversation + mode metadata/events | **APPROVED** |
-| 10 | Voice stack: Hybrid (C) | **APPROVED** |
-| 11 | Device testing: emulator + physical Android device | **APPROVED** |
-| 12 | Git/GitHub: use existing repository; no new repo; no secret commits | **APPROVED** |
-| 13 | Initial orb/branding direction (refinable design system) | **APPROVED** |
-
-No application code will be generated until the founder explicitly approves starting implementation.
-
----
-
-## Architecture concept diagram (approved)
-
-```text
-Flutter Mobile App (Android first, Riverpod)
-│  - dark-first UI + SaNa orb states
-│  - emulator for UI; physical device for voice validation
-│
-├──── LiveKit (WebRTC) ─────────── SaNa Voice Agent (LiveKit Agents)
-│                                      │
-│                                      ├─ STT provider (local Whisper eval / hosted swap)
-│                                      ├─ LLM provider (OpenRouter free / Ollama / later paid)
-│                                      └─ TTS provider (Kokoro eval / hosted swap)
-│
-└──── HTTPS/WSS ────────────────── SaNa Backend (Python / FastAPI)
-                                       │
-                                       ├─ Auth coordination (Supabase Auth JWTs)
-                                       ├─ PostgreSQL via Supabase (portable schema/repos)
-                                       ├─ Conversation Service (same conversation + mode events)
-                                       ├─ AI Orchestrator (general/debate/brainstorm/build)
-                                       ├─ LLMProvider abstraction
-                                       ├─ LiveKit token service (secrets server-side only)
-                                       └─ Build Orchestrator
-                                            ├─ WorkspaceBackend (local trusted MVP → remote sandbox later)
-                                            └─ DeepCodeAdapter (CLI/JSON after verification gate)
-                                                 └─ DeepCode (workspace-fenced)
-                                                      └─ Designated local project workspace (MVP)
-```
-
-### Component ownership reminder
-
-- **SaNa** = the product and orchestrator of UX + workflows
-- **LiveKit** = realtime communication infrastructure
-- **DeepCode** = engineering/build engine used by Build Mode
-- **Supabase** = Auth + Postgres hosting for MVP, behind clean boundaries
-
----
-
-## Mode architecture
-
-```text
-ConversationMode = general | debate | brainstorm | build
-```
-
-Shared:
-
-- conversation record
-- message transcript
-- voice/text interfaces
-- persistence
-- user profile personalization
-
-Mode-specific:
-
-- system prompt / behavior policy
-- tool availability
-- UI indicators
-- orchestration rules
-
-Build Mode uniquely gains DeepCode/Build tools through the Build Orchestrator.
-
-### Mode transitions (**APPROVED**)
-
-Keep **one conversation** and change `mode`, preserving conversational context.
-
-Mode changes must be stored as metadata/events so SaNa still knows which mode generated each part of the conversation.
-
-Examples:
-
-- General → “Let’s debate that” → Debate
-- Brainstorm → “Let’s build it” → Build (also create/link BuildProject)
-- Build → explanatory discussion can remain in same conversation
-
----
-
-## End of PRD
-
-**Current status:** Architecture/MVP decisions in this document are approved.  
-
-**Stop point:** Do **not** generate application code until the founder explicitly approves starting implementation after reviewing:
-
-1. Updated architecture
-2. Finalized MVP scope
-3. Implementation order
-4. Remaining unresolved technical questions
-5. Exact Phase 0 prerequisite/setup checks
+> Apply and verify the Supabase isolation migration in a controlled checkpoint, then perform a complete two-account browser test before beginning the live canvas or DeepCode work.
