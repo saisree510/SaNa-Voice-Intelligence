@@ -201,6 +201,27 @@ def test_create_project_and_approval_gate():
     assert len(approve_data["events"]) >= 2
 
 
+def test_build_project_fallback_architecture_reflects_clinic_scope():
+    workspace_path = _workspace("clinic_platform")
+    response = client.post(
+        "/v1/build/projects",
+        json={
+            "title": "PhysioFlow",
+            "specification": (
+                "A Supabase clinic app with patient and therapist roles, appointments, "
+                "QR check-in, Stripe invoices, email reminders, and analytics dashboard."
+            ),
+            "workspace_path": workspace_path,
+        },
+    )
+
+    assert response.status_code == 200
+    architecture_id = response.json()["architecture_id"]
+    architecture = client.get(f"/v1/architectures/{architecture_id}").json()
+    component_ids = {item["id"] for item in architecture["current_blueprint"]["components"]}
+    assert {"auth", "booking", "payments", "notifications", "checkin", "analytics"} <= component_ids
+
+
 def test_project_is_persisted_before_linked_architecture(monkeypatch):
     class OrderingArchitectureStore(ArchitectureStore):
         def create_architecture(self, record):

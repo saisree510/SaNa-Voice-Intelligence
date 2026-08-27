@@ -168,6 +168,73 @@ def _build_project_blueprint(
             )
         )
 
+    # A Build project can be created before the voice agent's draft ID reaches
+    # this endpoint.  In that case this fallback is the only canvas blueprint,
+    # so it must represent the actual product rather than collapsing every
+    # project to the generic UI/API/database/AI diagram above.
+    def add_component(component: dict, *, source_id: str = "logic", protocol: str = "HTTPS") -> None:
+        if any(existing["id"] == component["id"] for existing in components):
+            return
+        components.append(component)
+        connections.append(
+            ArchitectureConnection(
+                id=f"{source_id}-{component['id']}",
+                source_id=source_id,
+                target_id=component["id"],
+                protocol=protocol,
+            )
+        )
+
+    uses_supabase = "supabase" in text
+    if any(term in text for term in ("auth", "login", "role", "patient", "therapist", "receptionist", "owner")):
+        add_component({
+            "id": "auth",
+            "name": "Supabase Auth" if uses_supabase else "Role-based Access",
+            "type": "identity",
+            "technology": "Supabase Auth" if uses_supabase else "RBAC",
+            "metadata": {"source": "build_project"},
+        })
+    if any(term in text for term in ("appointment", "booking", "schedule", "check-in", "checkin", "session")):
+        add_component({
+            "id": "booking",
+            "name": "Appointments &\nTreatment Sessions",
+            "type": "domain_service",
+            "technology": "Scheduling",
+            "metadata": {"source": "build_project"},
+        })
+    if any(term in text for term in ("stripe", "payment", "invoice", "subscription", "billing")):
+        add_component({
+            "id": "payments",
+            "name": "Stripe Billing &\nInvoices",
+            "type": "external_service",
+            "technology": "Stripe",
+            "metadata": {"source": "build_project"},
+        })
+    if any(term in text for term in ("email", "notification", "reminder", "sms")):
+        add_component({
+            "id": "notifications",
+            "name": "Email &\nReminders",
+            "type": "external_service",
+            "technology": "Email service",
+            "metadata": {"source": "build_project"},
+        })
+    if any(term in text for term in ("qr", "check-in", "checkin", "no-show", "attendance")):
+        add_component({
+            "id": "checkin",
+            "name": "QR Check-in &\nAttendance",
+            "type": "domain_service",
+            "technology": "Mobile workflow",
+            "metadata": {"source": "build_project"},
+        })
+    if any(term in text for term in ("dashboard", "analytics", "utilization", "progress", "metric", "report")):
+        add_component({
+            "id": "analytics",
+            "name": "Clinic Analytics &\nOutcomes",
+            "type": "analytics",
+            "technology": "Reporting",
+            "metadata": {"source": "build_project"},
+        }, source_id="data" if uses_data else "logic", protocol="SQL" if uses_data else "HTTPS")
+
     return ArchitectureSpec(
         architecture_id=architecture_id,
         project_id=project_id,

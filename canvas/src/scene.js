@@ -85,6 +85,10 @@ function connectionElements(connection, componentPositions) {
     ? [[0, 0], [0, detourY - startY], [length, detourY - startY], [length, height]]
     : [[0, 0], [length, height]];
   const label = connection.protocol === "HTTPS" ? "" : connection.protocol || "";
+  // Keep protocol labels above the line so they cannot overlap the target
+  // node or an arrowhead (the source of the blurred text in the old view).
+  const labelX = horizontal ? (startX + endX) / 2 - 18 : startX + 14;
+  const labelY = horizontal ? Math.min(startY, endY) - 30 : (startY + endY) / 2 - 12;
 
   return convertToExcalidrawElements([
     {
@@ -102,8 +106,8 @@ function connectionElements(connection, componentPositions) {
     ...(label ? [{
       id: `edge-label-${connection.id}`,
       type: "text",
-      x: (startX + endX) / 2 - 18,
-      y: (startY + endY) / 2 - 24,
+      x: labelX,
+      y: labelY,
       text: label,
       fontSize: 16,
       strokeColor: "#66507d",
