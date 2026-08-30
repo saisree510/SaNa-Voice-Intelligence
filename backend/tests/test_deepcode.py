@@ -209,7 +209,8 @@ def test_build_project_fallback_architecture_reflects_clinic_scope():
             "title": "PhysioFlow",
             "specification": (
                 "A Supabase clinic app with patient and therapist roles, appointments, "
-                "QR check-in, Stripe invoices, email reminders, and analytics dashboard."
+                "QR check-in, photo documents, real-time availability, Stripe invoices, "
+                "email reminders, and analytics dashboard."
             ),
             "workspace_path": workspace_path,
         },
@@ -219,7 +220,7 @@ def test_build_project_fallback_architecture_reflects_clinic_scope():
     architecture_id = response.json()["architecture_id"]
     architecture = client.get(f"/v1/architectures/{architecture_id}").json()
     component_ids = {item["id"] for item in architecture["current_blueprint"]["components"]}
-    assert {"auth", "booking", "payments", "notifications", "checkin", "analytics"} <= component_ids
+    assert {"auth", "booking", "payments", "notifications", "checkin", "analytics", "storage", "realtime"} <= component_ids
 
 
 def test_project_is_persisted_before_linked_architecture(monkeypatch):

@@ -158,6 +158,10 @@ def _infer_overview_components(specification: str) -> list[dict[str, str]]:
         components.append({"id": "notifications", "name": "Email Notifications", "type": "external_service"})
     if any(term in text for term in ("qr", "check-in", "checkin", "no-show", "attendance")):
         components.append({"id": "checkin", "name": "QR Check-in &\nAttendance", "type": "domain_service"})
+    if any(term in text for term in ("upload", "photo", "video", "document", "file", "storage")):
+        components.append({"id": "storage", "name": "Supabase Storage", "type": "storage", "technology": "Supabase Storage" if uses_supabase else "Object storage"})
+    if any(term in text for term in ("real-time", "realtime", "live availability", "live update")):
+        components.append({"id": "realtime", "name": "Real-time Availability", "type": "realtime", "technology": "Supabase Realtime" if uses_supabase else "WebSockets"})
     if any(term in text for term in ("analytics", "dashboard", "trend", "fill rate", "report")):
         components.append({"id": "analytics", "name": "Attendance & Revenue Analytics", "type": "analytics"})
     if any(term in text for term in ("ai", "agent", "voice", "livekit", "llm", "speech")):
@@ -196,8 +200,11 @@ def _build_architecture_operations(architecture_id: str, components: list[dict[s
         ("api", "checkin", "HTTPS"),
         ("checkin", "database", "SQL"),
         ("database", "analytics", "SQL"),
-        ("frontend", "agent", "LiveKit"),
-        ("agent", "api", "HTTPS"),
+        ("api", "agent", "LiveKit"),
+        ("api", "storage", "HTTPS"),
+        ("storage", "database", "SQL"),
+        ("api", "realtime", "HTTPS"),
+        ("realtime", "frontend", "WebSocket"),
     ):
         if not any(component["id"] == source for component in components):
             continue

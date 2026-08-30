@@ -1,19 +1,24 @@
 import { convertToExcalidrawElements } from "@excalidraw/excalidraw";
 
 const positions = {
-  web: { x: 120, y: 220 },
-  frontend: { x: 120, y: 220 },
-  api: { x: 460, y: 220 },
-  database: { x: 800, y: 220 },
+  web: { x: 80, y: 300 },
+  frontend: { x: 80, y: 300 },
+  api: { x: 400, y: 300 },
+  logic: { x: 400, y: 300 },
+  database: { x: 720, y: 300 },
+  data: { x: 720, y: 300 },
   // Cross-cutting services live in a separate lane so their connections do
   // not pass through the primary UI → API → data path.
-  agent: { x: 460, y: 40 },
-  auth: { x: 380, y: 80 },
-  booking: { x: 680, y: 220 },
-  payments: { x: 680, y: 420 },
-  notifications: { x: 980, y: 80 },
-  checkin: { x: 680, y: 620 },
-  analytics: { x: 980, y: 620 },
+  agent: { x: 720, y: 80 },
+  ai: { x: 720, y: 80 },
+  auth: { x: 400, y: 80 },
+  storage: { x: 1040, y: 80 },
+  payments: { x: 1040, y: 220 },
+  notifications: { x: 1040, y: 360 },
+  analytics: { x: 1040, y: 520 },
+  booking: { x: 400, y: 520 },
+  checkin: { x: 720, y: 520 },
+  realtime: { x: 720, y: 680 },
 };
 
 const size = { width: 220, height: 96 };
@@ -70,25 +75,12 @@ function connectionElements(connection, componentPositions) {
   const endY = horizontal ? target.y + size.height / 2 : (flowsDown ? target.y : target.y + size.height);
   const length = endX - startX;
   const height = endY - startY;
-  const hasIntermediateNode = [...componentPositions.entries()].some(([id, position]) =>
-    id !== connection.source_id &&
-    id !== connection.target_id &&
-    position.x < Math.max(startX, endX) &&
-    position.x + size.width > Math.min(startX, endX) &&
-    position.y < Math.max(startY, endY) + size.height / 2 &&
-    position.y + size.height > Math.min(startY, endY) - size.height / 2,
-  );
-  // A long relationship never draws through an unrelated node. Route it in a
-  // separate lane with two elbows instead.
-  const detourY = Math.min(source.y, target.y) - 72;
-  const points = horizontal && hasIntermediateNode
-    ? [[0, 0], [0, detourY - startY], [length, detourY - startY], [length, height]]
+  // Each relationship leaves its source through a short private lane before
+  // turning toward its target, keeping arrows outside component bodies.
+  const elbow = 40 * Math.sign(length || 1);
+  const points = horizontal && Math.abs(height) > 8
+    ? [[0, 0], [elbow, 0], [elbow, height], [length, height]]
     : [[0, 0], [length, height]];
-  const label = connection.protocol === "HTTPS" ? "" : connection.protocol || "";
-  // Keep protocol labels above the line so they cannot overlap the target
-  // node or an arrowhead (the source of the blurred text in the old view).
-  const labelX = horizontal ? (startX + endX) / 2 - 18 : startX + 14;
-  const labelY = horizontal ? Math.min(startY, endY) - 30 : (startY + endY) / 2 - 12;
 
   return convertToExcalidrawElements([
     {
@@ -103,16 +95,6 @@ function connectionElements(connection, componentPositions) {
       endArrowhead: "arrow",
       customData: { blueprintId: connection.id, role: "connection" },
     },
-    ...(label ? [{
-      id: `edge-label-${connection.id}`,
-      type: "text",
-      x: labelX,
-      y: labelY,
-      text: label,
-      fontSize: 16,
-      strokeColor: "#66507d",
-      customData: { blueprintId: connection.id, role: "connection-label" },
-    }] : []),
   ]);
 }
 

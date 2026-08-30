@@ -58,6 +58,16 @@ def test_overview_architecture_uses_domain_components_for_fitness_workflow():
     }.issubset(component_ids)
 
 
+def test_overview_architecture_includes_material_clinic_update_components():
+    components = _infer_overview_components(
+        "A Supabase clinic application with patient photo uploads, treatment documents, "
+        "and real-time appointment availability."
+    )
+
+    component_ids = {component["id"] for component in components}
+    assert {"storage", "realtime"}.issubset(component_ids)
+
+
 @pytest.mark.asyncio
 async def test_voice_agent_build_tools_offline_file_drafting(monkeypatch):
     monkeypatch.delenv("BACKEND_URL", raising=False)

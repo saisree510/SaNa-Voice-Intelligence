@@ -161,10 +161,10 @@ def _build_project_blueprint(
         )
         connections.append(
             ArchitectureConnection(
-                id="frontend-ai",
-                source_id="frontend",
+                id="logic-ai",
+                source_id="logic",
                 target_id="ai",
-                protocol="Conversation",
+                protocol="LiveKit",
             )
         )
 
@@ -224,6 +224,22 @@ def _build_project_blueprint(
             "name": "QR Check-in &\nAttendance",
             "type": "domain_service",
             "technology": "Mobile workflow",
+            "metadata": {"source": "build_project"},
+        })
+    if any(term in text for term in ("upload", "photo", "video", "document", "file", "storage")):
+        add_component({
+            "id": "storage",
+            "name": "Supabase Storage" if uses_supabase else "Secure File Storage",
+            "type": "storage",
+            "technology": "Supabase Storage" if uses_supabase else "Object storage",
+            "metadata": {"source": "build_project"},
+        })
+    if any(term in text for term in ("real-time", "realtime", "live availability", "live update")):
+        add_component({
+            "id": "realtime",
+            "name": "Real-time Availability",
+            "type": "realtime",
+            "technology": "Supabase Realtime" if uses_supabase else "WebSockets",
             "metadata": {"source": "build_project"},
         })
     if any(term in text for term in ("dashboard", "analytics", "utilization", "progress", "metric", "report")):
