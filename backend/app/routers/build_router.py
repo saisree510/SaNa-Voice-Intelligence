@@ -193,7 +193,7 @@ def _build_project_blueprint(
             "type": "identity",
             "technology": "Supabase Auth" if uses_supabase else "RBAC",
             "metadata": {"source": "build_project"},
-        })
+        }, source_id="frontend")
     if any(term in text for term in ("appointment", "booking", "schedule", "check-in", "checkin", "session")):
         add_component({
             "id": "booking",
@@ -209,7 +209,7 @@ def _build_project_blueprint(
             "type": "external_service",
             "technology": "Stripe",
             "metadata": {"source": "build_project"},
-        })
+        }, source_id="booking" if any(item["id"] == "booking" for item in components) else "logic")
     if any(term in text for term in ("email", "notification", "reminder", "sms")):
         add_component({
             "id": "notifications",
@@ -217,7 +217,7 @@ def _build_project_blueprint(
             "type": "external_service",
             "technology": "Email service",
             "metadata": {"source": "build_project"},
-        })
+        }, source_id="booking" if any(item["id"] == "booking" for item in components) else "logic")
     if any(term in text for term in ("qr", "check-in", "checkin", "no-show", "attendance")):
         add_component({
             "id": "checkin",
@@ -225,7 +225,7 @@ def _build_project_blueprint(
             "type": "domain_service",
             "technology": "Mobile workflow",
             "metadata": {"source": "build_project"},
-        })
+        }, source_id="booking" if any(item["id"] == "booking" for item in components) else "logic")
     if any(term in text for term in ("upload", "photo", "video", "document", "file", "storage")):
         add_component({
             "id": "storage",
@@ -233,7 +233,7 @@ def _build_project_blueprint(
             "type": "storage",
             "technology": "Supabase Storage" if uses_supabase else "Object storage",
             "metadata": {"source": "build_project"},
-        })
+        }, source_id="booking" if any(item["id"] == "booking" for item in components) else "logic")
     if any(term in text for term in ("real-time", "realtime", "live availability", "live update")):
         add_component({
             "id": "realtime",
@@ -241,7 +241,7 @@ def _build_project_blueprint(
             "type": "realtime",
             "technology": "Supabase Realtime" if uses_supabase else "WebSockets",
             "metadata": {"source": "build_project"},
-        })
+        }, source_id="booking" if any(item["id"] == "booking" for item in components) else "logic")
     if any(term in text for term in ("dashboard", "analytics", "utilization", "progress", "metric", "report")):
         add_component({
             "id": "analytics",
@@ -250,6 +250,19 @@ def _build_project_blueprint(
             "technology": "Reporting",
             "metadata": {"source": "build_project"},
         }, source_id="data" if uses_data else "logic", protocol="SQL" if uses_data else "HTTPS")
+
+    # For a domain workflow, the data store feeds the workflow layer. This
+    # avoids a long API-to-database bypass line through the canvas.
+    if any(item["id"] == "booking" for item in components) and any(item["id"] == "data" for item in components):
+        connections = [connection for connection in connections if connection.id != "logic-data"]
+        connections.append(
+            ArchitectureConnection(
+                id="data-booking",
+                source_id="data",
+                target_id="booking",
+                protocol="SQL",
+            )
+        )
 
     return ArchitectureSpec(
         architecture_id=architecture_id,

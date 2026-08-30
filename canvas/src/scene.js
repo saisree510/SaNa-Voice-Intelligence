@@ -21,13 +21,35 @@ const positions = {
   realtime: { x: 720, y: 680 },
 };
 
+// Large blueprints use a layered, top-to-bottom architecture flow. It is much
+// easier to scan than a wide bus once a project has several integrations.
+const layeredPositions = {
+  web: { x: 620, y: 80 },
+  frontend: { x: 620, y: 80 },
+  auth: { x: 320, y: 240 },
+  api: { x: 620, y: 240 },
+  logic: { x: 620, y: 240 },
+  agent: { x: 920, y: 240 },
+  ai: { x: 920, y: 240 },
+  database: { x: 620, y: 400 },
+  data: { x: 620, y: 400 },
+  analytics: { x: 920, y: 400 },
+  booking: { x: 620, y: 560 },
+  payments: { x: 140, y: 720 },
+  checkin: { x: 380, y: 720 },
+  storage: { x: 620, y: 720 },
+  notifications: { x: 860, y: 720 },
+  realtime: { x: 1100, y: 720 },
+};
+
 const size = { width: 220, height: 96 };
 
-function positionFor(component, index) {
+function positionFor(component, index, componentCount) {
   if (component.metadata?.position && typeof component.metadata.position.x === "number" && typeof component.metadata.position.y === "number") {
     return component.metadata.position;
   }
-  return positions[component.id] ?? {
+  const layout = componentCount > 6 ? layeredPositions : positions;
+  return layout[component.id] ?? {
     x: 120 + (index % 4) * 340,
     y: 220 + Math.floor(index / 4) * 160,
   };
@@ -129,7 +151,7 @@ export function sceneForOperations(blueprint, operations) {
   const components = Array.isArray(blueprint.components) ? blueprint.components : [];
   const connections = Array.isArray(blueprint.connections) ? blueprint.connections : [];
   const componentPositions = new Map(
-    components.map((component, index) => [component.id, positionFor(component, index)]),
+    components.map((component, index) => [component.id, positionFor(component, index, components.length)]),
   );
 
   for (const operation of operations) {

@@ -189,22 +189,21 @@ def _build_architecture_operations(architecture_id: str, components: list[dict[s
         )
         sequence += 1
 
+    # Keep complex product diagrams readable by showing the primary dependency
+    # flow. The canvas switches to a layered top-to-bottom layout for these.
     for source, target, protocol in (
-        ("frontend", "api", "HTTPS"),
         ("frontend", "auth", "HTTPS"),
-        ("api", "database", "SQL"),
-        ("api", "booking", "HTTPS"),
-        ("booking", "database", "SQL"),
-        ("api", "payments", "HTTPS"),
-        ("booking", "notifications", "HTTPS"),
-        ("api", "checkin", "HTTPS"),
-        ("checkin", "database", "SQL"),
-        ("database", "analytics", "SQL"),
+        ("frontend", "api", "HTTPS"),
+        ("auth", "api", "HTTPS"),
         ("api", "agent", "LiveKit"),
-        ("api", "storage", "HTTPS"),
-        ("storage", "database", "SQL"),
-        ("api", "realtime", "HTTPS"),
-        ("realtime", "frontend", "WebSocket"),
+        ("api", "database", "SQL"),
+        ("database", "booking", "SQL"),
+        ("database", "analytics", "SQL"),
+        ("booking", "payments", "HTTPS"),
+        ("booking", "checkin", "HTTPS"),
+        ("booking", "storage", "HTTPS"),
+        ("booking", "notifications", "HTTPS"),
+        ("booking", "realtime", "HTTPS"),
     ):
         if not any(component["id"] == source for component in components):
             continue
