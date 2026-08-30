@@ -34,7 +34,8 @@ function positionFor(component, index) {
 }
 
 function componentElements(component, position) {
-  const subtitle = component.technology || component.type || "";
+  const candidateSubtitle = component.technology || component.type || "";
+  const subtitle = candidateSubtitle === component.name ? "" : candidateSubtitle;
   return convertToExcalidrawElements([
     {
       id: `node-${component.id}`,
@@ -62,22 +63,47 @@ function componentElements(component, position) {
   ]);
 }
 
-function connectionElements(connection, componentPositions) {
+function connectionElements(connection, componentPositions, allConnections) {
   const source = componentPositions.get(connection.source_id);
   const target = componentPositions.get(connection.target_id);
   if (!source || !target) return [];
+  const outgoing = allConnections
+    .filter((item) => item.source_id === connection.source_id)
+    .sort((a, b) => {
+      const aTarget = componentPositions.get(a.target_id);
+      const bTarget = componentPositions.get(b.target_id);
+      return (aTarget?.y ?? 0) - (bTarget?.y ?? 0) || (aTarget?.x ?? 0) - (bTarget?.x ?? 0);
+    });
+  const incoming = allConnections
+    .filter((item) => item.target_id === connection.target_id)
+    .sort((a, b) => {
+      const aSource = componentPositions.get(a.source_id);
+      const bSource = componentPositions.get(b.source_id);
+      return (aSource?.y ?? 0) - (bSource?.y ?? 0) || (aSource?.x ?? 0) - (bSource?.x ?? 0);
+    });
+  const outgoingIndex = Math.max(0, outgoing.findIndex((item) => item.id === connection.id));
+  const incomingIndex = Math.max(0, incoming.findIndex((item) => item.id === connection.id));
+  const edgeOffset = (index, count) => 18 + ((index + 1) * (size.height - 36)) / (count + 1);
   const horizontal = Math.abs(target.x - source.x) >= Math.abs(target.y - source.y);
   const flowsRight = target.x >= source.x;
   const flowsDown = target.y >= source.y;
-  const startX = horizontal ? (flowsRight ? source.x + size.width : source.x) : source.x + size.width / 2;
-  const startY = horizontal ? source.y + size.height / 2 : (flowsDown ? source.y + size.height : source.y);
-  const endX = horizontal ? (flowsRight ? target.x : target.x + size.width) : target.x + size.width / 2;
-  const endY = horizontal ? target.y + size.height / 2 : (flowsDown ? target.y : target.y + size.height);
+  const startX = horizontal
+    ? (flowsRight ? source.x + size.width : source.x)
+    : source.x + edgeOffset(outgoingIndex, outgoing.length);
+  const startY = horizontal
+    ? source.y + edgeOffset(outgoingIndex, outgoing.length)
+    : (flowsDown ? source.y + size.height : source.y);
+  const endX = horizontal
+    ? (flowsRight ? target.x : target.x + size.width)
+    : target.x + edgeOffset(incomingIndex, incoming.length);
+  const endY = horizontal
+    ? target.y + edgeOffset(incomingIndex, incoming.length)
+    : (flowsDown ? target.y : target.y + size.height);
   const length = endX - startX;
   const height = endY - startY;
   // Each relationship leaves its source through a short private lane before
   // turning toward its target, keeping arrows outside component bodies.
-  const elbow = 40 * Math.sign(length || 1);
+  const elbow = (30 + outgoingIndex * 18) * Math.sign(length || 1);
   const points = horizontal && Math.abs(height) > 8
     ? [[0, 0], [elbow, 0], [elbow, height], [length, height]]
     : [[0, 0], [length, height]];
@@ -114,7 +140,7 @@ export function sceneForOperations(blueprint, operations) {
     }
     if (operation.type === "connect_nodes") {
       const connection = connections.find(({ id }) => id === operation.connectionId);
-      if (connection) elements.push(...connectionElements(connection, componentPositions));
+      if (connection) elements.push(...connectionElements(connection, componentPositions, connections));
     }
   }
   return elements;
