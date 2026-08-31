@@ -44,6 +44,18 @@ const layeredPositions = {
 
 const size = { width: 220, height: 96 };
 
+// Semantic visual language adapted from the Excalidraw Diagram skill palette.
+// Colors communicate responsibility, instead of making every node the same card.
+function componentStyle(component) {
+  if (component.type === "frontend") return { fill: "#fed7aa", stroke: "#c2410c" };
+  if (component.type === "agent") return { fill: "#ddd6fe", stroke: "#6d28d9" };
+  if (component.type === "analytics") return { fill: "#a7f3d0", stroke: "#047857" };
+  if (component.type === "database" || component.type === "storage") return { fill: "#93c5fd", stroke: "#1e3a5f" };
+  if (component.type === "identity") return { fill: "#fef3c7", stroke: "#b45309" };
+  if (component.type === "external_service") return { fill: "#60a5fa", stroke: "#1e3a5f" };
+  return { fill: "#3b82f6", stroke: "#1e3a5f" };
+}
+
 function positionFor(component, index, componentCount) {
   if (component.metadata?.position && typeof component.metadata.position.x === "number" && typeof component.metadata.position.y === "number") {
     return component.metadata.position;
@@ -58,6 +70,7 @@ function positionFor(component, index, componentCount) {
 function componentElements(component, position) {
   const candidateSubtitle = component.technology || component.type || "";
   const subtitle = candidateSubtitle === component.name ? "" : candidateSubtitle;
+  const style = componentStyle(component);
   return convertToExcalidrawElements([
     {
       id: `node-${component.id}`,
@@ -67,9 +80,11 @@ function componentElements(component, position) {
       width: size.width,
       height: size.height,
       roundness: { type: 3 },
-      strokeColor: "#9f80d8",
-      backgroundColor: "#f0e8ff",
+      strokeColor: style.stroke,
+      backgroundColor: style.fill,
       fillStyle: "solid",
+      roughness: 0,
+      strokeWidth: 2,
       customData: { blueprintId: component.id, role: "component" },
     },
     {
@@ -79,7 +94,8 @@ function componentElements(component, position) {
       y: position.y + 24,
       text: subtitle ? `${component.name}\n${subtitle}` : component.name,
       fontSize: 20,
-      strokeColor: "#281d3d",
+      strokeColor: "#374151",
+      roughness: 0,
       customData: { blueprintId: component.id, role: "component-label" },
     },
   ]);
@@ -140,6 +156,8 @@ function connectionElements(connection, componentPositions, allConnections) {
       height,
       points,
       strokeColor: "#66507d",
+      roughness: 0,
+      strokeWidth: 2,
       endArrowhead: "arrow",
       customData: { blueprintId: connection.id, role: "connection" },
     },
@@ -153,6 +171,33 @@ export function sceneForOperations(blueprint, operations) {
   const componentPositions = new Map(
     components.map((component, index) => [component.id, positionFor(component, index, components.length)]),
   );
+
+  if (components.length > 6) {
+    elements.push(...convertToExcalidrawElements([
+      {
+        id: "architecture-flow-title",
+        type: "text",
+        x: 140,
+        y: 20,
+        text: "Architecture flow",
+        fontSize: 28,
+        strokeColor: "#1e40af",
+        roughness: 0,
+        customData: { role: "diagram-title" },
+      },
+      {
+        id: "architecture-flow-subtitle",
+        type: "text",
+        x: 142,
+        y: 58,
+        text: "Primary path and supporting integrations",
+        fontSize: 16,
+        strokeColor: "#64748b",
+        roughness: 0,
+        customData: { role: "diagram-subtitle" },
+      },
+    ]));
+  }
 
   for (const operation of operations) {
     if (operation.type === "add_node") {
