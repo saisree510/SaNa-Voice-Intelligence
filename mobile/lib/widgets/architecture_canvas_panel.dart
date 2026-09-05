@@ -120,7 +120,7 @@ class _ArchitectureCanvasPanelState extends State<ArchitectureCanvasPanel> {
 
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: SanaColors.pureWhite,
+        color: SanaColors.ink,
         border: Border.all(color: SanaColors.outline),
         borderRadius: BorderRadius.circular(22),
         boxShadow: [
@@ -243,7 +243,7 @@ class _CanvasHeader extends StatelessWidget {
     final isApproved = activeArch != null && activeArch.projectId != null;
 
     return ColoredBox(
-      color: SanaColors.pureWhite,
+      color: SanaColors.ink,
       child: Padding(
         padding: const EdgeInsets.fromLTRB(12, 10, 12, 8),
         child: Row(

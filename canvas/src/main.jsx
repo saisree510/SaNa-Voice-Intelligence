@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { Excalidraw, exportToBlob } from "@excalidraw/excalidraw";
+import { DotGrid } from "interactive-dot-grid";
 import { mockOperations, overviewBlueprint } from "./blueprint";
+import { brandIconUrl, iconDataUrl, iconFileId } from "./icons";
 import { sceneForOperations } from "./scene";
 import "./styles.css";
 
@@ -32,6 +34,8 @@ function CanvasProof() {
   const reducedMotionRef = useRef(false);
   const stepRef = useRef(0);
   const programmaticUpdateRef = useRef(false);
+  const stageRef = useRef(null);
+  const loadedIconFilesRef = useRef(new Set());
   const isEmbedded = new URLSearchParams(window.location.search).get("embed") === "1";
 
   useEffect(() => {
@@ -82,6 +86,26 @@ function CanvasProof() {
     return () => window.removeEventListener("message", handleMessage);
   }, [isEmbedded]);
 
+  // Excalidraw owns the foreground drawing surface. The interactive grid is a
+  // separate, click-through canvas directly underneath it, so we never render
+  // two dot patterns in the same visual layer.
+  useEffect(() => {
+    if (!stageRef.current || reducedMotion) return undefined;
+    const grid = new DotGrid({
+      container: stageRef.current,
+      spacing: 28,
+      dotMin: 1.1,
+      dotMax: 3.6,
+      radiusEffect: 210,
+      baseAlpha: 0.2,
+      maxAlpha: 0.72,
+      color: "167, 139, 250",
+      smoothing: 0.1,
+      zIndex: 0,
+    });
+    return () => grid.destroy();
+  }, [reducedMotion]);
+
   useEffect(() => {
     operationsRef.current = operations;
   }, [operations]);
@@ -125,6 +149,44 @@ function CanvasProof() {
       programmaticUpdateRef.current = false;
     }, 250);
   }, [elements]);
+
+  useEffect(() => {
+    let disposed = false;
+    const loadNodeIcons = async () => {
+      if (!apiRef.current || !blueprint?.components?.length) return;
+      const pending = blueprint.components.filter((component) => !loadedIconFilesRef.current.has(iconFileId(component)));
+      if (!pending.length) return;
+
+      const files = await Promise.all(pending.map(async (component) => {
+        let dataURL = iconDataUrl(component);
+        const brandUrl = brandIconUrl(component);
+        if (brandUrl) {
+          try {
+            const response = await fetch(brandUrl);
+            if (!response.ok) throw new Error(`Icon request returned ${response.status}`);
+            const svg = await response.text();
+            dataURL = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+          } catch (error) {
+            console.warn(`Using the semantic fallback icon for ${component.name}`, error);
+          }
+        }
+        return {
+          id: iconFileId(component),
+          dataURL,
+          mimeType: "image/svg+xml",
+          created: Date.now(),
+        };
+      }));
+
+      if (disposed || !apiRef.current) return;
+      apiRef.current.addFiles(files);
+      for (const component of pending) loadedIconFilesRef.current.add(iconFileId(component));
+      apiRef.current.updateScene({ elements: elementsRef.current });
+    };
+
+    loadNodeIcons();
+    return () => { disposed = true; };
+  }, [blueprint]);
 
   useEffect(() => {
     if (!isEmbedded) return;
@@ -254,7 +316,7 @@ function CanvasProof() {
         appState: {
           ...appState,
           exportBackground: true,
-          viewBackgroundColor: "#fdfcff",
+          viewBackgroundColor: "#0d0b1d",
         },
         mimeType: "image/png",
       });
@@ -339,9 +401,10 @@ function CanvasProof() {
           </label>
         </div>
       </header>}
-      <section className="canvas-stage" aria-label="Interactive Overview Architecture canvas">
+      <section ref={stageRef} className="canvas-stage" aria-label="Interactive Overview Architecture canvas">
         <Excalidraw
           excalidrawAPI={(api) => { apiRef.current = api; }}
+          theme="dark"
           initialData={{
             elements,
             appState: {

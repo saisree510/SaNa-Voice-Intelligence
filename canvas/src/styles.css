@@ -1,6 +1,6 @@
 :root {
-  color: #281d3d;
-  background: #fbf9ff;
+  color: #f5f3ff;
+  background: #0d0b1d;
   font-family: Georgia, "Times New Roman", serif;
 }
 
@@ -21,19 +21,18 @@ h1 { margin: 0; font-size: clamp(2rem, 4vw, 3.4rem); letter-spacing: -0.055em; }
 .controls button:disabled, .controls select:disabled { cursor: not-allowed; opacity: 0.55; }
 .controls label { display: flex; align-items: center; gap: 6px; color: #66507d; font-size: 0.92rem; }
 .controls select { padding: 8px; }
-.canvas-stage { position: relative; height: calc(100vh - 205px); min-height: 520px; max-width: 1440px; margin: 0 auto; overflow: hidden; border: 1px solid #ded2f5; border-radius: 22px; background: #fdfcff; box-shadow: 0 18px 50px rgb(93 58 145 / 0.12); }
-.canvas-stage::after { content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none; background-image: radial-gradient(circle, rgb(92 76 112 / 0.18) 1px, transparent 1.2px); background-position: 10px 10px; background-size: 24px 24px; }
+.canvas-stage { position: relative; height: calc(100vh - 205px); min-height: 520px; max-width: 1440px; margin: 0 auto; overflow: hidden; border: 1px solid rgb(196 181 253 / 0.35); border-radius: 22px; background: #0d0b1d; box-shadow: 0 18px 50px rgb(76 29 149 / 0.32); isolation: isolate; }
 .canvas-stage .excalidraw {
   position: relative;
   z-index: 1;
-  /* Excalidraw paints its own otherwise-opaque workspace. Put Soul's dots on
-     that visible layer rather than behind the renderer. */
+  /* Keep Excalidraw transparent: the one interactive grid lives beneath it. */
   background-color: transparent !important;
-  background-image: radial-gradient(circle, rgb(92 76 112 / 0.18) 1px, transparent 1.2px) !important;
-  background-position: 10px 10px !important;
-  background-size: 24px 24px !important;
+  background-image: none !important;
 }
-.canvas-proof.is-embedded { min-height: 100vh; padding: 0; background: #fdfcff; }
+.canvas-stage > canvas {
+  z-index: 0 !important;
+}
+.canvas-proof.is-embedded { min-height: 100vh; padding: 0; background: #0d0b1d; }
 .canvas-proof.is-embedded .canvas-stage { height: 100vh; min-height: 0; max-width: none; border: 0; border-radius: 0; box-shadow: none; }
 .accessible-summary { max-width: 1440px; margin: 16px auto 0; padding: 16px 20px; border-left: 4px solid #9f80d8; background: #f1ebfc; border-radius: 0 14px 14px 0; }
 .accessible-summary h2, .accessible-summary p { margin: 0; }

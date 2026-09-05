@@ -11,12 +11,14 @@ class AgentLayoutState {
   final bool isCameraVisible;
   final bool isScreenshareVisible;
   final bool isImmersiveWorkspaceVisible;
+  final bool isBuildWorkspace;
 
   const AgentLayoutState({
     this.isTranscriptionVisible = false,
     this.isCameraVisible = false,
     this.isScreenshareVisible = false,
     this.isImmersiveWorkspaceVisible = false,
+    this.isBuildWorkspace = false,
   });
 }
 
@@ -26,12 +28,14 @@ extension AgentLayoutStateCopyExt on AgentLayoutState {
     bool? isCameraVisible,
     bool? isScreenshareVisible,
     bool? isImmersiveWorkspaceVisible,
+    bool? isBuildWorkspace,
   }) {
     return AgentLayoutState(
       isTranscriptionVisible: isTranscriptionVisible ?? this.isTranscriptionVisible,
       isCameraVisible: isCameraVisible ?? this.isCameraVisible,
       isScreenshareVisible: isScreenshareVisible ?? this.isScreenshareVisible,
       isImmersiveWorkspaceVisible: isImmersiveWorkspaceVisible ?? this.isImmersiveWorkspaceVisible,
+      isBuildWorkspace: isBuildWorkspace ?? this.isBuildWorkspace,
     );
   }
 }
@@ -101,7 +105,9 @@ class AgentLayoutSwitcher extends StatelessWidget {
         int cellCountCam = 0;
         if (layoutState.isCameraVisible) cellCountCam += 1;
 
-        final shrinkAgentView = layoutState.isTranscriptionVisible && !layoutState.isImmersiveWorkspaceVisible;
+        final shrinkAgentView = layoutState.isTranscriptionVisible &&
+            !layoutState.isImmersiveWorkspaceVisible &&
+            !layoutState.isBuildWorkspace;
         final agentViewPosition = LayoutPosition(
           left: shrinkAgentView ? horizontalPadding : 0.0,
           top: shrinkAgentView ? topPadding : 0.0,
@@ -161,7 +167,7 @@ class AgentLayoutSwitcher extends StatelessWidget {
               ),
             ),
             // AgentView
-            if (!layoutState.isImmersiveWorkspaceVisible)
+            if (!layoutState.isImmersiveWorkspaceVisible && !layoutState.isBuildWorkspace)
               AnimatedPositioned(
                 duration: animationDuration,
                 curve: animationCurve,

@@ -1,36 +1,37 @@
 import 'package:flutter/material.dart';
 
-/// Refinable Sana brand tokens (white + vibrant-lavender/lilac).
+/// Soul's midnight workspace tokens: high contrast surfaces with a restrained
+/// aurora-violet signal that keeps the orb and architecture in focus.
 class SanaColors {
   const SanaColors._();
 
   static const Color pureWhite = Color(0xFFFFFFFF);
-  static const Color nearBlack = Color(0xFFFFFFFF); // Background alias for compatibility
-  static const Color ink = Color(0xFFF8F6FA);
-  static const Color surface = Color(0xFFF3EEFA);
-  static const Color surfaceElevated = Color(0xFFE9E2F5);
+  static const Color nearBlack = Color(0xFF0D0B1D);
+  static const Color ink = Color(0xFF15122A);
+  static const Color surface = Color(0xFF1C1833);
+  static const Color surfaceElevated = Color(0xFF282244);
 
   /// Primary brand signal — lightened soft Lilac / Lavender.
-  static const Color lavender = Color(0xFFA58AD6);
-  static const Color lavenderSoft = Color(0xFFCBBBEA);
-  static const Color lavenderDeep = Color(0xFF8A6DC2);
+  static const Color lavender = Color(0xFFA78BFA);
+  static const Color lavenderSoft = Color(0xFFC4B5FD);
+  static const Color lavenderDeep = Color(0xFF7C3AED);
 
-  static const Color fgPrimary = Color(0xFF191624);
-  static const Color fgSecondary = Color(0xFF524A66);
-  static const Color fgMuted = Color(0xFF857E99);
+  static const Color fgPrimary = Color(0xFFF5F3FF);
+  static const Color fgSecondary = Color(0xFFC9C0DD);
+  static const Color fgMuted = Color(0xFF9C91B4);
 
   static const Color danger = Color(0xFFD9534F);
   static const Color success = Color(0xFF2E8B57);
-  static const Color outline = Color(0x33A58AD6);
+  static const Color outline = Color(0x45C4B5FD);
 }
 
 ThemeData buildSanaTheme() {
-  const scheme = ColorScheme.light(
+  const scheme = ColorScheme.dark(
     primary: SanaColors.lavender,
     onPrimary: SanaColors.pureWhite,
     secondary: SanaColors.lavenderSoft,
     onSecondary: SanaColors.pureWhite,
-    surface: SanaColors.pureWhite,
+    surface: SanaColors.ink,
     onSurface: SanaColors.fgPrimary,
     onSurfaceVariant: SanaColors.fgSecondary,
     error: SanaColors.danger,
@@ -43,8 +44,8 @@ ThemeData buildSanaTheme() {
     useMaterial3: true,
     brightness: Brightness.light,
     colorScheme: scheme,
-    scaffoldBackgroundColor: SanaColors.pureWhite,
-    canvasColor: SanaColors.pureWhite,
+    scaffoldBackgroundColor: SanaColors.nearBlack,
+    canvasColor: SanaColors.nearBlack,
     cardColor: SanaColors.surface,
     dividerColor: SanaColors.outline,
     appBarTheme: const AppBarTheme(
@@ -127,7 +128,7 @@ ThemeData buildSanaTheme() {
       ),
     ),
     navigationBarTheme: NavigationBarThemeData(
-      backgroundColor: SanaColors.pureWhite,
+      backgroundColor: SanaColors.ink,
       elevation: 4,
       indicatorColor: SanaColors.lavender.withValues(alpha: 0.15),
       labelTextStyle: WidgetStateProperty.resolveWith((states) {

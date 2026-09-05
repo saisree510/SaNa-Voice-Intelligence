@@ -115,6 +115,8 @@ class AgentScreen extends StatelessWidget {
             isCameraVisible: appCtrl.isUserCameEnabled,
             isScreenshareVisible: appCtrl.isScreenshareEnabled,
             isImmersiveWorkspaceVisible: appCtrl.isCanvasFocusVisible,
+            isBuildWorkspace:
+                appCtrl.conversationMode == ConversationMode.build && appCtrl.agentScreenState == AgentScreenState.transcription,
           ),
           builder: (ctx, agentLayoutState, child) => Stack(
             children: [
@@ -122,7 +124,7 @@ class AgentScreen extends StatelessWidget {
                 color: SanaColors.nearBlack,
                 child: _buildLayoutSwitcher(ctx, agentLayoutState),
               ),
-              if (!agentLayoutState.isImmersiveWorkspaceVisible)
+              if (!agentLayoutState.isImmersiveWorkspaceVisible && !agentLayoutState.isBuildWorkspace)
                 Positioned(
                   top: MediaQuery.paddingOf(ctx).top + 8,
                   left: 16,
@@ -305,6 +307,7 @@ class _ConversationCanvasWorkspaceState extends State<_ConversationCanvasWorkspa
           }
 
           final isWide = constraints.maxWidth >= 980;
+          final isBuildMode = appCtrl.conversationMode == ConversationMode.build;
           if (!isWide) {
             _isCanvasCollapsed = false;
             _isCanvasFullscreen = false;
@@ -366,6 +369,13 @@ class _ConversationCanvasWorkspaceState extends State<_ConversationCanvasWorkspa
             );
           }
 
+          if (isBuildMode) {
+            return _BuildModeWorkspace(
+              conversationBuilder: widget.conversationBuilder,
+              architectureId: appCtrl.activeArchitectureId,
+            );
+          }
+
           return Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
             child: LayoutBuilder(
@@ -421,6 +431,152 @@ class _ConversationCanvasWorkspaceState extends State<_ConversationCanvasWorkspa
             ),
           );
         },
+      );
+}
+
+/// Build Mode keeps the architecture as the spatial anchor while conversation
+/// becomes a movable tool window on expanded screens.
+class _BuildModeWorkspace extends StatefulWidget {
+  const _BuildModeWorkspace({
+    required this.conversationBuilder,
+    required this.architectureId,
+  });
+
+  final Widget Function(BuildContext context, VoidCallback viewCanvas) conversationBuilder;
+  final String? architectureId;
+
+  @override
+  State<_BuildModeWorkspace> createState() => _BuildModeWorkspaceState();
+}
+
+class _BuildModeWorkspaceState extends State<_BuildModeWorkspace> {
+  Offset _panelOffset = const Offset(28, 28);
+
+  void _movePanel(DragUpdateDetails details, Size workspaceSize, Size panelSize) {
+    final next = _panelOffset + details.delta;
+    setState(() {
+      _panelOffset = Offset(
+        next.dx.clamp(16.0, workspaceSize.width - panelSize.width - 16.0).toDouble(),
+        next.dy.clamp(16.0, workspaceSize.height - panelSize.height - 116.0).toDouble(),
+      );
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) => LayoutBuilder(
+        builder: (context, constraints) {
+          final workspaceSize = constraints.biggest;
+          final panelWidth = (workspaceSize.width * 0.34).clamp(360.0, 540.0).toDouble();
+          final panelHeight = (workspaceSize.height * 0.66).clamp(440.0, 720.0).toDouble();
+          final panelSize = Size(panelWidth, panelHeight);
+          final maxTop = (workspaceSize.height - panelHeight - 116.0).clamp(16.0, double.infinity).toDouble();
+          final maxLeft = (workspaceSize.width - panelWidth - 16.0).clamp(16.0, double.infinity).toDouble();
+          final panelOffset = Offset(
+            _panelOffset.dx.clamp(16.0, maxLeft).toDouble(),
+            _panelOffset.dy.clamp(16.0, maxTop).toDouble(),
+          );
+
+          return Stack(
+            children: [
+              Positioned.fill(
+                child: ArchitectureCanvasPanel(
+                  architectureId: widget.architectureId,
+                  requireExplicitArchitecture: true,
+                  isFullscreen: true,
+                ),
+              ),
+              Positioned(
+                left: panelOffset.dx,
+                top: panelOffset.dy,
+                width: panelWidth,
+                height: panelHeight,
+                child: _DraggableConversationPanel(
+                  onDragUpdate: (details) => _movePanel(details, workspaceSize, panelSize),
+                  child: widget.conversationBuilder(context, () {}),
+                ),
+              ),
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 88,
+                child: IgnorePointer(
+                  child: Center(
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: SanaColors.lavender.withValues(alpha: 0.34),
+                            blurRadius: 44,
+                            spreadRadius: 8,
+                          ),
+                        ],
+                      ),
+                      child: const SanaOrbView(size: 94, showLabel: false),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
+      );
+}
+
+class _DraggableConversationPanel extends StatelessWidget {
+  const _DraggableConversationPanel({
+    required this.onDragUpdate,
+    required this.child,
+  });
+
+  final GestureDragUpdateCallback onDragUpdate;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => DecoratedBox(
+        decoration: BoxDecoration(
+          color: SanaColors.surfaceElevated.withValues(alpha: 0.94),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: SanaColors.lavender.withValues(alpha: 0.42)),
+          boxShadow: [
+            BoxShadow(
+              color: SanaColors.lavenderDeep.withValues(alpha: 0.22),
+              blurRadius: 36,
+              offset: const Offset(0, 18),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(23),
+          child: Column(
+            children: [
+              MouseRegion(
+                cursor: SystemMouseCursors.move,
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onPanUpdate: onDragUpdate,
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 12, 12, 10),
+                    child: Row(
+                      children: [
+                        Icon(Icons.drag_indicator_rounded, color: SanaColors.fgMuted.withValues(alpha: 0.78)),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Conversation',
+                          style: Theme.of(context).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w800),
+                        ),
+                        const Spacer(),
+                        const Icon(Icons.open_with_rounded, size: 17, color: SanaColors.fgMuted),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              Divider(height: 1, color: SanaColors.outline.withValues(alpha: 0.6)),
+              Expanded(child: child),
+            ],
+          ),
+        ),
       );
 }
 

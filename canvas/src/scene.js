@@ -1,4 +1,5 @@
 import { convertToExcalidrawElements } from "@excalidraw/excalidraw";
+import { iconFileId } from "./icons";
 
 const positions = {
   web: { x: 80, y: 300 },
@@ -88,9 +89,20 @@ function componentElements(component, position) {
       customData: { blueprintId: component.id, role: "component" },
     },
     {
+      id: `icon-${component.id}`,
+      type: "image",
+      x: position.x + 18,
+      y: position.y + 29,
+      width: 32,
+      height: 32,
+      fileId: iconFileId(component),
+      status: "saved",
+      customData: { blueprintId: component.id, role: "component-icon" },
+    },
+    {
       id: `label-${component.id}`,
       type: "text",
-      x: position.x + 22,
+      x: position.x + 62,
       y: position.y + 24,
       text: subtitle ? `${component.name}\n${subtitle}` : component.name,
       fontSize: 20,
