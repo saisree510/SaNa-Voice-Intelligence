@@ -580,43 +580,56 @@ class _DraggableConversationPanel extends StatelessWidget {
           borderRadius: BorderRadius.circular(23),
           child: Column(
             children: [
-              MouseRegion(
-                cursor: SystemMouseCursors.move,
-                child: GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onPanUpdate: onDragUpdate,
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 12, 12, 10),
-                    child: Row(
-                      children: [
-                        Icon(Icons.drag_indicator_rounded, color: SanaColors.fgMuted.withValues(alpha: 0.78)),
-                        const SizedBox(width: 8),
-                        Text(
-                          'Conversation',
-                          style: Theme.of(context).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w800),
-                        ),
-                        const Spacer(),
-                        Tooltip(
-                          message: 'Dock to the right',
-                          child: IconButton(
-                            onPressed: onDock,
-                            icon: const Icon(Icons.vertical_align_top_rounded, size: 18),
-                            color: SanaColors.fgMuted,
-                            visualDensity: VisualDensity.compact,
+              Padding(
+                padding: const EdgeInsets.fromLTRB(12, 8, 12, 6),
+                child: Row(
+                  children: [
+                    Tooltip(
+                      message: 'Drag conversation window',
+                      child: MouseRegion(
+                        cursor: SystemMouseCursors.move,
+                        child: Semantics(
+                          label: 'Drag conversation window',
+                          child: GestureDetector(
+                            behavior: HitTestBehavior.opaque,
+                            onPanUpdate: onDragUpdate,
+                            child: SizedBox(
+                              width: 36,
+                              height: 38,
+                              child: Icon(
+                                Icons.drag_indicator_rounded,
+                                color: SanaColors.fgMuted.withValues(alpha: 0.78),
+                              ),
+                            ),
                           ),
                         ),
-                        Tooltip(
-                          message: 'Minimize conversation',
-                          child: IconButton(
-                            onPressed: onMinimize,
-                            icon: const Icon(Icons.minimize_rounded, size: 19),
-                            color: SanaColors.fgMuted,
-                            visualDensity: VisualDensity.compact,
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
-                  ),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Conversation',
+                      style: Theme.of(context).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w800),
+                    ),
+                    const Spacer(),
+                    Tooltip(
+                      message: 'Dock to the right',
+                      child: IconButton(
+                        onPressed: onDock,
+                        icon: const Icon(Icons.vertical_align_top_rounded, size: 18),
+                        color: SanaColors.fgMuted,
+                        visualDensity: VisualDensity.compact,
+                      ),
+                    ),
+                    Tooltip(
+                      message: 'Minimize conversation',
+                      child: IconButton(
+                        onPressed: onMinimize,
+                        icon: const Icon(Icons.minimize_rounded, size: 19),
+                        color: SanaColors.fgMuted,
+                        visualDensity: VisualDensity.compact,
+                      ),
+                    ),
+                  ],
                 ),
               ),
               Divider(height: 1, color: SanaColors.outline.withValues(alpha: 0.6)),
