@@ -83,7 +83,7 @@ class _BuildEventTile extends StatelessWidget {
         'complete' => Colors.green,
         'error' => Colors.red,
         'file_create' || 'file_edit' || 'file_delete' => Colors.cyan,
-        'tool_start' || 'tool_complete' => Colors.purple,
+        'tool_start' || 'tool_complete' => SanaColors.mint,
         'test_result' => Colors.orange,
         _ => Colors.grey,
       };

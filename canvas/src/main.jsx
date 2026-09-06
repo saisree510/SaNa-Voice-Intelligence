@@ -99,7 +99,7 @@ function CanvasProof() {
       radiusEffect: 210,
       baseAlpha: 0.2,
       maxAlpha: 0.72,
-      color: "123, 104, 214",
+      color: "88, 191, 174",
       smoothing: 0.1,
       zIndex: 0,
     });

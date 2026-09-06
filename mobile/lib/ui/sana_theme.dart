@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 /// Soul's card-based light workspace: neutral surfaces, crisp white cards,
-/// black typography, and violet used only as a focused interaction signal.
+/// black typography, and mint/aqua used as focused interaction signals.
 class SanaColors {
   const SanaColors._();
 
@@ -11,13 +11,13 @@ class SanaColors {
   static const Color surface = Color(0xFFF0F0EC);
   static const Color surfaceElevated = Color(0xFFFFFFFF);
 
-  /// Primary brand signal — lightened soft Lilac / Lavender.
-  static const Color lavender = Color(0xFF7B68D6);
-  static const Color lavenderSoft = Color(0xFFE4E0FA);
-  static const Color lavenderDeep = Color(0xFF5A48B6);
+  /// Primary brand signal: clean mint-teal.
+  static const Color lavender = Color(0xFF58BFAE);
+  static const Color lavenderSoft = Color(0xFFE4F5F2);
+  static const Color lavenderDeep = Color(0xFF1F7468);
 
-  static const Color aqua = Color(0xFFA9DDE8);
-  static const Color mint = Color(0xFF8AD1C0);
+  static const Color aqua = Color(0xFFB8E4ED);
+  static const Color mint = Color(0xFF7ED2BF);
   static const Color coral = Color(0xFFFFA35C);
   static const Color blush = Color(0xFFF5A4C8);
 

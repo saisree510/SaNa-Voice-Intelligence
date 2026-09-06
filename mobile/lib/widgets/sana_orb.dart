@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import '../models/sana_orb_state.dart';
 import '../ui/sana_theme.dart';
 
-/// Organic muted-lavender SaNa orb. Motion differs by [SanaOrbState].
+/// Organic mint-teal Soul orb. Motion differs by [SanaOrbState].
 class SanaOrb extends StatefulWidget {
   const SanaOrb({
     super.key,
