@@ -62,6 +62,8 @@ function CanvasProof() {
           break;
         case "soul.canvas.command":
           if (message.payload?.command === "fit") fitToContent();
+          if (message.payload?.command === "zoom_in") zoomBy(1.18);
+          if (message.payload?.command === "zoom_out") zoomBy(1 / 1.18);
           if (message.payload?.command === "replay") reset();
           if (message.payload?.command === "pause") setPlaying(false);
           if (
@@ -243,6 +245,20 @@ function CanvasProof() {
 
   const fitToContent = () =>
     apiRef.current?.scrollToContent(elementsRef.current, { fitToContent: true, animate: !reducedMotionRef.current });
+
+  const zoomBy = (factor) => {
+    const api = apiRef.current;
+    if (!api) return;
+    const appState = api.getAppState();
+    const currentZoom = appState.zoom?.value ?? 1;
+    const nextZoom = Math.min(3, Math.max(0.2, currentZoom * factor));
+    api.updateScene({
+      appState: {
+        ...appState,
+        zoom: { value: nextZoom },
+      },
+    });
+  };
 
   const debounceTimerRef = useRef(null);
 

@@ -439,9 +439,19 @@ class _CanvasCommandBar extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               _CanvasIconButton(
+                tooltip: 'Zoom out',
+                icon: Icons.remove_rounded,
+                onPressed: () => controller.sendCommand('zoom_out'),
+              ),
+              _CanvasIconButton(
                 tooltip: 'Fit diagram',
                 icon: Icons.fit_screen_rounded,
                 onPressed: () => controller.sendCommand('fit'),
+              ),
+              _CanvasIconButton(
+                tooltip: 'Zoom in',
+                icon: Icons.add_rounded,
+                onPressed: () => controller.sendCommand('zoom_in'),
               ),
               _CanvasIconButton(
                 tooltip: 'Replay',
