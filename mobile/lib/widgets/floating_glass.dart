@@ -3,6 +3,8 @@ import 'dart:ui' show ImageFilter;
 import 'package:flutter/material.dart';
 import 'package:flutter_sficon/flutter_sficon.dart' as sf;
 
+import '../ui/sana_theme.dart';
+
 class FloatingGlassView extends StatelessWidget {
   final Widget child;
   const FloatingGlassView({
@@ -16,6 +18,17 @@ class FloatingGlassView extends StatelessWidget {
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
           child: Container(
+            decoration: BoxDecoration(
+              color: Theme.of(ctx).colorScheme.surface.withValues(alpha: 0.88),
+              borderRadius: BorderRadius.circular(100),
+              boxShadow: [
+                BoxShadow(
+                  color: SanaColors.lavenderDeep.withValues(alpha: 0.12),
+                  blurRadius: 22,
+                  offset: const Offset(0, 10),
+                ),
+              ],
+            ),
             foregroundDecoration: BoxDecoration(
               borderRadius: BorderRadius.circular(100),
               border: Border.all(

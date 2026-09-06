@@ -118,25 +118,29 @@ class _ArchitectureCanvasPanelState extends State<ArchitectureCanvasPanel> {
     final architecture = context.watch<ArchitectureService>().latestArchitecture;
     final canDisplayArchitecture = _canDisplayArchitecture(architecture);
 
+    final isWorkspace = widget.isFullscreen;
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: SanaColors.ink,
-        border: Border.all(color: SanaColors.outline),
-        borderRadius: BorderRadius.circular(22),
-        boxShadow: [
-          BoxShadow(
-            color: SanaColors.lavenderDeep.withValues(alpha: 0.10),
-            blurRadius: 30,
-            offset: const Offset(0, 16),
-          ),
-        ],
+        color: isWorkspace ? SanaColors.nearBlack : SanaColors.ink,
+        border: isWorkspace ? null : Border.all(color: SanaColors.outline),
+        borderRadius: isWorkspace ? BorderRadius.zero : BorderRadius.circular(22),
+        boxShadow: isWorkspace
+            ? null
+            : [
+                BoxShadow(
+                  color: SanaColors.lavenderDeep.withValues(alpha: 0.10),
+                  blurRadius: 30,
+                  offset: const Offset(0, 16),
+                ),
+              ],
       ),
       child: ClipRRect(
-        borderRadius: const BorderRadius.all(Radius.circular(22)),
+        borderRadius: isWorkspace ? BorderRadius.zero : const BorderRadius.all(Radius.circular(22)),
         child: Column(
           children: [
             _CanvasHeader(
               controller: _controller,
+              showStatus: canDisplayArchitecture,
               onCollapse: widget.onCollapse,
               onFullscreen: widget.onFullscreen,
               isFullscreen: widget.isFullscreen,
@@ -171,7 +175,7 @@ class _EmptyCanvasState extends StatelessWidget {
     final message = errorMessage ??
         (isLoading
             ? 'Loading the active architecture...'
-            : 'No live architecture is linked to this conversation yet. Ask Soul to design the architecture first.');
+            : 'Start by describing the app in the conversation panel. Soul will turn it into a live architecture here.');
 
     return CustomPaint(
       painter: const _DottedWorkspacePainter(),
@@ -227,6 +231,7 @@ class _CanvasHeader extends StatelessWidget {
   const _CanvasHeader({
     required this.controller,
     required this.isFullscreen,
+    required this.showStatus,
     this.onCollapse,
     this.onFullscreen,
   });
@@ -235,6 +240,7 @@ class _CanvasHeader extends StatelessWidget {
   final VoidCallback? onCollapse;
   final VoidCallback? onFullscreen;
   final bool isFullscreen;
+  final bool showStatus;
 
   @override
   Widget build(BuildContext context) {
@@ -253,7 +259,7 @@ class _CanvasHeader extends StatelessWidget {
                 alignment: Alignment.centerLeft,
                 child: Row(
                   children: [
-                    _CanvasStatusChip(controller: controller),
+                    if (showStatus) _CanvasStatusChip(controller: controller),
                     if (isDraft) ...[
                       const SizedBox(width: 12),
                       FilledButton.icon(

@@ -147,7 +147,9 @@ class AgentLayoutSwitcher extends StatelessWidget {
               Positioned.fill(
                 child: Padding(
                   padding: EdgeInsets.only(
-                    top: layoutState.isImmersiveWorkspaceVisible ? topPadding + 10 : singleCellHeight + topPadding,
+                    top: (layoutState.isImmersiveWorkspaceVisible || layoutState.isBuildWorkspace)
+                        ? topPadding + 10
+                        : singleCellHeight + topPadding,
                     bottom: 110,
                   ),
                   child: transcriptionsBuilder(context),

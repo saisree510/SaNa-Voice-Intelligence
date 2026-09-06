@@ -450,11 +450,15 @@ class _BuildModeWorkspace extends StatefulWidget {
 }
 
 class _BuildModeWorkspaceState extends State<_BuildModeWorkspace> {
-  Offset _panelOffset = const Offset(28, 28);
+  Offset _panelOffset = Offset.zero;
+  bool _hasPositionedPanel = false;
+  bool _isPanelMinimized = false;
 
   void _movePanel(DragUpdateDetails details, Size workspaceSize, Size panelSize) {
-    final next = _panelOffset + details.delta;
+    final start = _hasPositionedPanel ? _panelOffset : Offset(workspaceSize.width - panelSize.width - 28, 28);
+    final next = start + details.delta;
     setState(() {
+      _hasPositionedPanel = true;
       _panelOffset = Offset(
         next.dx.clamp(16.0, workspaceSize.width - panelSize.width - 16.0).toDouble(),
         next.dy.clamp(16.0, workspaceSize.height - panelSize.height - 116.0).toDouble(),
@@ -462,19 +466,28 @@ class _BuildModeWorkspaceState extends State<_BuildModeWorkspace> {
     });
   }
 
+  void _dockPanel(Size workspaceSize, Size panelSize) {
+    setState(() {
+      _hasPositionedPanel = true;
+      _panelOffset = Offset(workspaceSize.width - panelSize.width - 28, 28);
+    });
+  }
+
   @override
   Widget build(BuildContext context) => LayoutBuilder(
         builder: (context, constraints) {
           final workspaceSize = constraints.biggest;
-          final panelWidth = (workspaceSize.width * 0.34).clamp(360.0, 540.0).toDouble();
-          final panelHeight = (workspaceSize.height * 0.66).clamp(440.0, 720.0).toDouble();
+          final panelWidth = (workspaceSize.width * 0.31).clamp(360.0, 500.0).toDouble();
+          final panelHeight = (workspaceSize.height * 0.58).clamp(400.0, 640.0).toDouble();
           final panelSize = Size(panelWidth, panelHeight);
           final maxTop = (workspaceSize.height - panelHeight - 116.0).clamp(16.0, double.infinity).toDouble();
           final maxLeft = (workspaceSize.width - panelWidth - 16.0).clamp(16.0, double.infinity).toDouble();
-          final panelOffset = Offset(
-            _panelOffset.dx.clamp(16.0, maxLeft).toDouble(),
-            _panelOffset.dy.clamp(16.0, maxTop).toDouble(),
-          );
+          final panelOffset = _hasPositionedPanel
+              ? Offset(
+                  _panelOffset.dx.clamp(16.0, maxLeft).toDouble(),
+                  _panelOffset.dy.clamp(16.0, maxTop).toDouble(),
+                )
+              : Offset(maxLeft, 28);
 
           return Stack(
             children: [
@@ -485,20 +498,33 @@ class _BuildModeWorkspaceState extends State<_BuildModeWorkspace> {
                   isFullscreen: true,
                 ),
               ),
-              Positioned(
-                left: panelOffset.dx,
-                top: panelOffset.dy,
-                width: panelWidth,
-                height: panelHeight,
-                child: _DraggableConversationPanel(
-                  onDragUpdate: (details) => _movePanel(details, workspaceSize, panelSize),
-                  child: widget.conversationBuilder(context, () {}),
+              if (_isPanelMinimized)
+                Positioned(
+                  top: 24,
+                  right: 24,
+                  child: FilledButton.icon(
+                    onPressed: () => setState(() => _isPanelMinimized = false),
+                    icon: const Icon(Icons.chat_bubble_outline_rounded, size: 18),
+                    label: const Text('Open conversation'),
+                  ),
+                )
+              else
+                Positioned(
+                  left: panelOffset.dx,
+                  top: panelOffset.dy,
+                  width: panelWidth,
+                  height: panelHeight,
+                  child: _DraggableConversationPanel(
+                    onDragUpdate: (details) => _movePanel(details, workspaceSize, panelSize),
+                    onMinimize: () => setState(() => _isPanelMinimized = true),
+                    onDock: () => _dockPanel(workspaceSize, panelSize),
+                    child: widget.conversationBuilder(context, () {}),
+                  ),
                 ),
-              ),
               Positioned(
                 left: 0,
                 right: 0,
-                bottom: 88,
+                bottom: 94,
                 child: IgnorePointer(
                   child: Center(
                     child: DecoratedBox(
@@ -512,7 +538,7 @@ class _BuildModeWorkspaceState extends State<_BuildModeWorkspace> {
                           ),
                         ],
                       ),
-                      child: const SanaOrbView(size: 94, showLabel: false),
+                      child: const SanaOrbView(size: 112, showLabel: false),
                     ),
                   ),
                 ),
@@ -526,10 +552,14 @@ class _BuildModeWorkspaceState extends State<_BuildModeWorkspace> {
 class _DraggableConversationPanel extends StatelessWidget {
   const _DraggableConversationPanel({
     required this.onDragUpdate,
+    required this.onMinimize,
+    required this.onDock,
     required this.child,
   });
 
   final GestureDragUpdateCallback onDragUpdate;
+  final VoidCallback onMinimize;
+  final VoidCallback onDock;
   final Widget child;
 
   @override
@@ -566,7 +596,24 @@ class _DraggableConversationPanel extends StatelessWidget {
                           style: Theme.of(context).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w800),
                         ),
                         const Spacer(),
-                        const Icon(Icons.open_with_rounded, size: 17, color: SanaColors.fgMuted),
+                        Tooltip(
+                          message: 'Dock to the right',
+                          child: IconButton(
+                            onPressed: onDock,
+                            icon: const Icon(Icons.vertical_align_top_rounded, size: 18),
+                            color: SanaColors.fgMuted,
+                            visualDensity: VisualDensity.compact,
+                          ),
+                        ),
+                        Tooltip(
+                          message: 'Minimize conversation',
+                          child: IconButton(
+                            onPressed: onMinimize,
+                            icon: const Icon(Icons.minimize_rounded, size: 19),
+                            color: SanaColors.fgMuted,
+                            visualDensity: VisualDensity.compact,
+                          ),
+                        ),
                       ],
                     ),
                   ),

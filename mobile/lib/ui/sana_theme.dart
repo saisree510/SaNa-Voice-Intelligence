@@ -1,37 +1,37 @@
 import 'package:flutter/material.dart';
 
-/// Soul's midnight workspace tokens: high contrast surfaces with a restrained
-/// aurora-violet signal that keeps the orb and architecture in focus.
+/// Soul's light workspace tokens: calm white surfaces with a violet signal
+/// that keeps the orb and architecture in focus without visual heaviness.
 class SanaColors {
   const SanaColors._();
 
   static const Color pureWhite = Color(0xFFFFFFFF);
-  static const Color nearBlack = Color(0xFF0D0B1D);
-  static const Color ink = Color(0xFF15122A);
-  static const Color surface = Color(0xFF1C1833);
-  static const Color surfaceElevated = Color(0xFF282244);
+  static const Color nearBlack = Color(0xFFFBFAFF);
+  static const Color ink = Color(0xFFF4F1FA);
+  static const Color surface = Color(0xFFEDE8F7);
+  static const Color surfaceElevated = Color(0xFFE5DEF3);
 
   /// Primary brand signal — lightened soft Lilac / Lavender.
   static const Color lavender = Color(0xFFA78BFA);
   static const Color lavenderSoft = Color(0xFFC4B5FD);
   static const Color lavenderDeep = Color(0xFF7C3AED);
 
-  static const Color fgPrimary = Color(0xFFF5F3FF);
-  static const Color fgSecondary = Color(0xFFC9C0DD);
-  static const Color fgMuted = Color(0xFF9C91B4);
+  static const Color fgPrimary = Color(0xFF211B33);
+  static const Color fgSecondary = Color(0xFF59506C);
+  static const Color fgMuted = Color(0xFF887E9C);
 
   static const Color danger = Color(0xFFD9534F);
   static const Color success = Color(0xFF2E8B57);
-  static const Color outline = Color(0x45C4B5FD);
+  static const Color outline = Color(0x35A78BFA);
 }
 
 ThemeData buildSanaTheme() {
-  const scheme = ColorScheme.dark(
+  const scheme = ColorScheme.light(
     primary: SanaColors.lavender,
     onPrimary: SanaColors.pureWhite,
     secondary: SanaColors.lavenderSoft,
     onSecondary: SanaColors.pureWhite,
-    surface: SanaColors.ink,
+    surface: SanaColors.pureWhite,
     onSurface: SanaColors.fgPrimary,
     onSurfaceVariant: SanaColors.fgSecondary,
     error: SanaColors.danger,
@@ -128,7 +128,7 @@ ThemeData buildSanaTheme() {
       ),
     ),
     navigationBarTheme: NavigationBarThemeData(
-      backgroundColor: SanaColors.ink,
+      backgroundColor: SanaColors.pureWhite,
       elevation: 4,
       indicatorColor: SanaColors.lavender.withValues(alpha: 0.15),
       labelTextStyle: WidgetStateProperty.resolveWith((states) {

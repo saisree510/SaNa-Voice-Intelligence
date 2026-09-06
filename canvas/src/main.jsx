@@ -316,7 +316,7 @@ function CanvasProof() {
         appState: {
           ...appState,
           exportBackground: true,
-          viewBackgroundColor: "#0d0b1d",
+          viewBackgroundColor: "#fbfaff",
         },
         mimeType: "image/png",
       });
@@ -404,7 +404,7 @@ function CanvasProof() {
       <section ref={stageRef} className="canvas-stage" aria-label="Interactive Overview Architecture canvas">
         <Excalidraw
           excalidrawAPI={(api) => { apiRef.current = api; }}
-          theme="dark"
+          theme="light"
           initialData={{
             elements,
             appState: {
