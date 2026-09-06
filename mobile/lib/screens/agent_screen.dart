@@ -497,16 +497,19 @@ class _BuildModeWorkspaceState extends State<_BuildModeWorkspace> {
                   architectureId: widget.architectureId,
                   requireExplicitArchitecture: true,
                   isFullscreen: true,
+                  isInteractive: _isPanelMinimized,
                 ),
               ),
               if (_isPanelMinimized)
                 Positioned(
                   top: 24,
                   right: 24,
-                  child: FilledButton.icon(
-                    onPressed: () => setState(() => _isPanelMinimized = false),
-                    icon: const Icon(Icons.chat_bubble_outline_rounded, size: 18),
-                    label: const Text('Open conversation'),
+                  child: PointerInterceptor(
+                    child: FilledButton.icon(
+                      onPressed: () => setState(() => _isPanelMinimized = false),
+                      icon: const Icon(Icons.chat_bubble_outline_rounded, size: 18),
+                      label: const Text('Open conversation'),
+                    ),
                   ),
                 )
               else
@@ -515,13 +518,11 @@ class _BuildModeWorkspaceState extends State<_BuildModeWorkspace> {
                   top: panelOffset.dy,
                   width: panelWidth,
                   height: panelHeight,
-                  child: PointerInterceptor(
-                    child: _DraggableConversationPanel(
-                      onDragUpdate: (details) => _movePanel(details, workspaceSize, panelSize),
-                      onMinimize: () => setState(() => _isPanelMinimized = true),
-                      onDock: () => _dockPanel(workspaceSize, panelSize),
-                      child: widget.conversationBuilder(context, () {}),
-                    ),
+                  child: _DraggableConversationPanel(
+                    onDragUpdate: (details) => _movePanel(details, workspaceSize, panelSize),
+                    onMinimize: () => setState(() => _isPanelMinimized = true),
+                    onDock: () => _dockPanel(workspaceSize, panelSize),
+                    child: widget.conversationBuilder(context, () {}),
                   ),
                 ),
               Positioned(

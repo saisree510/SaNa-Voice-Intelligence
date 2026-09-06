@@ -12,9 +12,10 @@ import '../services/architecture_service.dart';
 import 'architecture_canvas_controller.dart';
 
 class ArchitectureCanvasView extends StatefulWidget {
-  const ArchitectureCanvasView({super.key, this.controller});
+  const ArchitectureCanvasView({super.key, this.controller, this.isInteractive = true});
 
   final ArchitectureCanvasController? controller;
+  final bool isInteractive;
 
   @override
   State<ArchitectureCanvasView> createState() => _ArchitectureCanvasViewState();
@@ -42,7 +43,8 @@ class _ArchitectureCanvasViewState extends State<ArchitectureCanvasView> {
           ..allow = 'clipboard-read; clipboard-write'
           ..style.border = '0'
           ..style.width = '100%'
-          ..style.height = '100%';
+          ..style.height = '100%'
+          ..style.pointerEvents = widget.isInteractive ? 'auto' : 'none';
 
         frame.onLoad.listen((_) => _postToCanvas('soul.canvas.parent_ready'));
         _iframe = frame;
@@ -64,6 +66,9 @@ class _ArchitectureCanvasViewState extends State<ArchitectureCanvasView> {
   @override
   void didUpdateWidget(covariant ArchitectureCanvasView oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (oldWidget.isInteractive != widget.isInteractive) {
+      _iframe?.style.pointerEvents = widget.isInteractive ? 'auto' : 'none';
+    }
     if (oldWidget.controller == widget.controller) return;
     oldWidget.controller?.unbindMessageSender(_sendMessage);
     widget.controller?.bindMessageSender(_sendMessage);

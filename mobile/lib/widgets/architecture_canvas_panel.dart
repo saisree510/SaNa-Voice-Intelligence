@@ -21,6 +21,7 @@ class ArchitectureCanvasPanel extends StatefulWidget {
     this.requireExplicitArchitecture = false,
     this.isFullscreen = false,
     this.isReadOnly = false,
+    this.isInteractive = true,
   });
 
   final VoidCallback? onCollapse;
@@ -31,6 +32,7 @@ class ArchitectureCanvasPanel extends StatefulWidget {
   final bool requireExplicitArchitecture;
   final bool isFullscreen;
   final bool isReadOnly;
+  final bool isInteractive;
 
   @override
   State<ArchitectureCanvasPanel> createState() => _ArchitectureCanvasPanelState();
@@ -147,7 +149,7 @@ class _ArchitectureCanvasPanelState extends State<ArchitectureCanvasPanel> {
             ),
             Expanded(
               child: canDisplayArchitecture
-                  ? ArchitectureCanvasView(controller: _controller)
+                  ? ArchitectureCanvasView(controller: _controller, isInteractive: widget.isInteractive)
                   : _EmptyCanvasState(
                       isLoading: context.watch<ArchitectureService>().isLoading,
                       errorMessage: context.watch<ArchitectureService>().errorMessage,

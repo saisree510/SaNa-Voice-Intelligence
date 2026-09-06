@@ -1,28 +1,32 @@
 import 'package:flutter/material.dart';
 
-/// Soul's light workspace tokens: calm white surfaces with a violet signal
-/// that keeps the orb and architecture in focus without visual heaviness.
+/// Soul's card-based light workspace: neutral surfaces, crisp white cards,
+/// black typography, and violet used only as a focused interaction signal.
 class SanaColors {
   const SanaColors._();
 
   static const Color pureWhite = Color(0xFFFFFFFF);
-  static const Color nearBlack = Color(0xFFFBFAFF);
-  static const Color ink = Color(0xFFF4F1FA);
-  static const Color surface = Color(0xFFEDE8F7);
-  static const Color surfaceElevated = Color(0xFFE5DEF3);
+  static const Color nearBlack = Color(0xFFF6F6F3);
+  static const Color ink = Color(0xFFFFFFFF);
+  static const Color surface = Color(0xFFF0F0ED);
+  static const Color surfaceElevated = Color(0xFFFFFFFF);
 
   /// Primary brand signal — lightened soft Lilac / Lavender.
-  static const Color lavender = Color(0xFFA78BFA);
-  static const Color lavenderSoft = Color(0xFFC4B5FD);
-  static const Color lavenderDeep = Color(0xFF7C3AED);
+  static const Color lavender = Color(0xFF7B68D6);
+  static const Color lavenderSoft = Color(0xFFE4E0FA);
+  static const Color lavenderDeep = Color(0xFF5A48B6);
 
-  static const Color fgPrimary = Color(0xFF211B33);
-  static const Color fgSecondary = Color(0xFF59506C);
-  static const Color fgMuted = Color(0xFF887E9C);
+  static const Color aqua = Color(0xFFA8DBE9);
+  static const Color mint = Color(0xFF8AD1C0);
+  static const Color coral = Color(0xFFF4A6A0);
+
+  static const Color fgPrimary = Color(0xFF1D1D1F);
+  static const Color fgSecondary = Color(0xFF5F5F65);
+  static const Color fgMuted = Color(0xFF898991);
 
   static const Color danger = Color(0xFFD9534F);
   static const Color success = Color(0xFF2E8B57);
-  static const Color outline = Color(0x35A78BFA);
+  static const Color outline = Color(0x1F1D1D1F);
 }
 
 ThemeData buildSanaTheme() {
@@ -46,7 +50,7 @@ ThemeData buildSanaTheme() {
     colorScheme: scheme,
     scaffoldBackgroundColor: SanaColors.nearBlack,
     canvasColor: SanaColors.nearBlack,
-    cardColor: SanaColors.surface,
+    cardColor: SanaColors.pureWhite,
     dividerColor: SanaColors.outline,
     appBarTheme: const AppBarTheme(
       backgroundColor: Colors.transparent,

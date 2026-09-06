@@ -179,36 +179,41 @@ class AgentLayoutSwitcher extends StatelessWidget {
                 bottom: agentViewPosition.bottom,
                 child: buildAgentView(ctx),
               ),
-            // CameraView
-            AnimatedPositioned(
-              duration: animationDuration,
-              curve: animationCurve,
-              left: cameraViewPosition.left,
-              top: cameraViewPosition.top,
-              right: cameraViewPosition.right,
-              bottom: cameraViewPosition.bottom,
-              child: AnimatedOpacity(
-                opacity: layoutState.isCameraVisible ? 1.0 : 0.0,
+            // Build Mode is a focused canvas workspace. Removing these hidden
+            // media tiles also prevents transparent platform views from
+            // intercepting the floating conversation panel's pointer events.
+            if (!layoutState.isBuildWorkspace) ...[
+              // CameraView
+              AnimatedPositioned(
                 duration: animationDuration,
                 curve: animationCurve,
-                child: buildCameraView(ctx),
+                left: cameraViewPosition.left,
+                top: cameraViewPosition.top,
+                right: cameraViewPosition.right,
+                bottom: cameraViewPosition.bottom,
+                child: AnimatedOpacity(
+                  opacity: layoutState.isCameraVisible ? 1.0 : 0.0,
+                  duration: animationDuration,
+                  curve: animationCurve,
+                  child: buildCameraView(ctx),
+                ),
               ),
-            ),
-            // ScreenshareView
-            AnimatedPositioned(
-              duration: animationDuration,
-              curve: animationCurve,
-              left: screenshareViewPosition.left,
-              top: screenshareViewPosition.top,
-              right: screenshareViewPosition.right,
-              bottom: screenshareViewPosition.bottom,
-              child: AnimatedOpacity(
-                opacity: layoutState.isScreenshareVisible ? 1.0 : 0.0,
+              // ScreenshareView
+              AnimatedPositioned(
                 duration: animationDuration,
                 curve: animationCurve,
-                child: buildScreenShareView(ctx),
+                left: screenshareViewPosition.left,
+                top: screenshareViewPosition.top,
+                right: screenshareViewPosition.right,
+                bottom: screenshareViewPosition.bottom,
+                child: AnimatedOpacity(
+                  opacity: layoutState.isScreenshareVisible ? 1.0 : 0.0,
+                  duration: animationDuration,
+                  curve: animationCurve,
+                  child: buildScreenShareView(ctx),
+                ),
               ),
-            ),
+            ],
             // Control bar
             Positioned(
               left: 0,
