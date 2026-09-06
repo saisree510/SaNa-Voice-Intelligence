@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:livekit_client/livekit_client.dart' as sdk;
 import 'package:livekit_components/livekit_components.dart' as components;
 import 'package:provider/provider.dart';
+import 'package:pointer_interceptor/pointer_interceptor.dart';
 
 import '../controllers/app_ctrl.dart';
 import '../controllers/conversation_timeline.dart';
@@ -514,11 +515,13 @@ class _BuildModeWorkspaceState extends State<_BuildModeWorkspace> {
                   top: panelOffset.dy,
                   width: panelWidth,
                   height: panelHeight,
-                  child: _DraggableConversationPanel(
-                    onDragUpdate: (details) => _movePanel(details, workspaceSize, panelSize),
-                    onMinimize: () => setState(() => _isPanelMinimized = true),
-                    onDock: () => _dockPanel(workspaceSize, panelSize),
-                    child: widget.conversationBuilder(context, () {}),
+                  child: PointerInterceptor(
+                    child: _DraggableConversationPanel(
+                      onDragUpdate: (details) => _movePanel(details, workspaceSize, panelSize),
+                      onMinimize: () => setState(() => _isPanelMinimized = true),
+                      onDock: () => _dockPanel(workspaceSize, panelSize),
+                      child: widget.conversationBuilder(context, () {}),
+                    ),
                   ),
                 ),
               Positioned(
