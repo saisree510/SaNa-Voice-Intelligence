@@ -260,6 +260,14 @@ function CanvasProof() {
     });
   };
 
+  const handleStageWheel = (event) => {
+    if (!event.ctrlKey && !event.metaKey) return;
+    event.preventDefault();
+    event.stopPropagation();
+    const factor = event.deltaY < 0 ? 1.08 : 1 / 1.08;
+    zoomBy(factor);
+  };
+
   const debounceTimerRef = useRef(null);
 
   const syncManualChanges = (currentElements) => {
@@ -417,7 +425,12 @@ function CanvasProof() {
           </label>
         </div>
       </header>}
-      <section ref={stageRef} className="canvas-stage" aria-label="Interactive Overview Architecture canvas">
+      <section
+        ref={stageRef}
+        className="canvas-stage"
+        aria-label="Interactive Overview Architecture canvas"
+        onWheelCapture={handleStageWheel}
+      >
         <Excalidraw
           excalidrawAPI={(api) => { apiRef.current = api; }}
           theme="light"

@@ -508,7 +508,6 @@ class _BuildModeWorkspaceState extends State<_BuildModeWorkspace> {
                             architectureId: widget.architectureId,
                             requireExplicitArchitecture: true,
                             isFullscreen: true,
-                            isInteractive: _isPanelMinimized,
                             onCollapse: () => setState(() => _isCanvasHidden = true),
                           ),
                         ),

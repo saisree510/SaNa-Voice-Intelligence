@@ -69,6 +69,10 @@ class MessageBar extends StatelessWidget {
               child: TextField(
                 focusNode: focusNode,
                 controller: controller,
+                textInputAction: TextInputAction.send,
+                onSubmitted: (_) {
+                  if (isSendEnabled) onSendTap?.call();
+                },
                 decoration: const InputDecoration.collapsed(
                   hintText: 'Message...',
                 ),

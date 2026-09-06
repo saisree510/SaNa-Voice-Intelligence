@@ -714,6 +714,8 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
           content: TextField(
             controller: controller,
             autofocus: true,
+            textInputAction: TextInputAction.send,
+            onSubmitted: (_) => Navigator.pop(context, controller.text),
             minLines: 2,
             maxLines: 4,
             decoration: const InputDecoration(
