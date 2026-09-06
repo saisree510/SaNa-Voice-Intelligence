@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_sficon/flutter_sficon.dart' as sf;
 
-import '../ui/color_pallette.dart';
+import '../ui/sana_theme.dart';
 
 class MessageBarButton extends StatelessWidget {
   final GestureTapCallback? onTap;
@@ -16,7 +16,7 @@ class MessageBarButton extends StatelessWidget {
   @override
   Widget build(BuildContext ctx) => ClipOval(
         child: Material(
-          color: isEnabled ? Theme.of(ctx).buttonTheme.colorScheme?.surface : LKColorPaletteDark().bg3,
+          color: isEnabled ? SanaColors.fgPrimary : SanaColors.surface,
           child: InkWell(
             onTap: isEnabled ? onTap : null,
             child: Container(
@@ -27,9 +27,9 @@ class MessageBarButton extends StatelessWidget {
               width: 40,
               height: 40,
               alignment: Alignment.center,
-              child: const sf.SFIcon(
+              child: sf.SFIcon(
                 sf.SFIcons.sf_arrow_up,
-                color: Colors.white,
+                color: isEnabled ? SanaColors.pureWhite : SanaColors.fgMuted,
                 fontSize: 16,
               ),
             ),
@@ -55,8 +55,9 @@ class MessageBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Container(
         decoration: BoxDecoration(
-          color: Theme.of(context).inputDecorationTheme.fillColor,
-          borderRadius: BorderRadius.circular(25),
+          color: SanaColors.surface,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: SanaColors.outline),
         ),
         padding: const EdgeInsets.symmetric(
           vertical: 7,

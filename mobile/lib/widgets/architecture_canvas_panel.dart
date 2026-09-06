@@ -125,7 +125,7 @@ class _ArchitectureCanvasPanelState extends State<ArchitectureCanvasPanel> {
       decoration: BoxDecoration(
         color: isWorkspace ? SanaColors.nearBlack : SanaColors.ink,
         border: isWorkspace ? null : Border.all(color: SanaColors.outline),
-        borderRadius: isWorkspace ? BorderRadius.zero : BorderRadius.circular(22),
+        borderRadius: isWorkspace ? BorderRadius.zero : BorderRadius.circular(8),
         boxShadow: isWorkspace
             ? null
             : [
@@ -137,7 +137,7 @@ class _ArchitectureCanvasPanelState extends State<ArchitectureCanvasPanel> {
               ],
       ),
       child: ClipRRect(
-        borderRadius: isWorkspace ? BorderRadius.zero : const BorderRadius.all(Radius.circular(22)),
+        borderRadius: isWorkspace ? BorderRadius.zero : const BorderRadius.all(Radius.circular(8)),
         child: Column(
           children: [
             _CanvasHeader(

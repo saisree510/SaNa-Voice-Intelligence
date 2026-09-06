@@ -104,17 +104,17 @@ class _SaNaHome extends StatelessWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final orbSize = (constraints.maxHeight * 0.28).clamp(120.0, 200.0);
+        final orbSize = (constraints.maxHeight * 0.22).clamp(112.0, 176.0);
 
         return SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 28),
+          padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
           child: ConstrainedBox(
             constraints: BoxConstraints(minHeight: constraints.maxHeight),
             child: IntrinsicHeight(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 8),
                   Text(
                     'Soul',
                     textAlign: TextAlign.center,
@@ -124,7 +124,7 @@ class _SaNaHome extends StatelessWidget {
                       letterSpacing: 1.2,
                     ),
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 8),
                   Text(
                     appCtrl.greetingLine,
                     textAlign: TextAlign.center,
@@ -132,6 +132,37 @@ class _SaNaHome extends StatelessWidget {
                       color: SanaColors.fgSecondary,
                       fontWeight: FontWeight.w500,
                     ),
+                  ),
+                  const SizedBox(height: 24),
+                  const Row(
+                    children: [
+                      Expanded(
+                        child: _StatusCard(
+                          label: 'Mode',
+                          value: 'Build',
+                          color: SanaColors.lavender,
+                          icon: Icons.rocket_launch_outlined,
+                        ),
+                      ),
+                      SizedBox(width: 10),
+                      Expanded(
+                        child: _StatusCard(
+                          label: 'Canvas',
+                          value: 'Live',
+                          color: SanaColors.mint,
+                          icon: Icons.account_tree_outlined,
+                        ),
+                      ),
+                      SizedBox(width: 10),
+                      Expanded(
+                        child: _StatusCard(
+                          label: 'Agent',
+                          value: 'Ready',
+                          color: SanaColors.coral,
+                          icon: Icons.graphic_eq_rounded,
+                        ),
+                      ),
+                    ],
                   ),
                   const Spacer(flex: 2),
                   Center(
@@ -240,6 +271,62 @@ class _ModeRow extends StatelessWidget {
   }
 }
 
+class _StatusCard extends StatelessWidget {
+  const _StatusCard({
+    required this.label,
+    required this.value,
+    required this.color,
+    required this.icon,
+  });
+
+  final String label;
+  final String value;
+  final Color color;
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) => DecoratedBox(
+        decoration: BoxDecoration(
+          color: SanaColors.pureWhite,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: SanaColors.outline),
+          boxShadow: [
+            BoxShadow(
+              color: SanaColors.fgPrimary.withValues(alpha: 0.04),
+              blurRadius: 16,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(icon, color: color, size: 20),
+              const SizedBox(height: 10),
+              Text(
+                value,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      color: SanaColors.fgPrimary,
+                      fontWeight: FontWeight.w800,
+                    ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(color: SanaColors.fgMuted),
+              ),
+            ],
+          ),
+        ),
+      );
+}
+
 class _ModeChip extends StatelessWidget {
   const _ModeChip({
     required this.label,
@@ -255,9 +342,7 @@ class _ModeChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bg = selected
-        ? SanaColors.lavender.withValues(alpha: 0.22)
-        : SanaColors.surface.withValues(alpha: enabled ? 1 : 0.55);
+    final bg = selected ? SanaColors.pureWhite : SanaColors.surface.withValues(alpha: enabled ? 1 : 0.55);
     final fg = selected
         ? SanaColors.lavender
         : enabled
@@ -271,10 +356,10 @@ class _ModeChip extends StatelessWidget {
       label: enabled ? label : '$label, coming soon',
       child: Material(
         color: bg,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(8),
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(8),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
             child: Text(

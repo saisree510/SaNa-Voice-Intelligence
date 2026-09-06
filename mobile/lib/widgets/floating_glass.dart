@@ -14,23 +14,23 @@ class FloatingGlassView extends StatelessWidget {
 
   @override
   Widget build(BuildContext ctx) => ClipRRect(
-        borderRadius: BorderRadius.circular(100),
+        borderRadius: BorderRadius.circular(8),
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
           child: Container(
             decoration: BoxDecoration(
-              color: Theme.of(ctx).colorScheme.surface.withValues(alpha: 0.88),
-              borderRadius: BorderRadius.circular(100),
+              color: Theme.of(ctx).colorScheme.surface.withValues(alpha: 0.96),
+              borderRadius: BorderRadius.circular(8),
               boxShadow: [
                 BoxShadow(
-                  color: SanaColors.lavenderDeep.withValues(alpha: 0.12),
-                  blurRadius: 22,
-                  offset: const Offset(0, 10),
+                  color: SanaColors.fgPrimary.withValues(alpha: 0.08),
+                  blurRadius: 18,
+                  offset: const Offset(0, 8),
                 ),
               ],
             ),
             foregroundDecoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(100),
+              borderRadius: BorderRadius.circular(8),
               border: Border.all(
                 width: 1,
                 color: Theme.of(ctx).colorScheme.outline.withValues(alpha: 0.2),
@@ -63,11 +63,11 @@ class FloatingGlassButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext ctx) => Material(
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(8),
         clipBehavior: Clip.antiAlias,
         type: MaterialType.transparency,
         child: Ink(
-          color: isActive ? Theme.of(ctx).cardColor : null,
+          color: isActive ? SanaColors.lavenderSoft : null,
           child: InkWell(
             onTap: onTap,
             child: Container(

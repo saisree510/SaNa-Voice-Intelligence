@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../models/conversation_turn.dart';
+import '../ui/sana_theme.dart';
 
 /// Scrollable unified conversation sheet for voice + text turns.
 class ConversationSheet extends StatefulWidget {
@@ -112,7 +113,7 @@ class ConversationTurnBubble extends StatelessWidget {
     final bool isUser = turn.isUser;
     final alignment = isUser ? Alignment.centerRight : Alignment.centerLeft;
     final colorScheme = Theme.of(context).colorScheme;
-    final background = isUser ? colorScheme.primary : colorScheme.surfaceContainerHighest;
+    final background = isUser ? colorScheme.primary : colorScheme.surface;
     final foreground = isUser ? colorScheme.onPrimary : colorScheme.onSurfaceVariant;
     final labelColor = isUser ? foreground.withValues(alpha: 0.8) : colorScheme.outline;
     final displayText = turn.isFinal ? text : '$text …';
@@ -129,11 +130,20 @@ class ConversationTurnBubble extends StatelessWidget {
           decoration: BoxDecoration(
             color: background,
             borderRadius: BorderRadius.only(
-              topLeft: const Radius.circular(18),
-              topRight: const Radius.circular(18),
-              bottomLeft: Radius.circular(isUser ? 18 : 4),
-              bottomRight: Radius.circular(isUser ? 4 : 18),
+              topLeft: const Radius.circular(8),
+              topRight: const Radius.circular(8),
+              bottomLeft: Radius.circular(isUser ? 8 : 3),
+              bottomRight: Radius.circular(isUser ? 3 : 8),
             ),
+            border: isUser ? null : Border.all(color: SanaColors.outline),
+            boxShadow: [
+              if (!isUser)
+                BoxShadow(
+                  color: SanaColors.fgPrimary.withValues(alpha: 0.05),
+                  blurRadius: 12,
+                  offset: const Offset(0, 5),
+                ),
+            ],
           ),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -179,7 +189,7 @@ class CanvasActivityCard extends StatelessWidget {
           decoration: BoxDecoration(
             color: colorScheme.surface,
             border: Border.all(color: colorScheme.primary.withValues(alpha: 0.28)),
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(8),
             boxShadow: [
               BoxShadow(
                 color: colorScheme.primary.withValues(alpha: 0.08),
@@ -195,8 +205,8 @@ class CanvasActivityCard extends StatelessWidget {
               children: [
                 DecoratedBox(
                   decoration: BoxDecoration(
-                    color: colorScheme.primary.withValues(alpha: 0.14),
-                    borderRadius: BorderRadius.circular(12),
+                    color: SanaColors.aqua.withValues(alpha: 0.65),
+                    borderRadius: BorderRadius.circular(8),
                   ),
                   child: Padding(
                     padding: const EdgeInsets.all(8),

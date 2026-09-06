@@ -6,9 +6,9 @@ class SanaColors {
   const SanaColors._();
 
   static const Color pureWhite = Color(0xFFFFFFFF);
-  static const Color nearBlack = Color(0xFFF6F6F3);
+  static const Color nearBlack = Color(0xFFF7F7F4);
   static const Color ink = Color(0xFFFFFFFF);
-  static const Color surface = Color(0xFFF0F0ED);
+  static const Color surface = Color(0xFFF0F0EC);
   static const Color surfaceElevated = Color(0xFFFFFFFF);
 
   /// Primary brand signal — lightened soft Lilac / Lavender.
@@ -16,9 +16,10 @@ class SanaColors {
   static const Color lavenderSoft = Color(0xFFE4E0FA);
   static const Color lavenderDeep = Color(0xFF5A48B6);
 
-  static const Color aqua = Color(0xFFA8DBE9);
+  static const Color aqua = Color(0xFFA9DDE8);
   static const Color mint = Color(0xFF8AD1C0);
-  static const Color coral = Color(0xFFF4A6A0);
+  static const Color coral = Color(0xFFFFA35C);
+  static const Color blush = Color(0xFFF5A4C8);
 
   static const Color fgPrimary = Color(0xFF1D1D1F);
   static const Color fgSecondary = Color(0xFF5F5F65);
@@ -62,13 +63,13 @@ ThemeData buildSanaTheme() {
       displaySmall: TextStyle(
         fontSize: 34,
         fontWeight: FontWeight.w600,
-        letterSpacing: -0.5,
+        letterSpacing: 0,
         color: SanaColors.fgPrimary,
       ),
       headlineMedium: TextStyle(
         fontSize: 26,
         fontWeight: FontWeight.w600,
-        letterSpacing: -0.3,
+        letterSpacing: 0,
         color: SanaColors.fgPrimary,
       ),
       titleLarge: TextStyle(
@@ -101,13 +102,13 @@ ThemeData buildSanaTheme() {
       labelLarge: TextStyle(
         fontSize: 14,
         fontWeight: FontWeight.w600,
-        letterSpacing: 0.2,
+        letterSpacing: 0,
         color: SanaColors.fgPrimary,
       ),
       labelSmall: TextStyle(
         fontSize: 11,
         fontWeight: FontWeight.w500,
-        letterSpacing: 0.3,
+        letterSpacing: 0,
         color: SanaColors.fgMuted,
       ),
     ),
@@ -116,7 +117,7 @@ ThemeData buildSanaTheme() {
       fillColor: SanaColors.surface,
       hintStyle: const TextStyle(color: SanaColors.fgMuted, fontSize: 14),
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(8),
         borderSide: BorderSide.none,
       ),
     ),
@@ -127,7 +128,7 @@ ThemeData buildSanaTheme() {
         disabledBackgroundColor: SanaColors.lavender.withValues(alpha: 0.35),
         disabledForegroundColor: SanaColors.pureWhite.withValues(alpha: 0.6),
         padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 16),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         textStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
       ),
     ),

@@ -4,7 +4,7 @@ import 'package:livekit_components/livekit_components.dart' as components;
 import 'package:provider/provider.dart';
 
 import '../app.dart';
-import '../controllers/app_ctrl.dart' show AppCtrl, AgentScreenState;
+import '../controllers/app_ctrl.dart' show AppCtrl, AgentScreenState, ConversationMode;
 import '../ui/sana_theme.dart';
 import 'floating_glass.dart';
 
@@ -69,15 +69,19 @@ class ControlBar extends StatelessWidget {
                   // onTap: () => appCtrl.toggleScreenShare(),
                 ),
               ),
-              Selector<AppCtrl, AgentScreenState>(
-                selector: (ctx, appCtx) => appCtx.agentScreenState,
-                builder: (context, agentScreenState, child) => Flexible(
+              Selector<AppCtrl, ({AgentScreenState screenState, ConversationMode mode})>(
+                selector: (ctx, appCtx) => (screenState: appCtx.agentScreenState, mode: appCtx.conversationMode),
+                builder: (context, agentState, child) => Flexible(
                   flex: 1,
                   fit: FlexFit.tight,
                   child: FloatingGlassButton(
-                    isActive: agentScreenState == AgentScreenState.transcription,
+                    isActive:
+                        agentState.screenState == AgentScreenState.transcription ||
+                        agentState.mode == ConversationMode.build,
                     sfIcon: sf.SFIcons.sf_ellipsis_message_fill,
-                    onTap: () => ctx.read<AppCtrl>().toggleAgentScreenMode(),
+                    onTap: agentState.mode == ConversationMode.build
+                        ? null
+                        : () => ctx.read<AppCtrl>().toggleAgentScreenMode(),
                   ),
                 ),
               ),

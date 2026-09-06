@@ -112,12 +112,12 @@ class AgentScreen extends StatelessWidget {
   Widget build(BuildContext ctx) => Material(
         child: Selector<AppCtrl, AgentLayoutState>(
           selector: (ctx, appCtrl) => AgentLayoutState(
-            isTranscriptionVisible: appCtrl.agentScreenState == AgentScreenState.transcription,
+            isTranscriptionVisible: appCtrl.agentScreenState == AgentScreenState.transcription ||
+                appCtrl.conversationMode == ConversationMode.build,
             isCameraVisible: appCtrl.isUserCameEnabled,
             isScreenshareVisible: appCtrl.isScreenshareEnabled,
             isImmersiveWorkspaceVisible: appCtrl.isCanvasFocusVisible,
-            isBuildWorkspace:
-                appCtrl.conversationMode == ConversationMode.build && appCtrl.agentScreenState == AgentScreenState.transcription,
+            isBuildWorkspace: appCtrl.conversationMode == ConversationMode.build,
           ),
           builder: (ctx, agentLayoutState, child) => Stack(
             children: [
@@ -518,11 +518,13 @@ class _BuildModeWorkspaceState extends State<_BuildModeWorkspace> {
                   top: panelOffset.dy,
                   width: panelWidth,
                   height: panelHeight,
-                  child: _DraggableConversationPanel(
-                    onDragUpdate: (details) => _movePanel(details, workspaceSize, panelSize),
-                    onMinimize: () => setState(() => _isPanelMinimized = true),
-                    onDock: () => _dockPanel(workspaceSize, panelSize),
-                    child: widget.conversationBuilder(context, () {}),
+                  child: PointerInterceptor(
+                    child: _DraggableConversationPanel(
+                      onDragUpdate: (details) => _movePanel(details, workspaceSize, panelSize),
+                      onMinimize: () => setState(() => _isPanelMinimized = true),
+                      onDock: () => _dockPanel(workspaceSize, panelSize),
+                      child: widget.conversationBuilder(context, () {}),
+                    ),
                   ),
                 ),
               Positioned(
@@ -567,79 +569,100 @@ class _DraggableConversationPanel extends StatelessWidget {
   final Widget child;
 
   @override
-  Widget build(BuildContext context) => DecoratedBox(
-        decoration: BoxDecoration(
-          color: SanaColors.surfaceElevated.withValues(alpha: 0.94),
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: SanaColors.lavender.withValues(alpha: 0.42)),
-          boxShadow: [
-            BoxShadow(
-              color: SanaColors.lavenderDeep.withValues(alpha: 0.22),
-              blurRadius: 36,
-              offset: const Offset(0, 18),
-            ),
-          ],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(23),
+  Widget build(BuildContext context) => Material(
+        color: SanaColors.pureWhite,
+        elevation: 14,
+        shadowColor: SanaColors.fgPrimary.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(8),
+        clipBehavior: Clip.antiAlias,
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            border: Border.all(color: SanaColors.outline),
+            borderRadius: BorderRadius.circular(8),
+          ),
           child: Column(
             children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(12, 8, 12, 6),
+              SizedBox(
+                height: 48,
                 child: Row(
                   children: [
-                    Tooltip(
-                      message: 'Drag conversation window',
-                      child: MouseRegion(
-                        cursor: SystemMouseCursors.move,
-                        child: Semantics(
-                          label: 'Drag conversation window',
+                    Expanded(
+                      child: Tooltip(
+                        message: 'Drag conversation window',
+                        child: MouseRegion(
+                          cursor: SystemMouseCursors.move,
                           child: GestureDetector(
                             behavior: HitTestBehavior.opaque,
                             onPanUpdate: onDragUpdate,
-                            child: SizedBox(
-                              width: 36,
-                              height: 38,
-                              child: Icon(
-                                Icons.drag_indicator_rounded,
-                                color: SanaColors.fgMuted.withValues(alpha: 0.78),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 14),
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    Icons.drag_indicator_rounded,
+                                    color: SanaColors.fgMuted.withValues(alpha: 0.78),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    'Conversation',
+                                    style:
+                                        Theme.of(context).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w800),
+                                  ),
+                                ],
                               ),
                             ),
                           ),
                         ),
                       ),
                     ),
-                    const SizedBox(width: 4),
-                    Text(
-                      'Conversation',
-                      style: Theme.of(context).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w800),
+                    _PanelActionButton(
+                      tooltip: 'Dock to the right',
+                      icon: Icons.vertical_align_top_rounded,
+                      onPressed: onDock,
                     ),
-                    const Spacer(),
-                    Tooltip(
-                      message: 'Dock to the right',
-                      child: IconButton(
-                        onPressed: onDock,
-                        icon: const Icon(Icons.vertical_align_top_rounded, size: 18),
-                        color: SanaColors.fgMuted,
-                        visualDensity: VisualDensity.compact,
-                      ),
+                    _PanelActionButton(
+                      tooltip: 'Minimize conversation',
+                      icon: Icons.minimize_rounded,
+                      onPressed: onMinimize,
                     ),
-                    Tooltip(
-                      message: 'Minimize conversation',
-                      child: IconButton(
-                        onPressed: onMinimize,
-                        icon: const Icon(Icons.minimize_rounded, size: 19),
-                        color: SanaColors.fgMuted,
-                        visualDensity: VisualDensity.compact,
-                      ),
-                    ),
+                    const SizedBox(width: 6),
                   ],
                 ),
               ),
-              Divider(height: 1, color: SanaColors.outline.withValues(alpha: 0.6)),
+              Divider(height: 1, color: SanaColors.outline.withValues(alpha: 0.85)),
               Expanded(child: child),
             ],
           ),
+        ),
+      );
+}
+
+class _PanelActionButton extends StatelessWidget {
+  const _PanelActionButton({
+    required this.tooltip,
+    required this.icon,
+    required this.onPressed,
+  });
+
+  final String tooltip;
+  final IconData icon;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) => Tooltip(
+        message: tooltip,
+        child: IconButton(
+          constraints: const BoxConstraints.tightFor(width: 40, height: 40),
+          padding: EdgeInsets.zero,
+          visualDensity: VisualDensity.compact,
+          icon: Icon(icon, size: 19),
+          color: SanaColors.fgSecondary,
+          style: IconButton.styleFrom(
+            hoverColor: SanaColors.surface,
+            highlightColor: SanaColors.lavenderSoft,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          ),
+          onPressed: onPressed,
         ),
       );
 }
