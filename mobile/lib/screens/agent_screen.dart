@@ -454,6 +454,7 @@ class _BuildModeWorkspaceState extends State<_BuildModeWorkspace> {
   Offset _panelOffset = Offset.zero;
   bool _hasPositionedPanel = false;
   bool _isPanelMinimized = false;
+  bool _isCanvasHidden = false;
 
   void _movePanel(DragUpdateDetails details, Size workspaceSize, Size panelSize) {
     final start = _hasPositionedPanel ? _panelOffset : Offset(workspaceSize.width - panelSize.width - 28, 28);
@@ -493,11 +494,24 @@ class _BuildModeWorkspaceState extends State<_BuildModeWorkspace> {
           return Stack(
             children: [
               Positioned.fill(
-                child: ArchitectureCanvasPanel(
-                  architectureId: widget.architectureId,
-                  requireExplicitArchitecture: true,
-                  isFullscreen: true,
-                  isInteractive: _isPanelMinimized,
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 220),
+                  child: _isCanvasHidden
+                      ? _HiddenCanvasWorkspace(
+                          key: const ValueKey('hidden-canvas'),
+                          onShowCanvas: () => setState(() => _isCanvasHidden = false),
+                        )
+                      : Padding(
+                          key: const ValueKey('live-canvas'),
+                          padding: const EdgeInsets.only(bottom: 18),
+                          child: ArchitectureCanvasPanel(
+                            architectureId: widget.architectureId,
+                            requireExplicitArchitecture: true,
+                            isFullscreen: true,
+                            isInteractive: _isPanelMinimized,
+                            onCollapse: () => setState(() => _isCanvasHidden = true),
+                          ),
+                        ),
                 ),
               ),
               if (_isPanelMinimized)
@@ -527,28 +541,29 @@ class _BuildModeWorkspaceState extends State<_BuildModeWorkspace> {
                     ),
                   ),
                 ),
-              Positioned(
-                left: 0,
-                right: 0,
-                bottom: 94,
-                child: IgnorePointer(
-                  child: Center(
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: SanaColors.lavender.withValues(alpha: 0.34),
-                            blurRadius: 44,
-                            spreadRadius: 8,
-                          ),
-                        ],
+              if (widget.architectureId == null || widget.architectureId!.isEmpty)
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: 94,
+                  child: IgnorePointer(
+                    child: Center(
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: SanaColors.lavender.withValues(alpha: 0.34),
+                              blurRadius: 44,
+                              spreadRadius: 8,
+                            ),
+                          ],
+                        ),
+                        child: const SanaOrbView(size: 112, showLabel: false),
                       ),
-                      child: const SanaOrbView(size: 112, showLabel: false),
                     ),
                   ),
                 ),
-              ),
             ],
           );
         },
@@ -632,6 +647,59 @@ class _DraggableConversationPanel extends StatelessWidget {
               Divider(height: 1, color: SanaColors.outline.withValues(alpha: 0.85)),
               Expanded(child: child),
             ],
+          ),
+        ),
+      );
+}
+
+class _HiddenCanvasWorkspace extends StatelessWidget {
+  const _HiddenCanvasWorkspace({super.key, required this.onShowCanvas});
+
+  final VoidCallback onShowCanvas;
+
+  @override
+  Widget build(BuildContext context) => DecoratedBox(
+        decoration: const BoxDecoration(color: SanaColors.nearBlack),
+        child: Center(
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: SanaColors.pureWhite,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: SanaColors.outline),
+              boxShadow: [
+                BoxShadow(
+                  color: SanaColors.fgPrimary.withValues(alpha: 0.08),
+                  blurRadius: 24,
+                  offset: const Offset(0, 12),
+                ),
+              ],
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(22),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.account_tree_outlined, color: SanaColors.lavender, size: 28),
+                  const SizedBox(height: 10),
+                  Text(
+                    'Canvas hidden',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    'Conversation stays open while the architecture is tucked away.',
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                  const SizedBox(height: 16),
+                  FilledButton.icon(
+                    onPressed: onShowCanvas,
+                    icon: const Icon(Icons.visibility_outlined, size: 18),
+                    label: const Text('Show canvas'),
+                  ),
+                ],
+              ),
+            ),
           ),
         ),
       );

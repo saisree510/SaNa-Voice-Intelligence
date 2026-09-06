@@ -126,7 +126,7 @@ class _AuthGateState extends State<AuthGate> {
           builder: (ctx, screen, _) {
             final isHome = screen == AppScreenState.welcome;
             return Container(
-              constraints: BoxConstraints(maxWidth: isHome ? 620 : double.infinity),
+              constraints: BoxConstraints(maxWidth: isHome ? 1120 : double.infinity),
               child: Stack(
                 children: [
                   AppLayoutSwitcher(
