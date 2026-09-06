@@ -139,37 +139,6 @@ class _SaNaHome extends StatelessWidget {
                       fontWeight: FontWeight.w500,
                     ),
                   ),
-                  const SizedBox(height: 24),
-                  const Row(
-                    children: [
-                      Expanded(
-                        child: _StatusCard(
-                          label: 'Mode',
-                          value: 'Build',
-                          color: SanaColors.lavender,
-                          icon: Icons.rocket_launch_outlined,
-                        ),
-                      ),
-                      SizedBox(width: 10),
-                      Expanded(
-                        child: _StatusCard(
-                          label: 'Canvas',
-                          value: 'Live',
-                          color: SanaColors.mint,
-                          icon: Icons.account_tree_outlined,
-                        ),
-                      ),
-                      SizedBox(width: 10),
-                      Expanded(
-                        child: _StatusCard(
-                          label: 'Agent',
-                          value: 'Ready',
-                          color: SanaColors.coral,
-                          icon: Icons.graphic_eq_rounded,
-                        ),
-                      ),
-                    ],
-                  ),
                   const Spacer(flex: 2),
                   Center(
                     child: Consumer2<AppCtrl, sdk.Session>(
@@ -197,12 +166,10 @@ class _SaNaHome extends StatelessWidget {
                     ),
                   ),
                   const Spacer(flex: 2),
-                  Text(
-                    'Mode',
-                    style: textTheme.labelSmall?.copyWith(color: SanaColors.fgMuted),
-                  ),
+                  Text('Mode',
+                      textAlign: TextAlign.center, style: textTheme.labelSmall?.copyWith(color: SanaColors.fgMuted)),
                   const SizedBox(height: 10),
-                  _ModeRow(appCtrl: appCtrl),
+                  Center(child: _ModeRow(appCtrl: appCtrl)),
                   const SizedBox(height: 22),
                   Consumer2<AppCtrl, sdk.Session>(
                     builder: (context, ctrl, session, _) {
@@ -223,9 +190,14 @@ class _SaNaHome extends StatelessWidget {
                         onPressed = () => unawaited(ctrl.connect());
                       }
 
-                      return FilledButton(
-                        onPressed: onPressed,
-                        child: Text(label),
+                      return Center(
+                        child: SizedBox(
+                          width: 260,
+                          child: FilledButton(
+                            onPressed: onPressed,
+                            child: Text(label),
+                          ),
+                        ),
                       );
                     },
                   ),
@@ -294,145 +266,87 @@ class _HomeDesktopDashboard extends StatelessWidget {
       child: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(28, 28, 28, 32),
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 1040),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                flex: 5,
-                child: _HomePanel(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Soul',
-                        style: textTheme.displaySmall?.copyWith(
-                          color: SanaColors.fgPrimary,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        appCtrl.greetingLine,
-                        style: textTheme.bodyLarge?.copyWith(color: SanaColors.fgSecondary),
-                      ),
-                      const SizedBox(height: 34),
-                      Center(
-                        child: Consumer2<AppCtrl, sdk.Session>(
-                          builder: (context, ctrl, session, _) {
-                            final connecting = ctrl.isConnecting;
-                            final live = session.connectionState == sdk.ConnectionState.connected ||
-                                session.connectionState == sdk.ConnectionState.reconnecting;
-
-                            return SanaOrbView(
-                              size: orbSize,
-                              forceState: connecting
-                                  ? SanaOrbState.connecting
-                                  : live
-                                      ? null
-                                      : SanaOrbState.idle,
-                              onTap: () {
-                                if (connecting) {
-                                  unawaited(ctrl.cancelConnect());
-                                } else {
-                                  unawaited(ctrl.connect());
-                                }
-                              },
-                            );
-                          },
-                        ),
-                      ),
-                      const SizedBox(height: 30),
-                      Text(
-                        'Mode',
-                        style: textTheme.labelSmall?.copyWith(color: SanaColors.fgMuted),
-                      ),
-                      const SizedBox(height: 10),
-                      _ModeRow(appCtrl: appCtrl),
-                      const SizedBox(height: 18),
-                      Consumer2<AppCtrl, sdk.Session>(
-                        builder: (context, ctrl, session, _) {
-                          final connecting = ctrl.isConnecting;
-                          final live = session.connectionState == sdk.ConnectionState.connected ||
-                              session.connectionState == sdk.ConnectionState.reconnecting;
-
-                          late final String label;
-                          late final VoidCallback onPressed;
-                          if (connecting) {
-                            label = 'Cancel';
-                            onPressed = () => unawaited(ctrl.cancelConnect());
-                          } else if (live) {
-                            label = 'Continue';
-                            onPressed = () => unawaited(ctrl.connect());
-                          } else {
-                            label = 'Talk with Soul';
-                            onPressed = () => unawaited(ctrl.connect());
-                          }
-
-                          return SizedBox(
-                            width: 260,
-                            child: FilledButton(
-                              onPressed: onPressed,
-                              child: Text(label),
-                            ),
-                          );
-                        },
-                      ),
-                    ],
+          constraints: const BoxConstraints(maxWidth: 720),
+          child: _HomePanel(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Text(
+                  'Soul',
+                  textAlign: TextAlign.center,
+                  style: textTheme.displaySmall?.copyWith(
+                    color: SanaColors.fgPrimary,
+                    fontWeight: FontWeight.w800,
                   ),
                 ),
-              ),
-              const SizedBox(width: 18),
-              SizedBox(
-                width: 340,
-                child: Column(
-                  children: [
-                    const Row(
-                      children: [
-                        Expanded(
-                          child: _StatusCard(
-                            label: 'Mode',
-                            value: 'Build',
-                            color: SanaColors.lavender,
-                            icon: Icons.rocket_launch_outlined,
-                          ),
-                        ),
-                        SizedBox(width: 10),
-                        Expanded(
-                          child: _StatusCard(
-                            label: 'Canvas',
-                            value: 'Live',
-                            color: SanaColors.mint,
-                            icon: Icons.account_tree_outlined,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-                    const _QuickActionCard(
-                      title: 'Architecture',
-                      subtitle: 'Canvas-first planning with live build handoff.',
-                      color: SanaColors.aqua,
-                      icon: Icons.schema_outlined,
-                    ),
-                    const SizedBox(height: 10),
-                    const _QuickActionCard(
-                      title: 'Projects',
-                      subtitle: 'Generated files, execution history, and downloads.',
-                      color: SanaColors.coral,
-                      icon: Icons.folder_copy_outlined,
-                    ),
-                    const SizedBox(height: 10),
-                    const _StatusCard(
-                      label: 'Agent',
-                      value: 'Ready',
-                      color: SanaColors.blush,
-                      icon: Icons.graphic_eq_rounded,
-                    ),
-                  ],
+                const SizedBox(height: 8),
+                Text(
+                  appCtrl.greetingLine,
+                  textAlign: TextAlign.center,
+                  style: textTheme.bodyLarge?.copyWith(color: SanaColors.fgSecondary),
                 ),
-              ),
-            ],
+                const SizedBox(height: 42),
+                Consumer2<AppCtrl, sdk.Session>(
+                  builder: (context, ctrl, session, _) {
+                    final connecting = ctrl.isConnecting;
+                    final live = session.connectionState == sdk.ConnectionState.connected ||
+                        session.connectionState == sdk.ConnectionState.reconnecting;
+
+                    return SanaOrbView(
+                      size: orbSize,
+                      forceState: connecting
+                          ? SanaOrbState.connecting
+                          : live
+                              ? null
+                              : SanaOrbState.idle,
+                      onTap: () {
+                        if (connecting) {
+                          unawaited(ctrl.cancelConnect());
+                        } else {
+                          unawaited(ctrl.connect());
+                        }
+                      },
+                    );
+                  },
+                ),
+                const SizedBox(height: 34),
+                Text(
+                  'Mode',
+                  style: textTheme.labelSmall?.copyWith(color: SanaColors.fgMuted),
+                ),
+                const SizedBox(height: 10),
+                _ModeRow(appCtrl: appCtrl),
+                const SizedBox(height: 18),
+                Consumer2<AppCtrl, sdk.Session>(
+                  builder: (context, ctrl, session, _) {
+                    final connecting = ctrl.isConnecting;
+                    final live = session.connectionState == sdk.ConnectionState.connected ||
+                        session.connectionState == sdk.ConnectionState.reconnecting;
+
+                    late final String label;
+                    late final VoidCallback onPressed;
+                    if (connecting) {
+                      label = 'Cancel';
+                      onPressed = () => unawaited(ctrl.cancelConnect());
+                    } else if (live) {
+                      label = 'Continue';
+                      onPressed = () => unawaited(ctrl.connect());
+                    } else {
+                      label = 'Talk with Soul';
+                      onPressed = () => unawaited(ctrl.connect());
+                    }
+
+                    return SizedBox(
+                      width: 260,
+                      child: FilledButton(
+                        onPressed: onPressed,
+                        child: Text(label),
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -462,126 +376,6 @@ class _HomePanel extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.all(28),
           child: child,
-        ),
-      );
-}
-
-class _QuickActionCard extends StatelessWidget {
-  const _QuickActionCard({
-    required this.title,
-    required this.subtitle,
-    required this.color,
-    required this.icon,
-  });
-
-  final String title;
-  final String subtitle;
-  final Color color;
-  final IconData icon;
-
-  @override
-  Widget build(BuildContext context) => DecoratedBox(
-        decoration: BoxDecoration(
-          color: SanaColors.pureWhite,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: SanaColors.outline),
-          boxShadow: [
-            BoxShadow(
-              color: SanaColors.fgPrimary.withValues(alpha: 0.04),
-              blurRadius: 16,
-              offset: const Offset(0, 8),
-            ),
-          ],
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              DecoratedBox(
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.35),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(10),
-                  child: Icon(icon, color: SanaColors.fgPrimary, size: 22),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      subtitle,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(color: SanaColors.fgSecondary),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-}
-
-class _StatusCard extends StatelessWidget {
-  const _StatusCard({
-    required this.label,
-    required this.value,
-    required this.color,
-    required this.icon,
-  });
-
-  final String label;
-  final String value;
-  final Color color;
-  final IconData icon;
-
-  @override
-  Widget build(BuildContext context) => DecoratedBox(
-        decoration: BoxDecoration(
-          color: SanaColors.pureWhite,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: SanaColors.outline),
-          boxShadow: [
-            BoxShadow(
-              color: SanaColors.fgPrimary.withValues(alpha: 0.04),
-              blurRadius: 16,
-              offset: const Offset(0, 8),
-            ),
-          ],
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Icon(icon, color: color, size: 20),
-              const SizedBox(height: 10),
-              Text(
-                value,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: SanaColors.fgPrimary,
-                      fontWeight: FontWeight.w800,
-                    ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.labelSmall?.copyWith(color: SanaColors.fgMuted),
-              ),
-            ],
-          ),
         ),
       );
 }
