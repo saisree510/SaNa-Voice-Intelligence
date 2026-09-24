@@ -1,6 +1,7 @@
 import 'dart:math' show max;
 
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:livekit_client/livekit_client.dart' as sdk;
 import 'package:livekit_components/livekit_components.dart' as components;
 import 'package:provider/provider.dart';
@@ -309,6 +310,13 @@ class _ConversationCanvasWorkspaceState extends State<_ConversationCanvasWorkspa
 
           final isWide = constraints.maxWidth >= 980;
           final isBuildMode = appCtrl.conversationMode == ConversationMode.build;
+          if (isBuildMode) {
+            return _BuildModeWorkspace(
+              conversationBuilder: widget.conversationBuilder,
+              architectureId: appCtrl.activeArchitectureId,
+            );
+          }
+
           if (!isWide) {
             _isCanvasCollapsed = false;
             _isCanvasFullscreen = false;
@@ -367,13 +375,6 @@ class _ConversationCanvasWorkspaceState extends State<_ConversationCanvasWorkspa
                   ),
                 ],
               ),
-            );
-          }
-
-          if (isBuildMode) {
-            return _BuildModeWorkspace(
-              conversationBuilder: widget.conversationBuilder,
-              architectureId: appCtrl.activeArchitectureId,
             );
           }
 
@@ -437,7 +438,7 @@ class _ConversationCanvasWorkspaceState extends State<_ConversationCanvasWorkspa
 
 /// Build Mode keeps the architecture as the spatial anchor while conversation
 /// becomes a movable tool window on expanded screens.
-class _BuildModeWorkspace extends StatefulWidget {
+class _BuildModeWorkspace extends StatelessWidget {
   const _BuildModeWorkspace({
     required this.conversationBuilder,
     required this.architectureId,
@@ -447,197 +448,181 @@ class _BuildModeWorkspace extends StatefulWidget {
   final String? architectureId;
 
   @override
-  State<_BuildModeWorkspace> createState() => _BuildModeWorkspaceState();
-}
-
-class _BuildModeWorkspaceState extends State<_BuildModeWorkspace> {
-  Offset _panelOffset = Offset.zero;
-  bool _hasPositionedPanel = false;
-  bool _isPanelMinimized = false;
-  bool _isCanvasHidden = false;
-
-  void _movePanel(DragUpdateDetails details, Size workspaceSize, Size panelSize) {
-    final start = _hasPositionedPanel ? _panelOffset : Offset(workspaceSize.width - panelSize.width - 28, 28);
-    final next = start + details.delta;
-    setState(() {
-      _hasPositionedPanel = true;
-      _panelOffset = Offset(
-        next.dx.clamp(16.0, workspaceSize.width - panelSize.width - 16.0).toDouble(),
-        next.dy.clamp(16.0, workspaceSize.height - panelSize.height - 116.0).toDouble(),
-      );
-    });
-  }
-
-  void _dockPanel(Size workspaceSize, Size panelSize) {
-    setState(() {
-      _hasPositionedPanel = true;
-      _panelOffset = Offset(workspaceSize.width - panelSize.width - 28, 28);
-    });
-  }
-
-  @override
   Widget build(BuildContext context) => LayoutBuilder(
         builder: (context, constraints) {
-          final workspaceSize = constraints.biggest;
-          final panelWidth = (workspaceSize.width * 0.31).clamp(360.0, 500.0).toDouble();
-          final panelHeight = (workspaceSize.height * 0.58).clamp(400.0, 640.0).toDouble();
-          final panelSize = Size(panelWidth, panelHeight);
-          final maxTop = (workspaceSize.height - panelHeight - 116.0).clamp(16.0, double.infinity).toDouble();
-          final maxLeft = (workspaceSize.width - panelWidth - 16.0).clamp(16.0, double.infinity).toDouble();
-          final panelOffset = _hasPositionedPanel
-              ? Offset(
-                  _panelOffset.dx.clamp(16.0, maxLeft).toDouble(),
-                  _panelOffset.dy.clamp(16.0, maxTop).toDouble(),
-                )
-              : Offset(maxLeft, 28);
+          final isCompact = constraints.maxWidth < 600;
+          final drawerWidth = isCompact
+              ? constraints.maxWidth.clamp(280.0, 420.0).toDouble()
+              : (constraints.maxWidth * 0.30).clamp(360.0, 480.0).toDouble();
 
-          return Stack(
-            children: [
-              Positioned.fill(
-                child: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 220),
-                  child: _isCanvasHidden
-                      ? _HiddenCanvasWorkspace(
-                          key: const ValueKey('hidden-canvas'),
-                          onShowCanvas: () => setState(() => _isCanvasHidden = false),
-                        )
-                      : Padding(
-                          key: const ValueKey('live-canvas'),
-                          padding: const EdgeInsets.only(bottom: 18),
-                          child: ArchitectureCanvasPanel(
-                            architectureId: widget.architectureId,
-                            requireExplicitArchitecture: true,
-                            isFullscreen: true,
-                            onCollapse: () => setState(() => _isCanvasHidden = true),
+          return Selector<AppCtrl, bool>(
+            selector: (context, appCtrl) => appCtrl.isBuildConversationVisible,
+            builder: (context, isDrawerOpen, _) => Row(
+              children: [
+                Expanded(
+                  child: Stack(
+                    children: [
+                      Positioned.fill(
+                        child: ArchitectureCanvasPanel(
+                          architectureId: architectureId,
+                          requireExplicitArchitecture: true,
+                          isFullscreen: true,
+                          showHeader: false,
+                          showEmptyStateMessage: false,
+                          useInteractiveGridWhenEmpty: true,
+                        ),
+                      ),
+                      Positioned(
+                        top: 18,
+                        // Sit directly beside Excalidraw's Library control.
+                        right: 104,
+                        child: PointerInterceptor(
+                          child: _BuildSidebarToggle(
+                            isDrawerOpen: isDrawerOpen,
+                            onToggleConversation: () => context.read<AppCtrl>().toggleBuildConversationVisibility(),
                           ),
                         ),
-                ),
-              ),
-              if (_isPanelMinimized)
-                Positioned(
-                  top: 24,
-                  right: 24,
-                  child: PointerInterceptor(
-                    child: FilledButton.icon(
-                      onPressed: () => setState(() => _isPanelMinimized = false),
-                      icon: const Icon(Icons.chat_bubble_outline_rounded, size: 18),
-                      label: const Text('Open conversation'),
-                    ),
-                  ),
-                )
-              else
-                Positioned(
-                  left: panelOffset.dx,
-                  top: panelOffset.dy,
-                  width: panelWidth,
-                  height: panelHeight,
-                  child: PointerInterceptor(
-                    child: _DraggableConversationPanel(
-                      onDragUpdate: (details) => _movePanel(details, workspaceSize, panelSize),
-                      onMinimize: () => setState(() => _isPanelMinimized = true),
-                      onDock: () => _dockPanel(workspaceSize, panelSize),
-                      child: widget.conversationBuilder(context, () {}),
-                    ),
+                      ),
+                    ],
                   ),
                 ),
-              if (widget.architectureId == null || widget.architectureId!.isEmpty)
-                Positioned(
-                  left: 0,
-                  right: 0,
-                  bottom: 94,
-                  child: IgnorePointer(
-                    child: Center(
-                      child: DecoratedBox(
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: SanaColors.lavender.withValues(alpha: 0.34),
-                              blurRadius: 44,
-                              spreadRadius: 8,
-                            ),
-                          ],
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 280),
+                  curve: Curves.easeInOutCubic,
+                  width: isDrawerOpen ? drawerWidth : 0,
+                  child: ClipRect(
+                    child: OverflowBox(
+                      alignment: Alignment.topRight,
+                      minWidth: drawerWidth,
+                      maxWidth: drawerWidth,
+                      child: SizedBox(
+                        width: drawerWidth,
+                        child: _BuildConversationDrawer(
+                          child: conversationBuilder(context, () {}),
+                          onClose: () => context.read<AppCtrl>().setBuildConversationVisible(false),
                         ),
-                        child: const SanaOrbView(size: 112, showLabel: false),
                       ),
                     ),
                   ),
                 ),
-            ],
+              ],
+            ),
           );
         },
       );
 }
 
-class _DraggableConversationPanel extends StatelessWidget {
-  const _DraggableConversationPanel({
-    required this.onDragUpdate,
-    required this.onMinimize,
-    required this.onDock,
-    required this.child,
+class _BuildSidebarToggle extends StatelessWidget {
+  const _BuildSidebarToggle({
+    required this.isDrawerOpen,
+    required this.onToggleConversation,
   });
 
-  final GestureDragUpdateCallback onDragUpdate;
-  final VoidCallback onMinimize;
-  final VoidCallback onDock;
+  final bool isDrawerOpen;
+  final VoidCallback onToggleConversation;
+
+  @override
+  Widget build(BuildContext context) => Tooltip(
+        message: isDrawerOpen ? 'Hide conversation' : 'Show conversation',
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onToggleConversation,
+            borderRadius: BorderRadius.circular(9),
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: SanaColors.pureWhite.withValues(alpha: 0.94),
+                border: Border.all(color: SanaColors.outline),
+                borderRadius: BorderRadius.circular(9),
+                boxShadow: [
+                  BoxShadow(
+                    color: SanaColors.fgPrimary.withValues(alpha: 0.10),
+                    blurRadius: 16,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
+              ),
+              child: SizedBox(
+                width: 34,
+                height: 38,
+                child: Row(
+                  children: [
+                    Container(
+                      width: 3,
+                      height: 24,
+                      color: SanaColors.surface,
+                    ),
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.all(6),
+                        child: SvgPicture.asset(
+                          'assets/icons/chat-svgrepo-com.svg',
+                          semanticsLabel: 'Conversation',
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+}
+
+class _BuildConversationDrawer extends StatelessWidget {
+  const _BuildConversationDrawer({
+    required this.child,
+    required this.onClose,
+  });
+
   final Widget child;
+  final VoidCallback onClose;
 
   @override
   Widget build(BuildContext context) => Material(
         color: SanaColors.pureWhite,
-        elevation: 14,
-        shadowColor: SanaColors.fgPrimary.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(8),
+        elevation: 10,
+        shadowColor: SanaColors.fgPrimary.withValues(alpha: 0.10),
         clipBehavior: Clip.antiAlias,
         child: DecoratedBox(
           decoration: BoxDecoration(
-            border: Border.all(color: SanaColors.outline),
-            borderRadius: BorderRadius.circular(8),
+            border: Border(left: BorderSide(color: SanaColors.outline)),
           ),
           child: Column(
             children: [
               SizedBox(
-                height: 48,
+                height: 50,
                 child: Row(
                   children: [
                     Expanded(
-                      child: Tooltip(
-                        message: 'Drag conversation window',
-                        child: MouseRegion(
-                          cursor: SystemMouseCursors.move,
-                          child: GestureDetector(
-                            behavior: HitTestBehavior.opaque,
-                            onPanUpdate: onDragUpdate,
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 14),
-                              child: Row(
-                                children: [
-                                  Icon(
-                                    Icons.drag_indicator_rounded,
-                                    color: SanaColors.fgMuted.withValues(alpha: 0.78),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    'Conversation',
-                                    style:
-                                        Theme.of(context).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w800),
-                                  ),
-                                ],
-                              ),
-                            ),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 18),
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            'Conversation',
+                            style: Theme.of(context).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w800),
                           ),
                         ),
                       ),
                     ),
-                    _PanelActionButton(
-                      tooltip: 'Dock to the right',
-                      icon: Icons.vertical_align_top_rounded,
-                      onPressed: onDock,
+                    components.MediaDeviceContextBuilder(
+                      builder: (context, roomCtx, mediaDeviceCtx) => IconButton(
+                        tooltip: mediaDeviceCtx.microphoneOpened ? 'Mute microphone' : 'Enable microphone',
+                        onPressed: () => mediaDeviceCtx.microphoneOpened
+                            ? mediaDeviceCtx.disableMicrophone()
+                            : mediaDeviceCtx.enableMicrophone(),
+                        icon: Icon(
+                          mediaDeviceCtx.microphoneOpened ? Icons.mic_rounded : Icons.mic_off_rounded,
+                          size: 20,
+                        ),
+                      ),
                     ),
-                    _PanelActionButton(
-                      tooltip: 'Minimize conversation',
-                      icon: Icons.minimize_rounded,
-                      onPressed: onMinimize,
+                    IconButton(
+                      tooltip: 'Hide conversation',
+                      icon: const Icon(Icons.close_rounded, size: 20),
+                      onPressed: onClose,
                     ),
                     const SizedBox(width: 6),
                   ],
@@ -647,89 +632,6 @@ class _DraggableConversationPanel extends StatelessWidget {
               Expanded(child: child),
             ],
           ),
-        ),
-      );
-}
-
-class _HiddenCanvasWorkspace extends StatelessWidget {
-  const _HiddenCanvasWorkspace({super.key, required this.onShowCanvas});
-
-  final VoidCallback onShowCanvas;
-
-  @override
-  Widget build(BuildContext context) => DecoratedBox(
-        decoration: const BoxDecoration(color: SanaColors.nearBlack),
-        child: Center(
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              color: SanaColors.pureWhite,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: SanaColors.outline),
-              boxShadow: [
-                BoxShadow(
-                  color: SanaColors.fgPrimary.withValues(alpha: 0.08),
-                  blurRadius: 24,
-                  offset: const Offset(0, 12),
-                ),
-              ],
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(22),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.account_tree_outlined, color: SanaColors.lavender, size: 28),
-                  const SizedBox(height: 10),
-                  Text(
-                    'Canvas hidden',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    'Conversation stays open while the architecture is tucked away.',
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                  const SizedBox(height: 16),
-                  FilledButton.icon(
-                    onPressed: onShowCanvas,
-                    icon: const Icon(Icons.visibility_outlined, size: 18),
-                    label: const Text('Show canvas'),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      );
-}
-
-class _PanelActionButton extends StatelessWidget {
-  const _PanelActionButton({
-    required this.tooltip,
-    required this.icon,
-    required this.onPressed,
-  });
-
-  final String tooltip;
-  final IconData icon;
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) => Tooltip(
-        message: tooltip,
-        child: IconButton(
-          constraints: const BoxConstraints.tightFor(width: 40, height: 40),
-          padding: EdgeInsets.zero,
-          visualDensity: VisualDensity.compact,
-          icon: Icon(icon, size: 19),
-          color: SanaColors.fgSecondary,
-          style: IconButton.styleFrom(
-            hoverColor: SanaColors.surface,
-            highlightColor: SanaColors.lavenderSoft,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-          ),
-          onPressed: onPressed,
         ),
       );
 }

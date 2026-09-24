@@ -12,10 +12,11 @@ import '../services/architecture_service.dart';
 import 'architecture_canvas_controller.dart';
 
 class ArchitectureCanvasView extends StatefulWidget {
-  const ArchitectureCanvasView({super.key, this.controller, this.isInteractive = true});
+  const ArchitectureCanvasView({super.key, this.controller, this.isInteractive = true, this.emptyState = false});
 
   final ArchitectureCanvasController? controller;
   final bool isInteractive;
+  final bool emptyState;
 
   @override
   State<ArchitectureCanvasView> createState() => _ArchitectureCanvasViewState();
@@ -38,7 +39,7 @@ class _ArchitectureCanvasViewState extends State<ArchitectureCanvasView> {
       _viewType,
       (int viewId) {
         final frame = html.IFrameElement()
-          ..src = _canvasUrl()
+          ..src = _canvasUrl(widget.emptyState)
           ..title = 'Soul Architecture Blueprint'
           ..allow = 'clipboard-read; clipboard-write'
           ..style.border = '0'
@@ -74,9 +75,9 @@ class _ArchitectureCanvasViewState extends State<ArchitectureCanvasView> {
     widget.controller?.bindMessageSender(_sendMessage);
   }
 
-  static String _canvasUrl() {
+  static String _canvasUrl(bool emptyState) {
     final baseHref = html.document.querySelector('base')?.getAttribute('href') ?? '/';
-    final canvasPath = Uri.parse(baseHref).resolve('canvas/index.html?embed=1').toString();
+    final canvasPath = Uri.parse(baseHref).resolve('canvas/index.html?embed=1&empty=${emptyState ? 1 : 0}').toString();
     return Uri.base.resolve(canvasPath).toString();
   }
 

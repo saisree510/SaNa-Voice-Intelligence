@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
-import { Excalidraw, exportToBlob } from "@excalidraw/excalidraw";
+import { Excalidraw } from "@excalidraw/excalidraw";
 import { DotGrid } from "interactive-dot-grid";
 import { mockOperations, overviewBlueprint } from "./blueprint";
 import { brandIconUrl, iconDataUrl, iconFileId } from "./icons";
@@ -22,15 +22,17 @@ function postToParent(type, payload = {}) {
 }
 
 function CanvasProof() {
+  const startsEmpty = new URLSearchParams(window.location.search).get("empty") === "1";
+  const initialOperations = startsEmpty ? [] : mockOperations;
   const [blueprint, setBlueprint] = useState(overviewBlueprint);
-  const [operations, setOperations] = useState(mockOperations);
+  const [operations, setOperations] = useState(initialOperations);
   const [step, setStep] = useState(0);
   const [playing, setPlaying] = useState(true);
   const [speed, setSpeed] = useState(1);
   const [reducedMotion, setReducedMotion] = useState(false);
   const apiRef = useRef(null);
   const elementsRef = useRef([]);
-  const operationsRef = useRef(mockOperations);
+  const operationsRef = useRef(initialOperations);
   const reducedMotionRef = useRef(false);
   const stepRef = useRef(0);
   const programmaticUpdateRef = useRef(false);
@@ -42,7 +44,7 @@ function CanvasProof() {
     if (!isEmbedded) return undefined;
     postToParent("soul.canvas.ready", {
       blueprintId: overviewBlueprint.id,
-      operationCount: mockOperations.length,
+      operationCount: initialOperations.length,
     });
 
     const handleMessage = (event) => {
@@ -260,13 +262,20 @@ function CanvasProof() {
     });
   };
 
-  const handleStageWheel = (event) => {
-    if (!event.ctrlKey && !event.metaKey) return;
-    event.preventDefault();
-    event.stopPropagation();
-    const factor = event.deltaY < 0 ? 1.08 : 1 / 1.08;
-    zoomBy(factor);
-  };
+  useEffect(() => {
+    const interceptCanvasPinch = (event) => {
+      if (!stageRef.current?.contains(event.target) || (!event.ctrlKey && !event.metaKey)) return;
+
+      // Chromium exposes a trackpad pinch as Ctrl + wheel. Capture it before
+      // the browser or Excalidraw can treat it as page zoom or a canvas pan.
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      zoomBy(Math.exp(-event.deltaY * 0.0025));
+    };
+
+    window.addEventListener("wheel", interceptCanvasPinch, { capture: true, passive: false });
+    return () => window.removeEventListener("wheel", interceptCanvasPinch, { capture: true });
+  }, [blueprint]);
 
   const debounceTimerRef = useRef(null);
 
@@ -330,69 +339,6 @@ function CanvasProof() {
     }, 800);
   };
 
-  const exportPng = async () => {
-    if (!apiRef.current || !blueprint) return;
-    try {
-      const elementsList = apiRef.current.getSceneElements();
-      const appState = apiRef.current.getAppState();
-      const blob = await exportToBlob({
-        elements: elementsList,
-        appState: {
-          ...appState,
-          exportBackground: true,
-          viewBackgroundColor: "#fbfaff",
-        },
-        mimeType: "image/png",
-      });
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `${blueprint.architecture_id || "blueprint"}.png`;
-      a.click();
-      window.URL.revokeObjectURL(url);
-    } catch (e) {
-      console.error("Failed to export PNG:", e);
-    }
-  };
-
-  const downloadTextFile = (filename, text) => {
-    const element = document.createElement("a");
-    element.setAttribute("href", "data:text/plain;charset=utf-8," + encodeURIComponent(text));
-    element.setAttribute("download", filename);
-    element.style.display = "none";
-    document.body.appendChild(element);
-    element.click();
-    document.body.removeChild(element);
-  };
-
-  const exportJson = () => {
-    if (!blueprint) return;
-    downloadTextFile(
-      `${blueprint.architecture_id || "blueprint"}.json`,
-      JSON.stringify(blueprint, null, 2),
-    );
-  };
-
-  const exportMermaid = () => {
-    if (!blueprint) return;
-    let out = "graph TD\n";
-    const components = blueprint.components || [];
-    const connections = blueprint.connections || [];
-    
-    for (const comp of components) {
-      const subtitle = comp.technology || comp.type || "";
-      const label = subtitle ? `"${comp.name}\n(${subtitle})"` : `"${comp.name}"`;
-      out += `  ${comp.id}[${label}]\n`;
-    }
-    
-    for (const conn of connections) {
-      const label = conn.protocol ? ` -- ${conn.protocol} --> ` : " --> ";
-      out += `  ${conn.source_id}${label}${conn.target_id}\n`;
-    }
-    
-    downloadTextFile(`${blueprint.architecture_id || "blueprint"}.mermaid`, out);
-  };
-
   useEffect(() => {
     if (!isEmbedded || !blueprint || step < operations.length || operations.length === 0) return;
     const elementsList = apiRef.current?.getSceneElements() || [];
@@ -429,7 +375,6 @@ function CanvasProof() {
         ref={stageRef}
         className="canvas-stage"
         aria-label="Interactive Overview Architecture canvas"
-        onWheelCapture={handleStageWheel}
       >
         <Excalidraw
           excalidrawAPI={(api) => { apiRef.current = api; }}
@@ -444,13 +389,11 @@ function CanvasProof() {
             },
           }}
           onChange={handleCanvasChange}
-          UIOptions={{ canvasActions: { loadScene: false, saveToActiveFile: false, export: false } }}
+          UIOptions={{
+            canvasActions: { loadScene: false, saveToActiveFile: false, export: false },
+            tools: { image: false },
+          }}
         />
-        <div className="canvas-floating-controls" aria-label="Export controls">
-          <button type="button" onClick={exportPng} title="Export PNG image">PNG</button>
-          <button type="button" onClick={exportJson} title="Export Blueprint JSON">JSON</button>
-          <button type="button" onClick={exportMermaid} title="Export Mermaid TD flowchart">Mermaid</button>
-        </div>
       </section>
       {!isEmbedded && <section className="accessible-summary" aria-label="Architecture Blueprint text summary">
         <h2>Blueprint summary</h2>

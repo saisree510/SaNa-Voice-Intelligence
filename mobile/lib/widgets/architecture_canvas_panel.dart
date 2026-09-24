@@ -22,6 +22,9 @@ class ArchitectureCanvasPanel extends StatefulWidget {
     this.isFullscreen = false,
     this.isReadOnly = false,
     this.isInteractive = true,
+    this.showHeader = true,
+    this.showEmptyStateMessage = true,
+    this.useInteractiveGridWhenEmpty = false,
   });
 
   final VoidCallback? onCollapse;
@@ -33,6 +36,9 @@ class ArchitectureCanvasPanel extends StatefulWidget {
   final bool isFullscreen;
   final bool isReadOnly;
   final bool isInteractive;
+  final bool showHeader;
+  final bool showEmptyStateMessage;
+  final bool useInteractiveGridWhenEmpty;
 
   @override
   State<ArchitectureCanvasPanel> createState() => _ArchitectureCanvasPanelState();
@@ -140,19 +146,25 @@ class _ArchitectureCanvasPanelState extends State<ArchitectureCanvasPanel> {
         borderRadius: isWorkspace ? BorderRadius.zero : const BorderRadius.all(Radius.circular(8)),
         child: Column(
           children: [
-            _CanvasHeader(
-              controller: _controller,
-              showStatus: canDisplayArchitecture,
-              onCollapse: widget.onCollapse,
-              onFullscreen: widget.onFullscreen,
-              isFullscreen: widget.isFullscreen,
-            ),
+            if (widget.showHeader)
+              _CanvasHeader(
+                controller: _controller,
+                showStatus: canDisplayArchitecture,
+                onCollapse: widget.onCollapse,
+                onFullscreen: widget.onFullscreen,
+                isFullscreen: widget.isFullscreen,
+              ),
             Expanded(
-              child: canDisplayArchitecture
-                  ? ArchitectureCanvasView(controller: _controller, isInteractive: widget.isInteractive)
+              child: canDisplayArchitecture || widget.useInteractiveGridWhenEmpty
+                  ? ArchitectureCanvasView(
+                      controller: _controller,
+                      isInteractive: widget.isInteractive,
+                      emptyState: !canDisplayArchitecture,
+                    )
                   : _EmptyCanvasState(
                       isLoading: context.watch<ArchitectureService>().isLoading,
                       errorMessage: context.watch<ArchitectureService>().errorMessage,
+                      showMessage: widget.showEmptyStateMessage,
                     ),
             ),
           ],
@@ -165,10 +177,12 @@ class _ArchitectureCanvasPanelState extends State<ArchitectureCanvasPanel> {
 class _EmptyCanvasState extends StatelessWidget {
   const _EmptyCanvasState({
     required this.isLoading,
+    required this.showMessage,
     this.errorMessage,
   });
 
   final bool isLoading;
+  final bool showMessage;
   final String? errorMessage;
 
   @override
@@ -182,31 +196,33 @@ class _EmptyCanvasState extends StatelessWidget {
     return CustomPaint(
       painter: const _DottedWorkspacePainter(),
       child: SizedBox.expand(
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 420),
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (isLoading) ...[
-                    const CircularProgressIndicator(color: SanaColors.lavender),
-                    const SizedBox(height: 18),
-                  ] else ...[
-                    const Icon(Icons.account_tree_outlined, color: SanaColors.lavender, size: 36),
-                    const SizedBox(height: 14),
-                  ],
-                  Text(
-                    message,
-                    textAlign: TextAlign.center,
-                    style: textTheme.bodyMedium?.copyWith(color: SanaColors.fgSecondary),
+        child: showMessage
+            ? Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 420),
+                  child: Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (isLoading) ...[
+                          const CircularProgressIndicator(color: SanaColors.lavender),
+                          const SizedBox(height: 18),
+                        ] else ...[
+                          const Icon(Icons.account_tree_outlined, color: SanaColors.lavender, size: 36),
+                          const SizedBox(height: 14),
+                        ],
+                        Text(
+                          message,
+                          textAlign: TextAlign.center,
+                          style: textTheme.bodyMedium?.copyWith(color: SanaColors.fgSecondary),
+                        ),
+                      ],
+                    ),
                   ),
-                ],
-              ),
-            ),
-          ),
-        ),
+                ),
+              )
+            : const SizedBox.expand(),
       ),
     );
   }

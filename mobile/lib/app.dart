@@ -42,6 +42,7 @@ class VoiceAssistantApp extends StatelessWidget {
           session: appCtrl.session,
           child: MaterialApp(
             title: 'Soul',
+            debugShowCheckedModeBanner: false,
             theme: buildSanaTheme(),
             darkTheme: buildSanaTheme(),
             themeMode: ThemeMode.light,

@@ -150,7 +150,7 @@ class AgentLayoutSwitcher extends StatelessWidget {
                     top: (layoutState.isImmersiveWorkspaceVisible || layoutState.isBuildWorkspace)
                         ? topPadding + 10
                         : singleCellHeight + topPadding,
-                    bottom: 110,
+                    bottom: layoutState.isBuildWorkspace ? 0 : 110,
                   ),
                   child: transcriptionsBuilder(context),
                 ),
@@ -214,20 +214,23 @@ class AgentLayoutSwitcher extends StatelessWidget {
                 ),
               ),
             ],
-            // Control bar
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: 0,
-              child: Padding(
-                padding: EdgeInsets.only(
-                  left: 20,
-                  right: 20,
-                  bottom: max(20, MediaQuery.of(ctx).viewPadding.bottom),
+            if (!layoutState.isBuildWorkspace)
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: Padding(
+                  padding: EdgeInsets.only(
+                    left: 20,
+                    right: 20,
+                    bottom: max(20, MediaQuery.of(ctx).viewPadding.bottom),
+                  ),
+                  child: const Align(
+                    alignment: Alignment.bottomCenter,
+                    child: ControlBar(),
+                  ),
                 ),
-                child: const ControlBar(),
               ),
-            ),
           ],
         );
       });

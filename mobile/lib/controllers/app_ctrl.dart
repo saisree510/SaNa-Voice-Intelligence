@@ -67,6 +67,7 @@ class AppCtrl extends ChangeNotifier {
   HomeTab homeTab = HomeTab.home;
   ConversationMode conversationMode = ConversationMode.general;
   bool isCanvasFocusVisible = false;
+  bool isBuildConversationVisible = true;
 
   //Test
   bool isUserCameEnabled = false;
@@ -428,6 +429,17 @@ class AppCtrl extends ChangeNotifier {
     notifyListeners();
   }
 
+  void toggleBuildConversationVisibility() {
+    isBuildConversationVisible = !isBuildConversationVisible;
+    notifyListeners();
+  }
+
+  void setBuildConversationVisible(bool isVisible) {
+    if (isBuildConversationVisible == isVisible) return;
+    isBuildConversationVisible = isVisible;
+    notifyListeners();
+  }
+
   void setHomeTab(HomeTab tab) {
     if (tab == homeTab) return;
     homeTab = tab;
@@ -438,6 +450,9 @@ class AppCtrl extends ChangeNotifier {
     if (mode == conversationMode) return;
     final oldMode = conversationMode;
     conversationMode = mode;
+    if (mode == ConversationMode.build) {
+      isBuildConversationVisible = true;
+    }
     notifyListeners();
 
     // Send mode switch data packet to live voice agent if connected
