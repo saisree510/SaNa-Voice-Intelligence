@@ -35,8 +35,23 @@ if (!window._flutter) {
 }
 _flutter.buildConfig = {"engineRevision":"5a2a6a42cce67f965cf540fcecf616faca624aa1","builds":[{"compileTarget":"dart2js","renderer":"canvaskit","mainJsPath":"main.dart.js"},{}]};
 
-_flutter.loader.load({
-  serviceWorkerSettings: {
-    serviceWorkerVersion: "1760730792" /* Flutter's service worker is deprecated and will be removed in a future Flutter release. */
+
+(async () => {
+  // Earlier GitHub Pages releases registered Flutter's generated service
+  // worker. Remove it so authentication and project data never come from a
+  // stale cached application bundle after a deployment.
+  if ('serviceWorker' in navigator) {
+    const wasControlled = navigator.serviceWorker.controller !== null;
+    const registrations = await navigator.serviceWorker.getRegistrations();
+    await Promise.all(registrations.map((registration) => registration.unregister()));
+
+    if (wasControlled && sessionStorage.getItem('soul-sw-cleared') !== 'true') {
+      sessionStorage.setItem('soul-sw-cleared', 'true');
+      window.location.reload();
+      return;
+    }
   }
-});
+
+  sessionStorage.removeItem('soul-sw-cleared');
+  await _flutter.loader.load();
+})();
