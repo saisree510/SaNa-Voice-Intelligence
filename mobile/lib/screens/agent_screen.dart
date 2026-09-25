@@ -512,7 +512,7 @@ class _BuildModeWorkspace extends StatelessWidget {
       );
 }
 
-class _BuildSidebarToggle extends StatelessWidget {
+class _BuildSidebarToggle extends StatefulWidget {
   const _BuildSidebarToggle({
     required this.isDrawerOpen,
     required this.onToggleConversation,
@@ -522,50 +522,112 @@ class _BuildSidebarToggle extends StatelessWidget {
   final VoidCallback onToggleConversation;
 
   @override
-  Widget build(BuildContext context) => Tooltip(
-        message: isDrawerOpen ? 'Hide conversation' : 'Show conversation',
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: onToggleConversation,
-            borderRadius: BorderRadius.circular(9),
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                color: SanaColors.pureWhite.withValues(alpha: 0.94),
-                border: Border.all(color: SanaColors.outline),
-                borderRadius: BorderRadius.circular(9),
-                boxShadow: [
-                  BoxShadow(
-                    color: SanaColors.fgPrimary.withValues(alpha: 0.10),
-                    blurRadius: 16,
-                    offset: const Offset(0, 6),
-                  ),
-                ],
-              ),
-              child: SizedBox(
-                width: 34,
-                height: 38,
-                child: Row(
-                  children: [
-                    Container(
-                      width: 3,
-                      height: 24,
-                      color: SanaColors.surface,
+  State<_BuildSidebarToggle> createState() => _BuildSidebarToggleState();
+}
+
+class _BuildSidebarToggleState extends State<_BuildSidebarToggle> {
+  bool _isHovering = false;
+
+  @override
+  Widget build(BuildContext context) => MouseRegion(
+        onEnter: (_) => setState(() => _isHovering = true),
+        onExit: (_) => setState(() => _isHovering = false),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            AnimatedSize(
+              duration: const Duration(milliseconds: 160),
+              curve: Curves.easeOut,
+              child: !_isHovering || widget.isDrawerOpen
+                  ? const SizedBox.shrink()
+                  : Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: _BuildQuickActions(),
                     ),
-                    Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.all(6),
-                        child: SvgPicture.asset(
-                          'assets/icons/chat-svgrepo-com.svg',
-                          semanticsLabel: 'Conversation',
+            ),
+            Tooltip(
+              message: widget.isDrawerOpen ? 'Hide conversation' : 'Show conversation',
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: widget.onToggleConversation,
+                  borderRadius: BorderRadius.circular(9),
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: SanaColors.pureWhite.withValues(alpha: 0.94),
+                      border: Border.all(color: SanaColors.outline),
+                      borderRadius: BorderRadius.circular(9),
+                      boxShadow: [
+                        BoxShadow(
+                          color: SanaColors.fgPrimary.withValues(alpha: 0.10),
+                          blurRadius: 16,
+                          offset: const Offset(0, 6),
                         ),
+                      ],
+                    ),
+                    child: SizedBox(
+                      width: 34,
+                      height: 38,
+                      child: Row(
+                        children: [
+                          Container(width: 3, height: 24, color: SanaColors.surface),
+                          Expanded(
+                            child: Padding(
+                              padding: const EdgeInsets.all(6),
+                              child: SvgPicture.asset(
+                                'assets/icons/chat-svgrepo-com.svg',
+                                semanticsLabel: 'Conversation',
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                  ],
+                  ),
                 ),
               ),
             ),
-          ),
+          ],
+        ),
+      );
+}
+
+class _BuildQuickActions extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) => DecoratedBox(
+        decoration: BoxDecoration(
+          color: SanaColors.pureWhite.withValues(alpha: 0.94),
+          border: Border.all(color: SanaColors.outline),
+          borderRadius: BorderRadius.circular(9),
+          boxShadow: [
+            BoxShadow(
+              color: SanaColors.fgPrimary.withValues(alpha: 0.10),
+              blurRadius: 16,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            components.MediaDeviceContextBuilder(
+              builder: (context, roomCtx, mediaDeviceCtx) => IconButton(
+                tooltip: mediaDeviceCtx.microphoneOpened ? 'Mute microphone' : 'Enable microphone',
+                onPressed: () => mediaDeviceCtx.microphoneOpened
+                    ? mediaDeviceCtx.disableMicrophone()
+                    : mediaDeviceCtx.enableMicrophone(),
+                icon: Icon(
+                  mediaDeviceCtx.microphoneOpened ? Icons.mic_rounded : Icons.mic_off_rounded,
+                  size: 20,
+                ),
+              ),
+            ),
+            IconButton(
+              tooltip: 'End conversation',
+              onPressed: () => context.read<AppCtrl>().disconnect(),
+              icon: const Icon(Icons.call_end_rounded, size: 20, color: SanaColors.danger),
+            ),
+          ],
         ),
       );
 }
@@ -617,6 +679,15 @@ class _BuildConversationDrawer extends StatelessWidget {
                           mediaDeviceCtx.microphoneOpened ? Icons.mic_rounded : Icons.mic_off_rounded,
                           size: 20,
                         ),
+                      ),
+                    ),
+                    IconButton(
+                      tooltip: 'End conversation',
+                      onPressed: () => context.read<AppCtrl>().disconnect(),
+                      icon: const Icon(
+                        Icons.call_end_rounded,
+                        size: 20,
+                        color: SanaColors.danger,
                       ),
                     ),
                     IconButton(
