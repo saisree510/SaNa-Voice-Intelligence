@@ -74,11 +74,10 @@ flutter:
   # the material Icons class.
   uses-material-design: true
 
-  # To add assets to your application, add an assets section, like this:
-  # The assets/ directory also picks up the optional assets/.env file when
-  # present (declared file assets must exist, directory contents may vary).
+  # Keep this list explicit: browser bundles are public, so .env files must
+  # never be included as application assets.
   assets:
-    - assets/
+    - assets/terminal.png
     - assets/icons/chat-svgrepo-com.svg
   #   - images/a_dot_burr.jpeg
   #   - images/a_dot_ham.jpeg
