@@ -8,6 +8,9 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 class AuthService extends ChangeNotifier {
   static final _logger = Logger('AuthService');
+  static const _compiledSupabaseUrl = String.fromEnvironment('SUPABASE_URL');
+  static const _compiledSupabaseAnonKey =
+      String.fromEnvironment('SUPABASE_ANON_KEY');
 
   bool _isInitialized = false;
   bool _isMock = false;
@@ -55,8 +58,12 @@ class AuthService extends ChangeNotifier {
   Future<void> initialize() async {
     if (_isInitialized) return;
 
-    final url = dotenv.env['SUPABASE_URL']?.trim() ?? '';
-    final anonKey = dotenv.env['SUPABASE_ANON_KEY']?.trim() ?? '';
+    final assetUrl = dotenv.env['SUPABASE_URL']?.trim() ?? '';
+    final assetAnonKey = dotenv.env['SUPABASE_ANON_KEY']?.trim() ?? '';
+    final url = assetUrl.isNotEmpty ? assetUrl : _compiledSupabaseUrl.trim();
+    final anonKey = assetAnonKey.isNotEmpty
+        ? assetAnonKey
+        : _compiledSupabaseAnonKey.trim();
 
     if (url.isNotEmpty && anonKey.isNotEmpty && url != '<your-supabase-url>') {
       try {

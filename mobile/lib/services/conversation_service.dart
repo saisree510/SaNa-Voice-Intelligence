@@ -20,6 +20,9 @@ class ConversationService extends ChangeNotifier {
 
   static final _logger = Logger('ConversationService');
   static const uuid = Uuid();
+  static const _compiledSupabaseUrl = String.fromEnvironment('SUPABASE_URL');
+  static const _compiledSupabaseAnonKey =
+      String.fromEnvironment('SUPABASE_ANON_KEY');
 
   List<ConversationSession> _conversations = [];
   bool _isLoading = false;
@@ -59,8 +62,12 @@ class ConversationService extends ChangeNotifier {
   }
 
   SupabaseClient? get _supabase {
-    final url = dotenv.env['SUPABASE_URL']?.trim() ?? '';
-    final anonKey = dotenv.env['SUPABASE_ANON_KEY']?.trim() ?? '';
+    final assetUrl = dotenv.env['SUPABASE_URL']?.trim() ?? '';
+    final assetAnonKey = dotenv.env['SUPABASE_ANON_KEY']?.trim() ?? '';
+    final url = assetUrl.isNotEmpty ? assetUrl : _compiledSupabaseUrl.trim();
+    final anonKey = assetAnonKey.isNotEmpty
+        ? assetAnonKey
+        : _compiledSupabaseAnonKey.trim();
     if (url.isEmpty || anonKey.isEmpty || url == '<your-supabase-url>') {
       return null;
     }
